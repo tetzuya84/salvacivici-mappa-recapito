@@ -47,6 +47,7 @@
   async function refresh(){state.records=(await readAll()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));renderRecords();updateNearWarning();}
 
   function showPage(tab){
+    document.querySelector('.app-shell').classList.toggle('is-capture',tab==='capture');
     ['capture','records','data'].forEach(name=>{
       $('page-'+name).hidden=name!==tab;
       const button=document.querySelector(`[data-tab="${name}"]`);
