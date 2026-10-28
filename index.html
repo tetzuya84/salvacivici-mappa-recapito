@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0c1b29">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SalvaCivici">
+  <meta name="description" content="Raccogli civici e coordinate GPS per Mappa Recapito, anche offline.">
+  <link rel="icon" href="assets/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <title>SalvaCivici • Mappa Recapito</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="identity">
+        <div class="identity-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><path d="M16 29s10-11.04 10-18a10 10 0 0 0-20 0c0 6.96 10 18 10 18Z" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="11" r="3.4" fill="currentColor"/></svg>
+        </div>
+        <div><div class="brand">SalvaCivici</div><div class="brand-sub">MAPPA RECAPITO</div></div>
+      </div>
+      <span class="version">BETA 0.2</span>
+    </header>
+
+    <main>
+      <section id="page-capture" class="page" aria-labelledby="page-title">
+        <div class="intro"><p class="eyebrow">RACCOLTA CIVICI</p><h1 id="page-title">Nuovo punto</h1><p class="subtitle">Via, civico e GPS. Il resto lo fa l'app.</p></div>
+        <form id="capture-form" autocomplete="off" novalidate>
+          <div class="form-card">
+            <label class="field-label" for="comune">Comune</label>
+            <input id="comune" name="comune" maxlength="90" placeholder="Es. Piubega" autocapitalize="words" enterkeyhint="next" required>
+            <label class="field-label space" for="via">Via o località</label>
+            <input id="via" name="via" maxlength="130" placeholder="Es. Via Roma" autocapitalize="words" enterkeyhint="next" required>
+            <label class="field-label space" for="civico">Numero civico</label>
+            <input id="civico" name="civico" maxlength="35" placeholder="Es. 73, 73/A, SNC" autocapitalize="characters" enterkeyhint="done" required>
+          </div>
+
+          <div class="section-head"><h2>Posizione GPS</h2><span class="light-label" id="gps-chip">Non rilevata</span></div>
+          <div class="gps-card" id="gps-card">
+            <div class="gps-top"><div class="gps-bubble" aria-hidden="true">◎</div><div><strong id="gps-title">Pronto a rilevare</strong><p id="gps-description">Acquisisci la posizione quando sei davanti al civico.</p></div></div>
+            <div class="coordinates" id="gps-coordinates" hidden><div><span>LATITUDINE</span><strong id="gps-lat">—</strong></div><div><span>LONGITUDINE</span><strong id="gps-lon">—</strong></div></div>
+            <div class="gps-details" id="gps-details" hidden></div>
+            <button id="gps-button" type="button" class="secondary full"><span aria-hidden="true">◎</span> Rileva GPS</button>
+          </div>
+          <p class="inline-alert" id="nearby-warning" role="status" hidden></p>
+          <button id="save-button" type="submit" class="primary full save">Salva civico <span aria-hidden="true">→</span></button>
+          <p class="helper" id="save-hint">Le coordinate vengono conservate esattamente come rilevate.</p>
+        </form>
+      </section>
+
+      <section id="page-records" class="page" hidden aria-labelledby="records-title">
+        <div class="intro"><p class="eyebrow">ARCHIVIO PERSONALE</p><h1 id="records-title">Civici salvati</h1><p class="subtitle">Ricerca, controlla e correggi i punti.</p></div>
+        <div class="stats-row"><div class="stat"><strong id="total-records">0</strong><span>Civici</span></div><div class="stat"><strong id="total-towns">0</strong><span>Comuni</span></div></div>
+        <label class="sr-only" for="search">Cerca civici</label><input id="search" class="search" type="search" placeholder="Cerca via, civico o comune…">
+        <div id="record-list" class="records-list"></div>
+        <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>I punti salvati compariranno qui.</p></div>
+      </section>
+
+      <section id="page-data" class="page" hidden aria-labelledby="data-title">
+        <div class="intro"><p class="eyebrow">I TUOI DATI</p><h1 id="data-title">Esporta e proteggi</h1><p class="subtitle">I dati restano su questo dispositivo finché non decidi di esportarli.</p></div>
+        <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate, precisione e data. Puoi importarlo nelle tue mappe.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
+        <div class="data-card"><div class="data-icon">▣</div><h2>Copia di sicurezza</h2><p>Salva tutti i tuoi civici in un file JSON, utile se cambi telefono o cancelli i dati del browser.</p><button id="export-json" type="button" class="secondary full">Scarica backup JSON</button><button id="import-json" type="button" class="text-button">Ripristina da backup</button><input type="file" id="import-file" accept=".json,application/json" hidden></div>
+        <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p></div>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="Navigazione principale">
+      <button class="tab active" data-tab="capture" type="button" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.68 7-12a7 7 0 0 0-14 0c0 4.32 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg><span>Salva</span></button>
+      <button class="tab" data-tab="records" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M5 12h14M5 19h14"/></svg><span>Archivio</span></button>
+      <button class="tab" data-tab="data" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 18v2h14v-2"/></svg><span>Dati</span></button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="confirm-dialog" class="modal"><div class="modal-inner"><h2 id="dialog-title">Confermi?</h2><p id="dialog-message"></p><div class="modal-actions"><button id="dialog-cancel" type="button" class="secondary">Annulla</button><button id="dialog-confirm" type="button" class="primary">Conferma</button></div></div></dialog>
+  <dialog id="edit-dialog" class="modal"><form id="edit-form" class="modal-inner" method="dialog"><h2>Modifica civico</h2><p>Le coordinate GPS rimangono invariate.</p><label for="edit-comune">Comune</label><input id="edit-comune" required maxlength="90"><label for="edit-via">Via</label><input id="edit-via" required maxlength="130"><label for="edit-civico">Civico</label><input id="edit-civico" required maxlength="35"><div class="modal-actions"><button id="edit-cancel" type="button" class="secondary">Annulla</button><button id="edit-save" type="submit" class="primary">Salva</button></div></form></dialog>
+  <script src="core.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

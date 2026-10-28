@@ -1,0 +1,15 @@
+const assert = require('node:assert/strict');
+const core = require('../core.js');
+const a={comune:'Piubega',via:'Via Roma',civico:'73/A'};
+assert.equal(core.isSameCivic(a,{comune:'piubega',via:'VIA ROMA',civico:'73a'}),true);
+assert.equal(core.isSameCivic(a,{comune:'Piubega',via:'Via Roma',civico:'74'}),false);
+assert.equal(core.isSameCivic(a,{comune:'Redondesco',via:'Via Roma',civico:'73/A'}),false);
+assert.ok(core.metersBetween({lat:45.16034285608394,lon:10.43743335868112},{lat:45.16034232483203,lon:10.43743410730139})<.1);
+assert.equal(core.metersBetween({lat:0,lon:0},{lat:0,lon:0}),0);
+const data=core.csv([{...a,lat:45.16034285608394,lon:10.43743335868112,accuracy:5,createdAt:'2026-10-28T10:51:00.000Z'}]);
+assert.match(data,/"Latitudine"/);
+assert.match(data,/45\.16034285608394/);
+assert.match(data,/"73\/A"/);
+assert.ok(core.isRecord({id:'test',...a,lat:45.1603428,lon:10.43743,createdAt:'2026-10-28T10:51:00Z'}));
+assert.equal(core.isRecord({id:'test',...a,lat:999,lon:10.43743,createdAt:'x'}),false);
+console.log('9 test logici superati.');

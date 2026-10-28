@@ -1,0 +1,16 @@
+{
+  "name": "SalvaCivici – Mappa Recapito",
+  "short_name": "SalvaCivici",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f9fa",
+  "theme_color": "#0c1b29",
+  "lang": "it",
+  "description": "Salvataggio civici con coordinate GPS e esportazione per Google My Maps",
+  "icons": [
+    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

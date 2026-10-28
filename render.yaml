@@ -1,0 +1,18 @@
+# Pubblicazione gratuita come sito statico Render.
+# Nessun database o servizio a pagamento richiesto.
+services:
+  - type: web
+    name: salvacivici-mappa-recapito
+    runtime: static
+    buildCommand: >-
+      mkdir -p dist/assets &&
+      cp index.html styles.css core.js app.js sw.js manifest.webmanifest dist/ &&
+      cp assets/icon-192.png assets/icon-512.png dist/assets/
+    staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
