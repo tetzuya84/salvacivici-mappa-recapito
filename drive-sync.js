@@ -60,7 +60,7 @@
     let q="name = '"+name.replace(/'/g,"\\'")+"' and trashed = false";
     if(folderId)q+=" and '"+folderId+"' in parents";
     if(mimeType)q+=" and mimeType = '"+mimeType+"'";
-    const path='/drive/v3/files?q='+encodeURIComponent(q)+'&fields='+encodeURIComponent('files(id,name,mimeType),nextPageToken')+'&page_size=100';
+    const path='/drive/v3/files?q='+encodeURIComponent(q)+'&fields='+encodeURIComponent('files(id,name,mimeType),nextPageToken')+'&pageSize=100';
     const result=await drive('GET',path);
     return result.files?.[0]||null;
   }
@@ -73,6 +73,7 @@
     return created.id;
   }
   async function uploadJson(folderId,name,content){
+    if(new TextEncoder().encode(content).byteLength>5*1024*1024)throw new Error('Backup oltre 5 MB: usa per ora l’esportazione JSON manuale.');
     const existing=await findFile(name,folderId,'application/json');
     const url=existing
       ?'/upload/drive/v3/files/'+encodeURIComponent(existing.id)+'?uploadType=media&fields=id,name'
@@ -81,10 +82,17 @@
     if(existing){
       resp=await fetch(API+url,{method:'PATCH',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json; charset=UTF-8'},body:content});
     }else{
-      const data=new FormData();
-      data.append('metadata',new Blob([JSON.stringify({name,mimeType:'application/json',parents:[folderId]})],{type:'application/json'}));
-      data.append('file',new Blob([content],{type:'application/json'}),name);
-      resp=await fetch(API+url,{method:'POST',headers:{Authorization:'Bearer '+token},body:data});
+      const boundary='salvacivici_'+Date.now().toString(36);
+      const body=new Blob([
+        '--'+boundary+'\r\n',
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n',
+        JSON.stringify({name,mimeType:'application/json',parents:[folderId]}),
+        '\r\n--'+boundary+'\r\n',
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n',
+        content,
+        '\r\n--'+boundary+'--'
+      ],{type:'multipart/related; boundary='+boundary});
+      resp=await fetch(API+url,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'multipart/related; boundary='+boundary},body});
     }
     const saved=await responseJson(resp);
     if(!saved.id)throw new Error('Google Drive non ha confermato il file '+name+'.');
