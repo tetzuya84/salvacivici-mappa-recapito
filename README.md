@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.4**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.5.8**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -41,3 +41,22 @@ Il gruppo composto da icona e due righe SalvaCivici / MAPPA RECAPITO è centrato
 
 ## Beta 0.5.4 — riquadro GPS uniformato
 La sezione Coordinate rilevate è distribuita con spaziature verticali uniformi tra intestazione, coordinate, precisione e messaggio di qualità. Un elemento grafico invisibile bilancia l'icona a sinistra, mantenendo il titolo e la descrizione realmente centrati. Latitudine e longitudine hanno colonne simmetriche. Rimane compatto il layout iPhone; CSS e badge di versione soltanto, senza modifiche al GPS né all'archivio locale.
+
+
+## Beta 0.5.8 — Backup Google Drive solo su richiesta (29 ottobre 2026)
+
+Nella pagina **Dati** c'è il pulsante «Sincronizza con Drive». Non viene caricato nessun civico in background o quando premi «Salva civico»: prima controlla e correggi i record nell'**Archivio**, poi premi volontariamente il pulsante e conferma.
+
+**Prima connessione, obbligatoria:**
+1. In [Google Cloud Console](https://console.cloud.google.com/) crea o seleziona un progetto, abilita **Google Drive API** e configura la schermata di consenso OAuth (in modalità Test aggiungi l'account Google che userai).
+2. Crea credenziali OAuth di tipo **Applicazione web**; fra le origini JavaScript autorizzate inserisci esattamente `https://tetzuya84.github.io` (senza il percorso). Questa integrazione usa il modello popup con Google Identity Services.
+3. In SalvaCivici → Dati → **Configura collegamento Google**, incolla soltanto il **Client ID** pubblico che termina con `.apps.googleusercontent.com`. NON inserire client secret, password o token.
+4. Premi **Sincronizza con Drive**; autorizza Google e conferma il numero di civici. Su iPhone il popup OAuth deve essere verificato nell'app della Home.
+
+L'app chiede il permesso limitato `https://www.googleapis.com/auth/drive.file`. Non accede indiscriminatamente agli altri documenti: crea in **Il mio Drive** una nuova cartella `SalvaCivici - Backup app` con `SalvaCivici_backup.json` (ultimo archivio aggiornato) e `SalvaCivici_backup_YYYY-MM-DD.json` (copia giornaliera; aggiornata più volte nello stesso giorno). Se desideri, dopo la prima sincronizzazione puoi spostare quella cartella sotto `SalvaCivici` da Google Drive. Non presupporre di poter creare subito file dentro una cartella preesistente con il permesso drive.file.
+
+Il token di accesso Google è mantenuto solo nella memoria della sessione, non inserito in GitHub o nel database dei civici. Il Client ID pubblico si salva nella configurazione locale. Se Google non è configurato, o non risponde, i dati restano solo sul dispositivo e la schermata mostra che nessun backup è stato confermato. Rimane il comando **Scarica backup JSON**.
+
+**Limiti:** la sincronizzazione non aggiorna Google My Maps. Gli upload singoli sono limitati a 5 MB (per file più grandi usare per ora l'esportazione manuale). La prova reale della login OAuth su iPhone e della scrittura nel Drive dell'utente è ancora da eseguire. Tutti i civici registrati finora nella app sono fittizi per test, e non vanno trasferiti nelle mappe reali. La PWA mantiene invariati `id`, `start_url`, `scope` e il database `salvacivici-mappa-recapito-v1`.
+
+**Test:** `node tests/core.test.js`; il backup ZIP Beta 0.5.8 contiene anche un test simulato per Drive (`node tests/drive-sync.test.js`).
