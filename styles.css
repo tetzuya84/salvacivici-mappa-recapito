@@ -57,3 +57,15 @@
  .app-shell.is-capture #page-capture .form-card {padding-top:8px;padding-bottom:8px;}
  .app-shell.is-capture #page-capture .gps-card {padding-top:9px;padding-bottom:9px;}
 }
+
+/* Beta 0.5: una sola casella da compilare; comune stimato da confini locali. */
+.comune-row{display:flex;align-items:center;justify-content:space-between;gap:9px;min-height:40px;padding:5px 0 7px;}
+.comune-row strong{font-size:15px;font-weight:760;line-height:1.4;overflow-wrap:anywhere;}
+.comune-row button{background:#edf5f3;color:#136f6b;border:0;border-radius:9px;min-height:36px;padding:7px 12px;font-size:12px;font-weight:740;flex:none;}
+.comune-row button:focus-visible{outline:2px solid #146f6b;outline-offset:2px;}
+.privacy-note a{color:#075f65}
+@media(max-width:639px){
+ .app-shell.is-capture #page-capture .comune-row{min-height:38px;padding:1px 0 6px;}
+ .app-shell.is-capture #page-capture .comune-row strong{font-size:14px;}
+ .app-shell.is-capture #page-capture .comune-row button{min-height:35px;font-size:12px;}
+}

@@ -30,4 +30,19 @@ assert.equal(core.isFreshGps(y,135,30),false);
 assert.equal(core.isFreshGps({...y,timestamp:NaN},115,30),false);
 assert.equal(core.isFreshGps(y,115,-1),false);
 assert.equal(core.isFreshGps({...y,timestamp:150},115,30),false);
-console.log('24 test logici superati (inclusi GPS multiplo e freschezza misure).');
+const cases=[
+ ['Via Roma 73/A','Via Roma','73/A'],
+ ['Strada Campagnola, 51','Strada Campagnola','51'],
+ ['Via XX Settembre 10','Via XX Settembre','10'],
+ ['Via 24 Maggio 4','Via 24 Maggio','4'],
+ ['Via Roma SNC','Via Roma','SNC'],
+ ['Via Roma 14 bis','Via Roma','14 bis']
+];
+for(const [input,via,civico] of cases)assert.deepEqual(core.splitAddress(input),{via,civico});
+assert.equal(core.splitAddress('Via Roma'),null);
+assert.equal(core.splitAddress(''),null);
+const polygon={name:'Comune Test',bbox:[9.9,44.9,10.1,45.1],geometry:{type:'Polygon',coordinates:[[[9.9,44.9],[10.1,44.9],[10.1,45.1],[9.9,45.1],[9.9,44.9]]]}};
+assert.equal(core.getComune(45,10,[polygon]),'Comune Test');
+assert.equal(core.getComune(46,10,[polygon]),'');
+assert.equal(core.getComune(45,11,[polygon]),'');
+console.log('35 test logici superati (GPS, civici, comune da confini).');

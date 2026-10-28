@@ -5,6 +5,7 @@
   const state={records:[],gps:null,editingId:null,db:null,toastTimeout:0};
   const DBNAME='salvacivici-mappa-recapito-v1';
   const STORE='civici';
+  let comuneManual=false;
 
   function toast(message){
     const box=$('toast');box.textContent=message;box.hidden=false;
@@ -59,6 +60,26 @@
     window.scrollTo({top:0,behavior:'auto'});
   }
   document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.tab)));
+
+  function showComune(name){
+    $('comune').value=name||'';
+    $('comune-display').textContent=name||'Non individuato · correggi';
+  }
+  function autoComune(gps){
+    if(comuneManual||!gps)return;
+    const name=SC.getComune(gps.lat,gps.lon,window.SC_COMUNI||[]);
+    showComune(name);
+  }
+  $('comune-edit').addEventListener('click',()=>{
+    $('comune').hidden=false;
+    $('comune-edit-label').hidden=false;
+    $('comune').focus();
+  });
+  $('comune').addEventListener('input',()=>{
+    comuneManual=true;
+    $('comune-display').textContent=SC.clean($('comune').value)||'Comune da inserire';
+  });
+  $('indirizzo').addEventListener('input',()=>{$('indirizzo-warning').hidden=true;});
 
   function confirmAction(title,message,confirmLabel='Conferma'){
     return new Promise(resolve=>{
@@ -145,6 +166,7 @@
     if(best){
       state.gps={...best,sampleCount:gpsSamples.length,spread:SC.gpsSpread(gpsSamples)};
       gpsValidated=true;gpsError=null;
+      autoComune(state.gps);
     }else{
       state.gps=null;gpsValidated=false;gpsError=geolocationError(error);
       toast(gpsError);
@@ -161,6 +183,7 @@
       state.gps=null;gpsValidated=false;updateGpsUI();return Promise.resolve(false);
     }
     gpsBusy=true;gpsValidated=false;gpsError=null;state.gps=null;
+    if(!comuneManual)showComune('');
     gpsSamples=[];gpsStartedAt=Date.now();
     gpsPromise=new Promise(resolve=>{gpsResolve=resolve;});
     updateGpsUI();
@@ -193,12 +216,22 @@
     event.preventDefault();
     if(!state.db){toast('Archivio non disponibile. Salvataggio disabilitato.');return;}
     if(gpsBusy){toast('Attendi la fine del rilevamento GPS.');return;}
-    const comune=SC.clean($('comune').value),via=SC.clean($('via').value),civico=SC.clean($('civico').value);
-    if(!comune||!via||!civico){toast('Compila comune, via e civico.');(!comune?$('comune'):!via?$('via'):$('civico')).focus();return;}
+    const address=SC.splitAddress($('indirizzo').value);
+    if(!address){
+      $('indirizzo-warning').textContent='Scrivi via e civico insieme, ad esempio: Strada Campagnola 51 oppure Via Roma 73/A.';
+      $('indirizzo-warning').hidden=false;
+      $('indirizzo').focus();return;
+    }
     if(!gpsValidated||!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
       toast('Aggiorno la posizione prima del salvataggio…');
       if(!(await startGpsAcquisition()))return;
     }
+    let comune=SC.clean($('comune').value);
+    if(!comune){
+      toast('Comune non individuato: usa Correggi per inserirlo.');
+      $('comune-edit').click();return;
+    }
+    const {via,civico}=address;
     const draft={comune,via,civico,...state.gps};
     const duplicate=state.records.find(r=>SC.isSameCivic(draft,r));
     if(duplicate){
@@ -207,13 +240,24 @@
     }
     if(!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
       if(!(await startGpsAcquisition()))return;
+      if(!SC.clean($('comune').value)){
+        toast('Comune non individuato: correggilo prima del salvataggio.');return;
+      }
+      if(SC.clean($('comune').value)!==comune){
+        toast('Il comune è cambiato con il nuovo GPS: controllalo e premi nuovamente Salva civico.');return;
+      }
     }
     const record={id:makeId(),comune,via,civico,lat:state.gps.lat,lon:state.gps.lon,accuracy:state.gps.accuracy,createdAt:new Date().toISOString()};
     $('save-button').disabled=true;
     try{
       await writeOne(record);
-      try{localStorage.setItem('salvacivici-last-town',comune);localStorage.setItem('salvacivici-last-road',via);}catch(e){}
-      await refresh();$('civico').value='';state.gps=null;gpsValidated=false;updateGpsUI();toast(`Civico ${record.civico} salvato.`);$('civico').focus();
+      await refresh();
+      $('indirizzo').value='';
+      comuneManual=false;
+      $('comune').hidden=true;$('comune-edit-label').hidden=true;
+      state.gps=null;gpsValidated=false;updateGpsUI();
+      toast(`Civico ${record.civico} salvato.`);
+      $('indirizzo').focus();
       if(document.visibilityState==='visible'&&!$('page-capture').hidden)startGpsAcquisition();
     }catch(e){toast('Salvataggio non riuscito. Controlla lo spazio disponibile.');}
     finally{updateGpsUI();}
@@ -310,7 +354,7 @@
     $('apply-update').addEventListener('click',async()=>{
       if(gpsBusy){toast('Termina prima il rilevamento GPS.');return;}
       if($('edit-dialog').open){toast('Termina prima la modifica del civico.');return;}
-      if($('civico').value.trim()){
+      if($('indirizzo').value.trim()){
         const proceed=await confirmAction('Aggiornare SalvaCivici?','Il civico che stai compilando non è ancora salvato. I civici già presenti nell’archivio rimarranno disponibili.','Aggiorna');
         if(!proceed)return;
       }
@@ -335,7 +379,8 @@
   }
   (async()=>{
     try{state.db=await dbOpen();await refresh();}catch(error){toast('Archivio locale non disponibile: impossibile salvare i civici.');$('save-button').disabled=true;}
-    try{$('comune').value=localStorage.getItem('salvacivici-last-town')||'';$('via').value=localStorage.getItem('salvacivici-last-road')||'';}catch(e){}
+    // Apertura pulita: nessun valore dei campi viene ripristinato da sessioni precedenti.
+    $('indirizzo').value='';showComune('');
     updateGpsUI();
     setupAppUpdates();
     startGpsAcquisition();

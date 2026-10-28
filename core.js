@@ -28,6 +28,44 @@ function gpsSpread(samples){
  for(let i=0;i<valid.length;i++)for(let j=i+1;j<valid.length;j++)max=Math.max(max,metersBetween(valid[i],valid[j]));
  return max;
 }
+
+/* Comune da confini ISTAT: tutte le coordinate sono [longitudine, latitudine]. */
+function insideRing(lon,lat,ring){
+ let inside=false;
+ for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+  const a=ring[i],b=ring[j];
+  if(Math.abs((b[0]-a[0])*(lat-a[1])-(b[1]-a[1])*(lon-a[0]))<1e-10 &&
+     lon>=Math.min(a[0],b[0])-1e-10&&lon<=Math.max(a[0],b[0])+1e-10 &&
+     lat>=Math.min(a[1],b[1])-1e-10&&lat<=Math.max(a[1],b[1])+1e-10)return true;
+  if((a[1]>lat)!==(b[1]>lat) && lon<(b[0]-a[0])*(lat-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+ }
+ return inside;
+}
+function insidePolygon(lon,lat,rings){
+ if(!rings||!rings.length||!insideRing(lon,lat,rings[0]))return false;
+ for(let i=1;i<rings.length;i++)if(insideRing(lon,lat,rings[i]))return false;
+ return true;
+}
+function getComune(lat,lon,features){
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Array.isArray(features))return '';
+ for(const f of features){
+  const b=f.bbox;
+  if(b&&(lon<b[0]||lat<b[1]||lon>b[2]||lat>b[3]))continue;
+  const g=f.geometry;
+  if(!g)continue;
+  const polys=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+  if(polys.some(p=>insidePolygon(lon,lat,p)))return f.name;
+ }
+ return '';
+}
+/* Unico campo operativo: via e civico finale. Via 24 Maggio 7/A => Via 24 Maggio + 7/A */
+function splitAddress(text){
+ const s=clean(text);
+ const m=s.match(/^(.*?)\s*(?:,\s*|\s+)(\d{1,6}(?:(?:\s*[\/\-]\s*|\s+)[A-Za-z0-9]{1,4}|[A-Za-z])?(?:\s*bis|\s*ter|\s*quater)?|s\.?\s*n\.?\s*c\.?)$/i);
+ if(!m)return null;
+ const via=clean(m[1]).replace(/[,\s]+$/,'').trim(),civico=clean(m[2]);
+ return via&&civico?{via,civico}:null;
+}
 const csvEscape = value => '"'+String(value??'').replace(/"/g,'""')+'"';
 function csv(records){
  const header=['Civico','Via','Comune','Latitudine','Longitudine','Precisione_m','Data','Google_Maps'];
@@ -35,7 +73,7 @@ function csv(records){
  return '\uFEFF'+[header,...rows].map(row=>row.map(csvEscape).join(',')).join('\r\n')+'\r\n';
 }
 function isRecord(item){return !!item && typeof item==='object' && typeof item.id==='string' && typeof item.comune==='string' && typeof item.via==='string' && typeof item.civico==='string' && typeof item.createdAt==='string' && Number.isFinite(item.lat) && Math.abs(item.lat)<=90 && Number.isFinite(item.lon)&&Math.abs(item.lon)<=180 && item.comune.trim() && item.via.trim() && item.civico.trim();}
-const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,csv,isRecord};
+const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,splitAddress,getComune,csv,isRecord};
 root.SC=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
