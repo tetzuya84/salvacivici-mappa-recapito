@@ -15,7 +15,7 @@ function validGpsSample(s){
  return !!s && Number.isFinite(s.lat)&&Math.abs(s.lat)<=90&&Number.isFinite(s.lon)&&Math.abs(s.lon)<=180&&Number.isFinite(s.accuracy)&&s.accuracy>0&&Number.isFinite(s.timestamp);
 }
 function isFreshGps(sample,now,maxAge){
- return validGpsSample(sample)&&Number.isFinite(now)&&Number.isFinite(maxAge)&&maxAge>=0&&sample.timestamp<=now+2000&&now-sample.timestamp<=maxAge;
+ return validGpsSample(sample)&&Number.isFinite(now)&&Number.isFinite(maxAge)&&maxAge>=0&&sample.timestamp<=now&&now-sample.timestamp<=maxAge;
 }
 function bestGpsSample(samples){
  if(!Array.isArray(samples))return null;
