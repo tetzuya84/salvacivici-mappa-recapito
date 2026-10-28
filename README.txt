@@ -38,7 +38,7 @@ VERSIONE BETA 0.3 — 28 OTTOBRE 2026
 - Rilevamento GPS con una sola pressione: fino a 3 misure fresche.
 - Confronto di precisione stimata, scelta di quella con precisione migliore.
 - Se dopo il primo fix non arrivano altre misure, usa la prima dopo circa 4 secondi.
-- Se l'acquisizione fallisce, mantiene il fix precedente, se presente.
+- Se l'acquisizione fallisce, mantiene il fix precedente per confronto ma blocca il salvataggio finché il GPS non viene riacquisito.
 - Mostra l'eventuale dispersione anomala tra le letture (lato diagnostico).
 - Nessuna modifica al database IndexedDB esistente, CSV o JSON.
 - Prima dell'uso operativo verificare la precisione reale in punti noti.

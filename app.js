@@ -83,7 +83,7 @@
   const GPS_REFINEMENT_MS=3800;
   const GPS_FIRST_FIX_TIMEOUT_MS=18000;
   let gpsWatch=null, gpsFirstTimer=null, gpsRefineTimer=null;
-  let gpsBusy=false, gpsSamples=[], gpsStartedAt=0;
+  let gpsBusy=false, gpsValidated=false, gpsSamples=[], gpsStartedAt=0;
 
   function stopGpsWatch(){
     if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
@@ -94,12 +94,12 @@
   function updateGpsUI(){
     const gps=state.gps;
     $('gps-button').disabled=gpsBusy;
-    $('save-button').disabled=gpsBusy||!state.db;
+    $('save-button').disabled=gpsBusy||!state.db||(!!gps&&!gpsValidated);
     $('gps-button').textContent=gpsBusy?`◎ Misurazione ${gpsSamples.length}/${GPS_TARGET_SAMPLES}…`:gps?'↻ Rileva di nuovo':'◎ Rileva GPS';
     $('gps-coordinates').hidden=!gps;
     $('gps-details').hidden=!gps;
-    $('gps-chip').textContent=gpsBusy?'Misurazione…':gps?'GPS acquisito':'Non rilevata';
-    $('gps-chip').classList.toggle('ready',!!gps&&!gpsBusy);
+    $('gps-chip').textContent=gpsBusy?'Misurazione…':gps?(gpsValidated?'GPS acquisito':'GPS da rifare'):'Non rilevata';
+    $('gps-chip').classList.toggle('ready',!!gps&&gpsValidated&&!gpsBusy);
     $('gps-title').textContent=gpsBusy?'Acquisizione intelligente…':gps?'Coordinate rilevate':'Pronto a rilevare';
     $('gps-description').textContent=gpsBusy?'Resta fermo: l’app confronta più posizioni.':gps?`${gps.sampleCount||1} ${gps.sampleCount===1?'lettura':'letture'} GPS · scelta la precisione stimata migliore.`:'Acquisisci la posizione quando sei davanti al civico.';
     if(gps){
@@ -113,6 +113,7 @@
       quality.textContent=gpsSamples.length?`${gpsSamples.length} ${gpsSamples.length===1?'lettura valida':'letture valide'} raccolte · miglior precisione: ±${Math.round(SC.bestGpsSample(gpsSamples).accuracy)} m.`:'Ricerca del primo segnale GPS…';
       quality.classList.remove('warning');
     }else if(gps){
+      if(!gpsValidated){quality.hidden=false;quality.classList.add('warning');quality.textContent='Nuova rilevazione fallita: il vecchio GPS è visibile solo per confronto. Riprova prima di salvare.';updateNearWarning();return;}
       const spread=gps.spread||0;
       const unstable=spread>Math.max(12,gps.accuracy*1.5);
       const lowAccuracy=gps.accuracy>20;
@@ -134,7 +135,7 @@
     stopGpsWatch();
     const best=SC.bestGpsSample(gpsSamples);
     if(best){
-      state.gps={...best,sampleCount:gpsSamples.length,spread:SC.gpsSpread(gpsSamples)};
+      state.gps={...best,sampleCount:gpsSamples.length,spread:SC.gpsSpread(gpsSamples)};gpsValidated=true;
       toast(`GPS acquisito: ${gpsSamples.length} ${gpsSamples.length===1?'lettura':'letture'}, migliore ±${Math.round(best.accuracy)} m.`);
     }else{
       toast(geolocationError(error));
@@ -144,7 +145,7 @@
   $('gps-button').addEventListener('click',()=>{
     if(gpsBusy)return;
     if(!navigator.geolocation){toast('Il GPS non è disponibile su questo dispositivo.');return;}
-    gpsBusy=true;gpsSamples=[];gpsStartedAt=Date.now();
+    gpsBusy=true;gpsValidated=false;gpsSamples=[];gpsStartedAt=Date.now();
     updateGpsUI();
     // L'intervallo breve parte solo DOPO il primo fix; il permesso iOS può richiedere tempo.
     gpsFirstTimer=setTimeout(()=>finishGps({code:3}),GPS_FIRST_FIX_TIMEOUT_MS);
@@ -176,6 +177,7 @@
     const comune=SC.clean($('comune').value),via=SC.clean($('via').value),civico=SC.clean($('civico').value);
     if(!comune||!via||!civico){toast('Compila comune, via e civico.');(!comune?$('comune'):!via?$('via'):$('civico')).focus();return;}
     if(!state.gps){toast('Prima rileva la posizione GPS.');return;}
+    if(!gpsValidated){toast('Nuovo rilevamento fallito: acquisisci di nuovo il GPS prima di salvare.');return;}
     const draft={comune,via,civico,...state.gps};
     const duplicate=state.records.find(r=>SC.isSameCivic(draft,r));
     if(duplicate){
@@ -187,7 +189,7 @@
     try{
       await writeOne(record);
       try{localStorage.setItem('salvacivici-last-town',comune);localStorage.setItem('salvacivici-last-road',via);}catch(e){}
-      await refresh();$('civico').value='';state.gps=null;updateGpsUI();toast(`Civico ${record.civico} salvato.`);$('civico').focus();
+      await refresh();$('civico').value='';state.gps=null;gpsValidated=false;updateGpsUI();toast(`Civico ${record.civico} salvato.`);$('civico').focus();
     }catch(e){toast('Salvataggio non riuscito. Controlla lo spazio disponibile.');}
     finally{$('save-button').disabled=false;}
   });
