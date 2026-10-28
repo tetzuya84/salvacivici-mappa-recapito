@@ -401,3 +401,17 @@
 }
 
 /* Beta 0.5.6 — simbolo GPS rimosso, contenuti distribuiti sull'asse centrale. */
+
+
+/* Beta 0.5.8 — sincronizzazione manuale, solo schermata Dati. */
+#page-data .drive-sync-card{text-align:center}
+#page-data .drive-sync-card .data-icon{margin:0 auto 13px}
+#page-data .drive-status{margin:11px 0 5px;min-height:18px;font-size:12px;color:#12675c;line-height:1.45}
+#page-data .drive-status.warning{color:#a65c13}
+#page-data .drive-setup{margin:12px 0 18px;padding:13px;border:1px solid #d9e7e9;background:#f6f9f9;border-radius:12px;text-align:left}
+#page-data .drive-setup[hidden]{display:none}
+#page-data .drive-setup input{font-size:13px;min-height:44px;margin-bottom:9px}
+#page-data .drive-setup .field-label{text-align:left}
+#page-data .drive-setup p{font-size:11px;margin:10px 0 0}
+#page-data .drive-note{margin:12px 0 0;font-size:11px;line-height:1.5}
+#page-data .drive-setup a{color:#08766f}
