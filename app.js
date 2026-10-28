@@ -45,7 +45,7 @@
     transaction.oncomplete=()=>resolve();
     transaction.onerror=()=>reject(transaction.error||new Error('Eliminazione non riuscita.'));
   });}
-  async function refresh(){state.records=(await readAll()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));renderRecords();updateNearWarning();}
+  async function refresh(){state.records=(await readAll()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));renderRecords();updateNearWarning();window.dispatchEvent(new Event('salvacivici:datachanged'));}
 
   function showPage(tab){
     document.querySelector('.app-shell').classList.toggle('is-capture',tab==='capture');
@@ -382,6 +382,7 @@
     // Apertura pulita: nessun valore dei campi viene ripristinato da sessioni precedenti.
     $('indirizzo').value='';showComune('');
     updateGpsUI();
+    if(window.SCDriveSync)window.SCDriveSync.init({getRecords:readAll,confirmAction,toast});
     setupAppUpdates();
     startGpsAcquisition();
   })();
