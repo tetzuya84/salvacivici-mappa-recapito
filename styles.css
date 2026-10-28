@@ -136,3 +136,41 @@
   .app-shell.is-capture #page-capture .section-head{margin:8px 0 5px;}
   .app-shell.is-capture #page-capture .comune-row{justify-content:center;}
 }
+
+/* Beta 0.5.2 — ritmo verticale uniforme per le due aree del modulo.
+   La spaziatura è definita dai gruppi, non dai vecchi margini dei label.
+   Mantiene la visualizzazione compatta e il pulsante di correzione accessibile. */
+#page-capture .form-card{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ gap:12px;
+}
+#page-capture .capture-field-group{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ gap:8px;
+ min-width:0;
+}
+#page-capture .capture-field-group > .field-label,
+.app-shell.is-capture #page-capture .capture-field-group > .field-label.space{
+ margin:0;
+ text-align:center;
+}
+#page-capture .comune-row,
+.app-shell.is-capture #page-capture .comune-row{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:10px;
+ min-height:36px;
+ padding:0;
+ margin:0;
+}
+#page-capture .comune-row strong{text-align:center;}
+@media(max-width:639px) {
+ .app-shell.is-capture #page-capture .form-card{gap:12px;}
+ .app-shell.is-capture #page-capture .capture-field-group{gap:8px;}
+}

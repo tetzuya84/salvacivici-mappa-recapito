@@ -23,7 +23,7 @@
         </div>
         <div><div class="brand">SalvaCivici</div><div class="brand-sub">MAPPA RECAPITO</div></div>
       </div>
-      <span class="version">BETA 0.5.1</span>
+      <span class="version">BETA 0.5.2</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -35,12 +35,16 @@
         <div class="intro"><p class="eyebrow">RACCOLTA CIVICI</p><h1 id="page-title">Nuovo punto</h1><p class="subtitle">Via, civico e GPS. Il resto lo fa l'app.</p></div>
         <form id="capture-form" autocomplete="off" novalidate>
           <div class="form-card">
-            <div class="field-label">Comune rilevato dal GPS</div>
-            <div class="comune-row"><strong id="comune-display">In attesa del GPS…</strong><button id="comune-edit" type="button" aria-label="Correggi comune">Correggi</button></div>
-            <label id="comune-edit-label" class="field-label space" for="comune" hidden>Correggi comune</label>
-            <input id="comune" name="comune" maxlength="90" placeholder="Scrivi il comune" autocapitalize="words" enterkeyhint="done" hidden>
-            <label class="field-label space" for="indirizzo">Indirizzo e civico</label>
-            <input id="indirizzo" name="indirizzo" maxlength="180" placeholder="Es. Strada Campagnola 51" autocapitalize="words" enterkeyhint="done" required>
+            <div class="capture-field-group comune-group">
+              <div class="field-label">Comune rilevato dal GPS</div>
+              <div class="comune-row"><strong id="comune-display">In attesa del GPS…</strong><button id="comune-edit" type="button" aria-label="Correggi comune">Correggi</button></div>
+              <label id="comune-edit-label" class="field-label" for="comune" hidden>Correggi comune</label>
+              <input id="comune" name="comune" maxlength="90" placeholder="Scrivi il comune" autocapitalize="words" enterkeyhint="done" hidden>
+            </div>
+            <div class="capture-field-group indirizzo-group">
+              <label class="field-label" for="indirizzo">Indirizzo e civico</label>
+              <input id="indirizzo" name="indirizzo" maxlength="180" placeholder="Es. Strada Campagnola 51" autocapitalize="words" enterkeyhint="done" required>
+            </div>
           </div>
 
           <div class="section-head"><h2>Posizione GPS</h2><span class="light-label" id="gps-chip">Non rilevata</span></div>

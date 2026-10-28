@@ -32,3 +32,6 @@ All'apertura il campo testo viene svuotato. Il comune è riconosciuto sul dispos
 
 ## Beta 0.5.1 — interfaccia centrata
 Testi, titoli, campi, comune automatico, coordinate GPS, avvisi, schede archivio e pagina Dati sono allineati al centro. L'intestazione è centrata. Resta attivo il layout compatto per iPhone; non sono modificati Javascript, API GPS, IndexedDB, salvataggi né esportazioni. La versione del service worker cambia per distribuire il nuovo CSS.
+
+## Beta 0.5.2 — disposizione uniforme nel riquadro Comune e indirizzo
+I due gruppi di contenuti del modulo Salva hanno ora spaziature verticali controllate e coerenti: etichetta Comune, nome Comune + pulsante Correggi, etichetta Indirizzo e civico e campo di scrittura. Testi centrati, riquadro compatto, nessuna modifica al GPS, al riconoscimento Comune o ai civici conservati. Il CSS evita margini irregolari nelle etichette, anche quando viene aperto il campo di correzione.
