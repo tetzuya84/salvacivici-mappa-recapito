@@ -363,3 +363,68 @@
     line-height:1.35;
   }
 }
+
+
+/* Beta 0.5.5 — logo otticamente centrato e testi della stessa larghezza.
+   SVG textLength mantiene l'allineamento esatto anche con i font di iOS. */
+.topbar .identity,
+.app-shell.is-capture .topbar .identity {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:max-content;
+  max-width:100%;
+  margin-inline:auto;
+}
+.topbar .identity-copy,
+.app-shell.is-capture .topbar .identity-copy {
+  display:flex;
+  width:144px;
+  height:46px;
+  flex:0 0 144px;
+  align-items:center;
+  justify-content:center;
+}
+.topbar .identity-wordmark {
+  display:block;
+  width:144px;
+  height:46px;
+  overflow:visible;
+}
+.topbar .wordmark-name {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:23px;
+  font-weight:800;
+  fill:#fff;
+}
+.topbar .wordmark-sub {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:9.5px;
+  font-weight:750;
+  fill:#a6c9cb;
+}
+.topbar .identity .identity-mark,
+.app-shell.is-capture .topbar .identity .identity-mark {
+  width:46px;
+  height:46px;
+  min-width:46px;
+  flex:0 0 46px;
+  border-radius:12px;
+}
+.topbar .identity-mark svg,
+.app-shell.is-capture .topbar .identity-mark svg {
+  width:35px;
+  height:35px;
+}
+.topbar .version,
+.app-shell.is-capture .topbar .version {
+  display:block;
+  align-self:center;
+  margin-inline:auto;
+  padding:3px 8px;
+  font-size:7.5px;
+  line-height:1.2;
+  letter-spacing:1px;
+}
