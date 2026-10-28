@@ -38,3 +38,6 @@ I due gruppi di contenuti del modulo Salva hanno ora spaziature verticali contro
 
 ## Beta 0.5.3 — proporzioni logo e intestazione
 Il gruppo composto da icona e due righe SalvaCivici / MAPPA RECAPITO è centrato nel riquadro scuro. Il nome è ingrandito e dimensionato visivamente alla larghezza del sottotitolo; il simbolo viene portato all'altezza complessiva delle due righe. Il badge della versione BETA è ridotto e centrato sotto il gruppo. Il resto della schermata e l'archivio locale rimangono invariati.
+
+## Beta 0.5.4 — riquadro GPS uniformato
+La sezione Coordinate rilevate è distribuita con spaziature verticali uniformi tra intestazione, coordinate, precisione e messaggio di qualità. Un elemento grafico invisibile bilancia l'icona a sinistra, mantenendo il titolo e la descrizione realmente centrati. Latitudine e longitudine hanno colonne simmetriche. Rimane compatto il layout iPhone; CSS e badge di versione soltanto, senza modifiche al GPS né all'archivio locale.

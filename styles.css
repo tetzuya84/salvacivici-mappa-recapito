@@ -254,3 +254,112 @@
     gap:5px;
   }
 }
+
+/* Beta 0.5.4 — riquadro GPS con ritmo uniforme e intestazione simmetrica.
+   La colonna vuota sulla destra compensa l'icona e centra i testi. */
+#page-capture .gps-card {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-content:start;
+  row-gap:14px;
+  padding:18px 20px;
+  text-align:center;
+}
+#page-capture .gps-top {
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 42px;
+  align-items:center;
+  justify-items:center;
+  gap:10px;
+  text-align:center;
+}
+#page-capture .gps-top .gps-bubble{
+  grid-column:1;
+  grid-row:1;
+  width:42px;
+  height:42px;
+  border-radius:12px;
+}
+#page-capture .gps-top > div:last-child {
+  grid-column:2;
+  grid-row:1;
+  min-width:0;
+  text-align:center;
+}
+#page-capture .gps-top::after{
+  content:"";
+  grid-column:3;
+  grid-row:1;
+  width:42px;
+  height:1px;
+}
+#page-capture .gps-top strong{display:block;line-height:1.25;}
+#page-capture .gps-top p{margin:5px 0 0;line-height:1.35;text-align:center;}
+#page-capture .coordinates{
+  margin:0;
+  padding:12px 0 0;
+  gap:16px;
+  align-items:start;
+}
+#page-capture .coordinates > div{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  min-width:0;
+  gap:5px;
+  text-align:center;
+}
+#page-capture .coordinates span{
+  margin:0;
+  text-align:center;
+}
+#page-capture .coordinates strong{
+  display:block;
+  line-height:1.35;
+  text-align:center;
+  overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums;
+}
+#page-capture .gps-details{
+  margin:0;
+  line-height:1.4;
+  text-align:center;
+}
+#page-capture .gps-quality{
+  margin:0;
+  padding:10px 12px;
+  line-height:1.4;
+  text-align:center;
+}
+@media(max-width:639px){
+  .app-shell.is-capture #page-capture .gps-card{
+    padding:12px 13px;
+    row-gap:10px;
+  }
+  .app-shell.is-capture #page-capture .gps-top{
+    grid-template-columns:32px minmax(0,1fr) 32px;
+    column-gap:6px;
+  }
+  .app-shell.is-capture #page-capture .gps-top .gps-bubble{
+    width:32px;
+    height:32px;
+    font-size:22px;
+    border-radius:10px;
+  }
+  .app-shell.is-capture #page-capture .gps-top::after{
+    width:32px;
+  }
+  .app-shell.is-capture #page-capture .gps-top p{margin:3px 0 0;line-height:1.3;}
+  .app-shell.is-capture #page-capture .coordinates{
+    padding:10px 0 0;
+    gap:8px;
+  }
+  .app-shell.is-capture #page-capture .coordinates span{margin:0;}
+  .app-shell.is-capture #page-capture .gps-details{margin:0;}
+  .app-shell.is-capture #page-capture .gps-quality{
+    margin:0;
+    padding:8px 10px;
+    line-height:1.35;
+  }
+}
