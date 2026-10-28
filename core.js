@@ -14,6 +14,9 @@ function metersBetween(a,b){
 function validGpsSample(s){
  return !!s && Number.isFinite(s.lat)&&Math.abs(s.lat)<=90&&Number.isFinite(s.lon)&&Math.abs(s.lon)<=180&&Number.isFinite(s.accuracy)&&s.accuracy>0&&Number.isFinite(s.timestamp);
 }
+function isFreshGps(sample,now,maxAge){
+ return validGpsSample(sample)&&Number.isFinite(now)&&Number.isFinite(maxAge)&&maxAge>=0&&sample.timestamp<=now+2000&&now-sample.timestamp<=maxAge;
+}
 function bestGpsSample(samples){
  if(!Array.isArray(samples))return null;
  return samples.filter(validGpsSample).reduce((best,s)=>!best||s.accuracy<best.accuracy||(s.accuracy===best.accuracy&&s.timestamp>best.timestamp)?s:best,null);
@@ -32,7 +35,7 @@ function csv(records){
  return '\uFEFF'+[header,...rows].map(row=>row.map(csvEscape).join(',')).join('\r\n')+'\r\n';
 }
 function isRecord(item){return !!item && typeof item==='object' && typeof item.id==='string' && typeof item.comune==='string' && typeof item.via==='string' && typeof item.civico==='string' && typeof item.createdAt==='string' && Number.isFinite(item.lat) && Math.abs(item.lat)<=90 && Number.isFinite(item.lon)&&Math.abs(item.lon)<=180 && item.comune.trim() && item.via.trim() && item.civico.trim();}
-const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,bestGpsSample,gpsSpread,csv,isRecord};
+const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,csv,isRecord};
 root.SC=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
