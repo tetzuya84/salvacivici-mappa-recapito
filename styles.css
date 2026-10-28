@@ -69,3 +69,70 @@
  .app-shell.is-capture #page-capture .comune-row strong{font-size:14px;}
  .app-shell.is-capture #page-capture .comune-row button{min-height:35px;font-size:12px;}
 }
+
+/* Beta 0.5.1 — allineamento centrale in tutte le sezioni, senza alterare i dati. */
+.topbar{
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  gap:5px;
+}
+.identity{justify-content:center;}
+.identity > div:last-child{text-align:center;}
+.version{margin-inline:auto;}
+.app-shell .intro,
+.app-shell .field-label,
+.app-shell .form-card,
+.app-shell .gps-card,
+.app-shell .gps-details,
+.app-shell .gps-quality,
+.app-shell .coordinates,
+.app-shell .inline-alert,
+.app-shell .stats-row,
+.app-shell .record,
+.app-shell .data-card,
+.app-shell .privacy-note,
+.app-shell .empty-state,
+.app-shell .update-banner,
+.modal-inner{text-align:center;}
+.app-shell input,
+.modal-inner input{text-align:center;}
+.comune-row{
+  justify-content:center;
+  text-align:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.comune-row strong{max-width:100%;}
+.section-head{
+  justify-content:center;
+  text-align:center;
+  gap:12px;
+}
+.gps-top{justify-content:center;text-align:center;}
+.gps-top > div:last-child{text-align:center;}
+.coordinates > div{text-align:center;}
+.gps-quality{text-align:center;}
+.record-head{
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+}
+.record-actions{justify-content:center;}
+.data-icon{margin-inline:auto;}
+.privacy-note strong,
+.update-banner strong{display:block;text-align:center;}
+.update-banner{justify-content:center;}
+/* Mantiene la schermata operativa compatta sull'iPhone. */
+@media(max-width:639px){
+  .app-shell.is-capture .topbar{
+    gap:3px;
+    padding:calc(6px + env(safe-area-inset-top)) 12px 6px;
+  }
+  .app-shell.is-capture .version{font-size:8px;padding:3px 9px;}
+  .app-shell.is-capture #page-capture .intro{margin-bottom:7px;}
+  .app-shell.is-capture #page-capture .section-head{margin:8px 0 5px;}
+  .app-shell.is-capture #page-capture .comune-row{justify-content:center;}
+}

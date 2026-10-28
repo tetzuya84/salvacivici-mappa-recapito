@@ -29,3 +29,6 @@ All'apertura o al ritorno in primo piano l'app rileva automaticamente la posizio
 
 ## Beta 0.5 — Comune automatico e campo unico
 All'apertura il campo testo viene svuotato. Il comune è riconosciuto sul dispositivo tramite poligoni comunali ISTAT (2026), fonte guglielmo/geojson-italy, licenza CC BY; perimetro: Mantova, Brescia e Cremona nel sud della Lombardia. Nessun invio di coordinate a servizi di geocodifica; funzionamento offline dopo il caricamento delle risorse in cache. Il comune può essere corretto manualmente e va verificato vicino ai confini comunali. Si scrive solo «Via e civico» in un'unica casella, es. `Strada Campagnola 51` oppure `Via Roma 73/A`. L'app separa il civico prima di salvare o segnala un indirizzo non riconosciuto. Se manca il comune, il salvataggio resta disabilitato finché non lo si corregge. Nessuna variazione al formato dati o ai backup esistenti.
+
+## Beta 0.5.1 — interfaccia centrata
+Testi, titoli, campi, comune automatico, coordinate GPS, avvisi, schede archivio e pagina Dati sono allineati al centro. L'intestazione è centrata. Resta attivo il layout compatto per iPhone; non sono modificati Javascript, API GPS, IndexedDB, salvataggi né esportazioni. La versione del service worker cambia per distribuire il nuovo CSS.
