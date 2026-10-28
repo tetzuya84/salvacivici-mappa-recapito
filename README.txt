@@ -32,3 +32,14 @@ Per testare su computer: avviare un server locale (es. python -m http.server 876
 
 RISERVATEZZA
 L'app non invia automaticamente coordinate o civici a server di terze parti. Il pulsante "Apri mappa" carica Google Maps, e le esportazioni vengono inviate solo attraverso le azioni scelte dall'utente.
+
+
+VERSIONE BETA 0.3 — 28 OTTOBRE 2026
+- Rilevamento GPS con una sola pressione: fino a 3 misure fresche.
+- Confronto di precisione stimata, scelta di quella con precisione migliore.
+- Se dopo il primo fix non arrivano altre misure, usa la prima dopo circa 4 secondi.
+- Se l'acquisizione fallisce, mantiene il fix precedente, se presente.
+- Mostra l'eventuale dispersione anomala tra le letture (lato diagnostico).
+- Nessuna modifica al database IndexedDB esistente, CSV o JSON.
+- Prima dell'uso operativo verificare la precisione reale in punti noti.
+- Non inviare mai coordinate personali al repository GitHub pubblico.

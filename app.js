@@ -77,17 +77,49 @@
     if(error.code===3)return 'Tempo scaduto. Riprova quando il segnale migliora.';
     return 'Impossibile ottenere la posizione GPS.';
   }
+  // Una pressione avvia più fix GPS freschi: nessun dato precedente viene sovrascritto
+  // se la nuova acquisizione fallisce. Le stime del dispositivo non sono garanzie di errore.
+  const GPS_TARGET_SAMPLES=3;
+  const GPS_REFINEMENT_MS=3800;
+  const GPS_FIRST_FIX_TIMEOUT_MS=18000;
+  let gpsWatch=null, gpsFirstTimer=null, gpsRefineTimer=null;
+  let gpsBusy=false, gpsSamples=[], gpsStartedAt=0;
+
+  function stopGpsWatch(){
+    if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
+    clearTimeout(gpsFirstTimer);clearTimeout(gpsRefineTimer);
+    gpsFirstTimer=null;gpsRefineTimer=null;
+    gpsBusy=false;
+  }
   function updateGpsUI(){
     const gps=state.gps;
-    $('gps-button').textContent=gps?'↻ Rileva di nuovo':'◎ Rileva GPS';
-    $('gps-coordinates').hidden=!gps;$('gps-details').hidden=!gps;
-    $('gps-chip').textContent=gps?'GPS acquisito':'Non rilevata';$('gps-chip').classList.toggle('ready',!!gps);
-    $('gps-title').textContent=gps?'Coordinate rilevate':'Pronto a rilevare';
-    $('gps-description').textContent=gps?'Puoi ripetere il rilevamento quando vuoi.':'Acquisisci la posizione quando sei davanti al civico.';
+    $('gps-button').disabled=gpsBusy;
+    $('save-button').disabled=gpsBusy||!state.db;
+    $('gps-button').textContent=gpsBusy?`◎ Misurazione ${gpsSamples.length}/${GPS_TARGET_SAMPLES}…`:gps?'↻ Rileva di nuovo':'◎ Rileva GPS';
+    $('gps-coordinates').hidden=!gps;
+    $('gps-details').hidden=!gps;
+    $('gps-chip').textContent=gpsBusy?'Misurazione…':gps?'GPS acquisito':'Non rilevata';
+    $('gps-chip').classList.toggle('ready',!!gps&&!gpsBusy);
+    $('gps-title').textContent=gpsBusy?'Acquisizione intelligente…':gps?'Coordinate rilevate':'Pronto a rilevare';
+    $('gps-description').textContent=gpsBusy?'Resta fermo: l’app confronta più posizioni.':gps?`${gps.sampleCount||1} ${gps.sampleCount===1?'lettura':'letture'} GPS · scelta la precisione stimata migliore.`:'Acquisisci la posizione quando sei davanti al civico.';
     if(gps){
-      $('gps-lat').textContent=String(gps.lat);$('gps-lon').textContent=String(gps.lon);
-      $('gps-details').textContent=`Precisione stimata: ±${Math.round(gps.accuracy)} m · ${new Date(gps.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`+(gps.accuracy>30?' · Segnale poco preciso':'');
+      $('gps-lat').textContent=String(gps.lat);
+      $('gps-lon').textContent=String(gps.lon);
+      $('gps-details').textContent=`Precisione stimata: ±${Math.round(gps.accuracy)} m · ${new Date(gps.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
     }
+    const quality=$('gps-quality');
+    if(gpsBusy){
+      quality.hidden=false;
+      quality.textContent=gpsSamples.length?`${gpsSamples.length} ${gpsSamples.length===1?'lettura valida':'letture valide'} raccolte · miglior precisione: ±${Math.round(SC.bestGpsSample(gpsSamples).accuracy)} m.`:'Ricerca del primo segnale GPS…';
+      quality.classList.remove('warning');
+    }else if(gps){
+      const spread=gps.spread||0;
+      const unstable=spread>Math.max(12,gps.accuracy*1.5);
+      const lowAccuracy=gps.accuracy>20;
+      quality.hidden=false;
+      quality.classList.toggle('warning',unstable||lowAccuracy);
+      quality.textContent=unstable?`Attenzione: le letture variano di ${Math.round(spread)} m. Se sei fermo, riprova prima di salvare.`:lowAccuracy?'Segnale poco preciso: verifica il punto e, se puoi, riprova.':gps.sampleCount<2?'Una sola lettura disponibile. Puoi riprovare per confrontarne altre.':`Posizione selezionata tra ${gps.sampleCount} letture (distanza massima tra misure: ${Math.round(spread)} m).`;
+    }else{quality.hidden=true;quality.textContent='';quality.classList.remove('warning');}
     updateNearWarning();
   }
   function updateNearWarning(){
@@ -97,20 +129,50 @@
     if(distance<=5){box.textContent=`Sei a circa ${Math.round(distance)} m dall’ultimo punto salvato (${latest.via}, ${latest.civico}). Puoi comunque salvare un civico diverso allo stesso ingresso.`;box.hidden=false;}
     else box.hidden=true;
   }
+  function finishGps(error){
+    if(!gpsBusy)return;
+    stopGpsWatch();
+    const best=SC.bestGpsSample(gpsSamples);
+    if(best){
+      state.gps={...best,sampleCount:gpsSamples.length,spread:SC.gpsSpread(gpsSamples)};
+      toast(`GPS acquisito: ${gpsSamples.length} ${gpsSamples.length===1?'lettura':'letture'}, migliore ±${Math.round(best.accuracy)} m.`);
+    }else{
+      toast(geolocationError(error));
+    }
+    updateGpsUI();
+  }
   $('gps-button').addEventListener('click',()=>{
+    if(gpsBusy)return;
     if(!navigator.geolocation){toast('Il GPS non è disponibile su questo dispositivo.');return;}
-    const button=$('gps-button');button.disabled=true;button.textContent='Rilevamento in corso…';
-    navigator.geolocation.getCurrentPosition(position=>{
-      const {latitude,longitude,accuracy}=position.coords;
-      state.gps={lat:latitude,lon:longitude,accuracy,timestamp:position.timestamp};
-      button.disabled=false;updateGpsUI();toast('Coordinate GPS acquisite.');
-    },error=>{button.disabled=false;updateGpsUI();toast(geolocationError(error));},{enableHighAccuracy:true,maximumAge:0,timeout:25000});
+    gpsBusy=true;gpsSamples=[];gpsStartedAt=Date.now();
+    updateGpsUI();
+    // L'intervallo breve parte solo DOPO il primo fix; il permesso iOS può richiedere tempo.
+    gpsFirstTimer=setTimeout(()=>finishGps({code:3}),GPS_FIRST_FIX_TIMEOUT_MS);
+    try{
+      gpsWatch=navigator.geolocation.watchPosition(position=>{
+        if(!gpsBusy)return;
+        const {latitude,longitude,accuracy}=position.coords;
+        const timestamp=position.timestamp;
+        if(!Number.isFinite(latitude)||Math.abs(latitude)>90||!Number.isFinite(longitude)||Math.abs(longitude)>180||!Number.isFinite(accuracy)||accuracy<=0)return;
+        // Evita coordinate del vecchio fix o letture duplicate con stesso timestamp.
+        if(!Number.isFinite(timestamp)||timestamp<gpsStartedAt-1000||gpsSamples.some(s=>s.timestamp===timestamp))return;
+        gpsSamples.push({lat:latitude,lon:longitude,accuracy,timestamp});
+        if(gpsSamples.length===1){
+          clearTimeout(gpsFirstTimer);gpsFirstTimer=null;
+          gpsRefineTimer=setTimeout(()=>finishGps(),GPS_REFINEMENT_MS);
+        }
+        updateGpsUI();
+        const best=SC.bestGpsSample(gpsSamples);
+        if(gpsSamples.length>=GPS_TARGET_SAMPLES||(gpsSamples.length>=2&&best.accuracy<=5))finishGps();
+      },error=>finishGps(error),{enableHighAccuracy:true,maximumAge:0,timeout:15000});
+    }catch(e){finishGps();}
   });
 
   function makeId(){return typeof crypto.randomUUID==='function'?crypto.randomUUID():`sc-${Date.now()}-${Math.random().toString(36).slice(2)}`;}
   $('capture-form').addEventListener('submit',async event=>{
     event.preventDefault();
     if(!state.db){toast('Archivio non disponibile. Salvataggio disabilitato.');return;}
+    if(gpsBusy){toast('Attendi la fine del rilevamento GPS.');return;}
     const comune=SC.clean($('comune').value),via=SC.clean($('via').value),civico=SC.clean($('civico').value);
     if(!comune||!via||!civico){toast('Compila comune, via e civico.');(!comune?$('comune'):!via?$('via'):$('civico')).focus();return;}
     if(!state.gps){toast('Prima rileva la posizione GPS.');return;}
