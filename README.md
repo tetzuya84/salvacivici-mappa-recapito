@@ -35,3 +35,6 @@ Testi, titoli, campi, comune automatico, coordinate GPS, avvisi, schede archivio
 
 ## Beta 0.5.2 — disposizione uniforme nel riquadro Comune e indirizzo
 I due gruppi di contenuti del modulo Salva hanno ora spaziature verticali controllate e coerenti: etichetta Comune, nome Comune + pulsante Correggi, etichetta Indirizzo e civico e campo di scrittura. Testi centrati, riquadro compatto, nessuna modifica al GPS, al riconoscimento Comune o ai civici conservati. Il CSS evita margini irregolari nelle etichette, anche quando viene aperto il campo di correzione.
+
+## Beta 0.5.3 — proporzioni logo e intestazione
+Il gruppo composto da icona e due righe SalvaCivici / MAPPA RECAPITO è centrato nel riquadro scuro. Il nome è ingrandito e dimensionato visivamente alla larghezza del sottotitolo; il simbolo viene portato all'altezza complessiva delle due righe. Il badge della versione BETA è ridotto e centrato sotto il gruppo. Il resto della schermata e l'archivio locale rimangono invariati.

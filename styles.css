@@ -174,3 +174,83 @@
  .app-shell.is-capture #page-capture .form-card{gap:12px;}
  .app-shell.is-capture #page-capture .capture-field-group{gap:8px;}
 }
+
+/* Beta 0.5.3 — identità centrata e proporzioni del logo armonizzate.
+   Simbolo alto come le due righe; badge versione più piccolo e in asse. */
+.topbar,
+.app-shell.is-capture .topbar {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:6px;
+}
+.topbar .identity {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  max-width:100%;
+  gap:10px;
+  margin:0 auto;
+}
+.topbar .identity-copy {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  width:148px;
+  min-width:0;
+  text-align:center;
+}
+.topbar .identity .identity-mark,
+.app-shell.is-capture .topbar .identity-mark {
+  width:43px;
+  height:43px;
+  min-width:43px;
+  flex:0 0 43px;
+  border-radius:12px;
+}
+.topbar .identity-mark svg,
+.app-shell.is-capture .topbar .identity-mark svg {
+  width:29px;
+  height:29px;
+}
+.topbar .identity .brand,
+.app-shell.is-capture .topbar .brand {
+  width:100%;
+  font-size:22px;
+  line-height:1.05;
+  letter-spacing:.15px;
+  font-weight:790;
+  text-align:center;
+  text-align-last:justify;
+  white-space:nowrap;
+}
+.topbar .identity .brand-sub,
+.app-shell.is-capture .topbar .brand-sub {
+  width:100%;
+  font-size:9.4px;
+  line-height:1.2;
+  letter-spacing:2.5px;
+  margin-top:6px;
+  text-align:center;
+  white-space:nowrap;
+}
+.topbar .version,
+.app-shell.is-capture .topbar .version {
+  align-self:center;
+  margin:0 auto;
+  padding:3px 8px;
+  font-size:7.5px;
+  line-height:1.2;
+  letter-spacing:1px;
+  font-weight:700;
+}
+@media (max-width:639px) {
+  .app-shell.is-capture .topbar {
+    padding:calc(7px + env(safe-area-inset-top)) 12px 7px;
+    gap:5px;
+  }
+}
