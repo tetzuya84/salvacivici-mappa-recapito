@@ -276,12 +276,42 @@
     try{await writeMany(records);await refresh();toast(`${records.length} civici importati.`);}catch(e){toast('Importazione non riuscita.');}
   });
 
+  /* Aggiornamento versioni: nessun reset IndexedDB o localStorage. */
+  function setupAppUpdates(){
+    if(!('serviceWorker'in navigator)||location.protocol!=='https:')return;
+    const banner=$('update-banner');
+    let controller=navigator.serviceWorker.controller;
+    let lastCheck=0;
+    $('apply-update').addEventListener('click',async()=>{
+      if(gpsBusy){toast('Termina prima il rilevamento GPS.');return;}
+      if($('edit-dialog').open){toast('Termina prima la modifica del civico.');return;}
+      if($('civico').value.trim()){
+        const proceed=await confirmAction('Aggiornare SalvaCivici?','Il civico che stai compilando non è ancora salvato. I civici già presenti nell’archivio rimarranno disponibili.','Aggiorna');
+        if(!proceed)return;
+      }
+      location.reload();
+    });
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      const next=navigator.serviceWorker.controller;
+      if(controller&&next&&controller!==next)banner.hidden=false;
+      controller=next;
+    });
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+      const check=()=>{
+        if(!navigator.onLine||document.visibilityState==='hidden'||Date.now()-lastCheck<45000)return;
+        lastCheck=Date.now();
+        reg.update().catch(()=>{});
+      };
+      check();
+      document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
+      window.addEventListener('online',check);
+      window.addEventListener('pageshow',check);
+    }).catch(()=>{});
+  }
   (async()=>{
     try{state.db=await dbOpen();await refresh();}catch(error){toast('Archivio locale non disponibile: impossibile salvare i civici.');$('save-button').disabled=true;}
     try{$('comune').value=localStorage.getItem('salvacivici-last-town')||'';$('via').value=localStorage.getItem('salvacivici-last-road')||'';}catch(e){}
     updateGpsUI();
-    if('serviceWorker'in navigator&&location.protocol==='https:'){
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
-    }
+    setupAppUpdates();
   })();
 })();

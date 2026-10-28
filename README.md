@@ -17,3 +17,6 @@ Repository pubblico: **non aggiungere dati reali dei civici**.
 ## Verifica codice
 
 `node tests/core.test.js`
+
+## Aggiornamenti app su iPhone (Beta 0.3.1)
+Il service worker controlla gli aggiornamenti all'apertura e al ritorno in primo piano (con limite di frequenza). Quando cambia il controller, l'app mostra un avviso «Nuova versione disponibile» e un pulsante «Aggiorna»; non ricarica autonomamente una scheda con dati non ancora salvati. Il rilevamento GPS non viene modificato. L'archivio IndexedDB mantiene il nome e la versione precedenti: `salvacivici-mappa-recapito-v1`.
