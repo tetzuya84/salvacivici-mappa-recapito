@@ -106,7 +106,7 @@
       if(!Array.isArray(records)||!records.every(r=>root.SC.isRecord(r)))throw new Error('Archivio non valido.');
       const exportedAt=new Date().toISOString();
       const backup=JSON.stringify({app:'SalvaCivici',version:1,exportedAt,records},null,2);
-      const date=exportedAt.slice(0,10);
+      const date=new Date(exportedAt).toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
       status('Invio su Google Drive…');
       const folder=await ensureFolder();
       await uploadJson(folder,MAIN_NAME,backup);
