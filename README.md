@@ -86,3 +86,13 @@ La precedente modalità di backup OAuth diretto rimane prevista nei browser non 
 **Nota:** Firestore mantiene l'archivio cloud condiviso, ma **non è un backup su Google Drive**. Per maggiore sicurezza continuare a esportare JSON periodicamente. Limite provvisorio per la copia cloud in un documento: circa 700 KiB.
 
 Istruzioni di configurazione e test: [CLOUD_SETUP.md](CLOUD_SETUP.md). Test locali: `node tests/cloud-merge.test.js`, `node tests/core.test.js`.
+
+## Beta 0.6.1 — Accedi con Google (sperimentale su iOS Home)
+
+Nella scheda **Dati → Archivio cloud condiviso** il pulsante principale è **Accedi con Google**: l'utente può usare il suo account Google su iPhone, iPad e altri dispositivi senza creare una nuova password SalvaCivici. La login è gestita da Firebase Authentication, **non** dall'accesso diretto a Google Drive; l'archivio cloud e le regole Firestore rimangono quelli della Beta 0.6.0.
+
+**Attivazione necessaria nella Firebase Console:** Authentication → Metodo di accesso → Google (abilitato con email di assistenza) e Authentication → Impostazioni → Domini autorizzati → `tetzuya84.github.io`. Nessun client secret va inserito in GitHub, nell'app o in chat. L'accesso alternativo Email/Password rimane disponibile sotto il riquadro espandibile e non modifica i civici.
+
+**Stato tecnico:** login Google tramite `signInWithPopup()` Firebase SDK ufficiale; errori per provider inattivo, dominio non autorizzato, popup bloccato e account diverso gestiti senza cancellare l'archivio. Il vecchio blocco OAuth sulla PWA iOS significa che la compatibilità su iPhone/iPad dalla Home **deve ancora essere provata**. Non si promette il funzionamento su tutti i dispositivi finché non è testato. Non cambiare né ricreare l'icona Home. Il database locale, il manifest PWA e l'identità cloud restano invariati.
+
+Guida completa e precauzioni: [GOOGLE_LOGIN.md](GOOGLE_LOGIN.md). Test mock: `node tests/google-login.test.js`.
