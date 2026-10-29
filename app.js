@@ -528,7 +528,13 @@
       $('indirizzo-warning').hidden=false;
       $('indirizzo').focus();return;
     }
-    if(!gpsValidated||!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
+    let selectedPosition=mapReview.getCaptureSelection();
+    if(selectedPosition&&Date.now()-selectedPosition.confirmedAt>MAP_REVIEW_MAX_AGE_MS){
+      mapReview.resetCapture();
+      toast('La verifica della posizione è troppo vecchia. Ripeti il GPS e controlla il pin.');
+      void startGpsAcquisition();return;
+    }
+    if(!selectedPosition&&!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
       toast('Aggiorno la posizione prima del salvataggio…');
       if(!(await startGpsAcquisition())||state.gps?.sampleCount!==GPS_TARGET_SAMPLES)return;
     }
@@ -544,7 +550,7 @@
       const answer=await confirmAction('Civico già presente',`Hai già salvato ${duplicate.via}, ${duplicate.civico} (${duplicate.comune}). Vuoi registrare comunque un altro punto?`,'Salva comunque');
       if(!answer)return;
     }
-    if(!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
+    if(!selectedPosition&&!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
       if(!(await startGpsAcquisition())||state.gps?.sampleCount!==GPS_TARGET_SAMPLES)return;
       if(!SC.clean($('comune').value)){
         toast('Comune non individuato: correggilo prima del salvataggio.');return;
@@ -554,7 +560,18 @@
       }
     }
     if(!gpsValidated||state.gps?.sampleCount!==GPS_TARGET_SAMPLES){toast('GPS non completo: salvataggio annullato.');return;}
-    const record={id:makeId(),comune,via,civico,lat:state.gps.lat,lon:state.gps.lon,accuracy:state.gps.accuracy,createdAt:new Date().toISOString()};
+    if(!selectedPosition){
+      const answer=await confirmAction('Posizione non verificata sulla mappa',
+        'Le tre letture GPS non garantiscono la posizione dell’ingresso. Vuoi salvare comunque il civico senza verificare il pin sulla mappa?',
+        'Salva GPS non verificato');
+      if(!answer){mapReview.openCapture();return;}
+    }
+    if(!gpsValidated||state.gps?.sampleCount!==GPS_TARGET_SAMPLES||gpsBusy){
+      toast('GPS non più completo: salvataggio annullato.');return;
+    }
+    const base={id:makeId(),comune,via,civico,lat:state.gps.lat,lon:state.gps.lon,accuracy:state.gps.accuracy,createdAt:new Date().toISOString()};
+    const record=selectedPosition?SC.applyVerifiedPosition(base,selectedPosition):
+      {...base,positionSource:'gps_unverified',gpsOriginal:{lat:state.gps.lat,lon:state.gps.lon,accuracy:state.gps.accuracy}};
     $('save-button').disabled=true;
     try{
       await writeOne(record);
@@ -562,7 +579,7 @@
       $('indirizzo').value='';
       comuneManual=false;
       $('comune').hidden=true;$('comune-edit-label').hidden=true;
-      state.gps=null;gpsValidated=false;updateGpsUI();
+      state.gps=null;gpsValidated=false;mapReview.resetCapture();updateGpsUI();
       toast(`Civico ${record.civico} salvato.`);
       $('indirizzo').focus();
       if(document.visibilityState==='visible'&&!$('page-capture').hidden)startGpsAcquisition();
