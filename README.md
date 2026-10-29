@@ -70,3 +70,19 @@ Il test reale Google OAuth dalla PWA iOS/iPadOS avviata dalla Home ha restituito
 La precedente modalità di backup OAuth diretto rimane prevista nei browser non iOS supportati, ma aprire SalvaCivici in Safari su iPhone/iPad non permette di presumere l'accesso all'IndexedDB della PWA installata: gli archivi sono separati. Non ricreare l'icona Home. Manteniamo il manifest, la URL e `salvacivici-mappa-recapito-v1` invariati.
 
 **Test simulati:** su iOS apertura della condivisione con civici di test; nessun accesso OAuth/Google API; annullamento senza salvataggio; archivio vuoto; gestione cancellazione del menu condivisione. **Test manuale necessario** sul dispositivo per verificare che Google Drive compaia nel menu e riceva il file.
+
+## Beta 0.6.0 — archivio cloud condiviso iPhone/iPad (29 ottobre 2026)
+
+**Novità:** la schermata Dati ora presenta «Archivio cloud condiviso». La web app Firebase del progetto `salvacivici-mappa-recapito` è già configurata. **Non è necessario inserire manualmente projectId né API key e non viene più usato il menu Condividi iOS per la sincronizzazione ordinaria.** Le vecchie funzioni di esportazione JSON/CSV restano disponibili.
+
+**Prima connessione:** sul primo dispositivo aprire SalvaCivici dall'icona Home, aggiornare a Beta 0.6.0, andare in Dati e scegliere «Crea account SalvaCivici» con email e **nuova password per l'archivio** (non la password Google); poi accedere sul secondo dispositivo con lo stesso account. Non inviare password a ChatGPT. La modalità di accesso Firebase è Email/Password e non apre il popup OAuth bloccato su iOS.
+
+**Modifiche:** la cattura GPS e l'archivio rimangono in IndexedDB locale (funzionano offline). Dopo aver verificato i civici, premere «Sincronizza i dispositivi» e confermare: l'app confronta i dati locali con la copia cloud Firestore, conserva gli ID originali e applica una fusione conservativa. All'apertura, i record **già confermati** possono essere importati in automatico su un dispositivo senza modifiche locali in sospeso; **l'invio delle modifiche rimane manuale**. Se lo stesso ID viene modificato diversamente sui due dispositivi, il sistema si ferma e mostra un conflitto (non sovrascrive).
+
+**Sicurezza:** database Cloud Firestore con regole `firestore.rules` che impediscono accesso pubblico e consentono get/create/update soltanto nella cartella del proprietario autenticato `users/{uid}/snapshots/main`; divieti di list e delete. La chiave Firebase web nel codice è una configurazione pubblica, **non un client secret**. Restano invariati l'identità `manifest.webmanifest`, l'indirizzo GitHub Pages e IndexedDB `salvacivici-mappa-recapito-v1`. Il database precedente non viene cancellato.
+
+**Stato:** verifica logica e simulazioni multi-dispositivo superate; prova reale dell'account Firebase e della sincronizzazione sul dispositivo dell'utente ancora necessaria. Tutti i civici finora registrati nell'app sono dati inventati, per cui conviene controllarli/eliminarli volontariamente prima della prima sincronizzazione; non toccare Google My Maps.
+
+**Nota:** Firestore mantiene l'archivio cloud condiviso, ma **non è un backup su Google Drive**. Per maggiore sicurezza continuare a esportare JSON periodicamente. Limite provvisorio per la copia cloud in un documento: circa 700 KiB.
+
+Istruzioni di configurazione e test: [CLOUD_SETUP.md](CLOUD_SETUP.md). Test locali: `node tests/cloud-merge.test.js`, `node tests/core.test.js`.
