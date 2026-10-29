@@ -28,7 +28,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.3</span>
+      <span class="version">BETA 0.6.4</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -67,7 +67,15 @@
       </section>
 
       <section id="page-records" class="page" hidden aria-labelledby="records-title">
-        <div class="intro"><p class="eyebrow">ARCHIVIO PERSONALE</p><h1 id="records-title">Civici salvati</h1><p class="subtitle">Ricerca, controlla e correggi i punti.</p></div>
+        <div id="archive-pull" class="archive-pull" data-state="idle" aria-hidden="true">
+          <span class="archive-pull-spinner"></span>
+          <span id="archive-pull-label">Trascina per sincronizzare</span>
+        </div>
+        <div class="intro"><p class="eyebrow">ARCHIVIO PERSONALE</p><h1 id="records-title">Civici salvati</h1><p class="subtitle">Ricerca, controlla e correggi i punti.</p>
+          <p class="archive-swipe-hint">↓ Trascina verso il basso per sincronizzare</p>
+        </div>
+        <p id="archive-pull-status" class="archive-pull-status" role="status" aria-live="polite" hidden></p>
+        <button id="archive-sync-keyboard" class="sr-only" type="button">Sincronizza archivio cloud</button>
         <div class="stats-row"><div class="stat"><strong id="total-records">0</strong><span>Civici</span></div><div class="stat"><strong id="total-towns">0</strong><span>Comuni</span></div></div>
         <label class="sr-only" for="search">Cerca civici</label><input id="search" class="search" type="search" placeholder="Cerca via, civico o comune…">
         <div id="record-list" class="records-list"></div>
@@ -79,7 +87,7 @@
         <div class="data-card cloud-card">
           <div class="data-icon" aria-hidden="true">☁</div>
           <h2>Archivio cloud condiviso</h2>
-          <p>Uno stesso archivio per iPhone e iPad. Correggi i civici prima di premere Sincronizza. Nessuna finestra di condivisione.</p>
+          <p>Un solo archivio per tutti i tuoi dispositivi. Per inviare modifiche, trascina verso il basso nella sezione Archivio.</p>
           <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Cloud da configurare.</p>
           <div id="cloud-config" class="cloud-credentials" hidden>
             <h3>Collega Firebase (una volta sola)</h3>
@@ -108,12 +116,10 @@
           </div>
           <div id="cloud-account" hidden>
             <p id="cloud-identity" class="cloud-identity"></p>
-            <button id="cloud-sync" type="button" class="primary full">Sincronizza i dispositivi</button>
-            <button id="cloud-refresh" type="button" class="text-button">Controlla aggiornamenti cloud</button>
-            <p class="cloud-help">Ricezione automatica quando ritorni nell’app e, mentre è aperta, circa ogni 30 secondi. Le modifiche locali vengono inviate solo su tua conferma.</p>
+            <p class="cloud-help">Gli aggiornamenti arrivano automaticamente quando l’app è aperta. Per pubblicare le modifiche, usa lo swipe nell'Archivio.</p>
             <button id="cloud-logout" type="button" class="text-button">Disconnetti</button>
           </div>
-          <p class="cloud-help">Il GPS e l'Archivio continuano a funzionare offline. La prima sincronizzazione richiede una conferma. Eventuali modifiche incompatibili vengono bloccate, senza sovrascrivere i civici.</p>
+          <p class="cloud-help">GPS e archivio funzionano anche offline. Lo swipe volontario in Archivio avvia l'invio; eventuali conflitti vengono bloccati senza sovrascrivere i civici.</p>
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate, precisione e data. Puoi importarlo nelle tue mappe.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="data-card"><div class="data-icon">▣</div><h2>Copia di sicurezza</h2><p>Salva tutti i tuoi civici in un file JSON, utile se cambi telefono o cancelli i dati del browser.</p><button id="export-json" type="button" class="secondary full">Scarica backup JSON</button><button id="import-json" type="button" class="text-button">Ripristina da backup</button><input type="file" id="import-file" accept=".json,application/json" hidden></div>
