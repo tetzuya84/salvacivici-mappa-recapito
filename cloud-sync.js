@@ -68,7 +68,7 @@ function useCredentials(data){
  store(SESSION,session);
  $('cloud-password').value='';
  showState();
- message('Accesso riuscito. Puoi sincronizzare l’archivio dopo averlo controllato.');
+ message('Accesso riuscito. Controlla l’Archivio, poi trascina verso il basso per sincronizzare.');
 }
 async function login(mode){
  if(busy)return;
@@ -135,7 +135,7 @@ async function pullIfSafe({quiet=false}={}){
  try{
    const before=await engine.getRecords(),saved=read(baseKey(),null);
    if(saved?.records&& !sameRecords(before,saved.records)){
-     if(!quiet)message('Hai civici locali da controllare: premi Sincronizza per inviarli quando sei pronto.');return;
+     if(!quiet)message('Hai civici locali da controllare: per inviarli, trascina verso il basso nell’Archivio.');return;
    }
    if(!saved&&before.length){
      if(!quiet)message('Archivio locale non ancora collegato: controlla i civici prima della prima sincronizzazione.');return;
@@ -226,7 +226,7 @@ function init(options){
  setInterval(autoReceive,30000);
  showState();
  if(session?.uid)void pullIfSafe();
- message(session?'Cloud pronto. Controlla l’Archivio, poi premi Sincronizza.':
+ message(session?'Cloud pronto. Apri l’Archivio e trascina verso il basso per sincronizzare.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
 root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false})};
