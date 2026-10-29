@@ -4,6 +4,7 @@
 (function(root){
 'use strict';
 const $=id=>document.getElementById(id),KEY='sc-cloud-settings-v1',SESSION='sc-cloud-session-v1',BASE='sc-cloud-base-',OWNER='sc-cloud-owner-v1';
+const DEFAULT_CONFIG={projectId:'salvacivici-mappa-recapito',apiKey:'AIzaSyAZfrIhmPy25_xDLIvb2SMPPsW_5H8hnCg'};
 const M=root.SCCloudMerge;
 let engine=null,config=null,session=null,token='',expires=0,busy=false;
 function read(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch(e){return fallback}}
@@ -172,9 +173,11 @@ async function synchronize(){
 }
 function logout(){session=null;token='';expires=0;remove(SESSION);showState();message('Disconnesso dal cloud. I civici locali rimangono sul dispositivo.');}
 function init(options){
- engine=options;config=read(KEY,null);session=read(SESSION,null);
- $('cloud-project').value=config?.projectId||'salvacivici-mappa-recapito';
- $('cloud-api-key').value=config?.apiKey||'';
+ engine=options;config=DEFAULT_CONFIG;session=read(SESSION,null);
+ // La configurazione web Firebase è pubblica, identica per entrambi i dispositivi.
+ // Ignora eventuali parametri di prova archiviati da vecchie versioni.
+ $('cloud-project').value=config.projectId;
+ $('cloud-api-key').value=config.apiKey;
  $('cloud-save-config').addEventListener('click',()=>void saveConfiguration());
  $('cloud-login').addEventListener('click',()=>void login('login'));
  $('cloud-register').addEventListener('click',()=>void login('register'));
