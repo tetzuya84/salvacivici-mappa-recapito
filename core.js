@@ -29,6 +29,25 @@ function gpsSpread(samples){
  return max;
 }
 
+
+/* La Geolocation API espone accuratezza orizzontale in metri, NON potenza satellitare.
+   Il punteggio è solo un'indicazione visiva della qualità stimata delle coordinate. */
+function gpsQuality(accuracy){
+ if(!Number.isFinite(accuracy)||accuracy<=0)return{score:0,label:'Non disponibile',tone:'none'};
+ let label,tone;
+ if(accuracy<=5){label='Ottima';tone='excellent';}
+ else if(accuracy<=10){label='Molto buona';tone='good';}
+ else if(accuracy<=20){label='Buona';tone='good';}
+ else if(accuracy<=35){label='Discreta';tone='fair';}
+ else if(accuracy<=60){label='Debole';tone='poor';}
+ else {label='Molto imprecisa';tone='poor';}
+ return{score:Math.max(8,Math.min(100,Math.round(100*Math.exp(-accuracy/32)))),label,tone};
+}
+function hasRequiredGpsReadings(samples,required=3){
+ return Array.isArray(samples)&&Number.isInteger(required)&&required>=1&&samples.length>=required&&
+   samples.every(validGpsSample)&&new Set(samples.map(sample=>sample.timestamp)).size>=required;
+}
+
 /* Comune da confini ISTAT: tutte le coordinate sono [longitudine, latitudine]. */
 function insideRing(lon,lat,ring){
  let inside=false;
@@ -73,7 +92,7 @@ function csv(records){
  return '\uFEFF'+[header,...rows].map(row=>row.map(csvEscape).join(',')).join('\r\n')+'\r\n';
 }
 function isRecord(item){return !!item && typeof item==='object' && typeof item.id==='string' && typeof item.comune==='string' && typeof item.via==='string' && typeof item.civico==='string' && typeof item.createdAt==='string' && Number.isFinite(item.lat) && Math.abs(item.lat)<=90 && Number.isFinite(item.lon)&&Math.abs(item.lon)<=180 && item.comune.trim() && item.via.trim() && item.civico.trim();}
-const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,splitAddress,getComune,csv,isRecord};
+const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,gpsQuality,hasRequiredGpsReadings,splitAddress,getComune,csv,isRecord};
 root.SC=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
