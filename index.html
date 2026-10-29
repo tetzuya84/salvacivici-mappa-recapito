@@ -28,7 +28,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.0</span>
+      <span class="version">BETA 0.6.1</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -90,14 +90,21 @@
             <button id="cloud-save-config" type="button" class="secondary full">Salva configurazione</button>
           </div>
           <div id="cloud-login-panel" class="cloud-credentials" hidden>
-            <h3>Il tuo account SalvaCivici</h3>
-            <p>Usa la stessa email e la stessa password dell'archivio SalvaCivici su entrambi i dispositivi. Non serve la password Google.</p>
-            <label for="cloud-email" class="field-label">Email</label>
-            <input id="cloud-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off">
-            <label for="cloud-password" class="field-label">Password Firebase</label>
-            <input id="cloud-password" type="password" autocomplete="current-password">
-            <button id="cloud-login" type="button" class="primary full">Accedi</button>
-            <button id="cloud-register" type="button" class="text-button">Crea account SalvaCivici</button>
+            <h3>Accedi al tuo archivio</h3>
+            <p>Usa il tuo account Google su iPhone, iPad e altri dispositivi, senza una nuova password.</p>
+            <button id="cloud-google-login" type="button" class="cloud-google-button full" disabled>
+              <span class="google-g" aria-hidden="true">G</span> Accedi con Google
+            </button>
+            <details class="cloud-email-fallback">
+              <summary>Accesso con email e password (alternativa)</summary>
+              <p>Disponibile se il browser del dispositivo non permette l'accesso Google.</p>
+              <label for="cloud-email" class="field-label">Email</label>
+              <input id="cloud-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off">
+              <label for="cloud-password" class="field-label">Password Firebase</label>
+              <input id="cloud-password" type="password" autocomplete="current-password">
+              <button id="cloud-login" type="button" class="primary full">Accedi con email</button>
+              <button id="cloud-register" type="button" class="text-button">Crea account con email</button>
+            </details>
           </div>
           <div id="cloud-account" hidden>
             <p id="cloud-identity" class="cloud-identity"></p>
@@ -127,5 +134,6 @@
   <script src="cloud-merge.js" defer></script>
   <script src="cloud-sync.js" defer></script>
   <script src="app.js" defer></script>
+  <script type="module" src="cloud-google.js"></script>
 </body>
 </html>
