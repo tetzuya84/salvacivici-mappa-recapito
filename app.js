@@ -69,6 +69,88 @@
   }
   document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.tab)));
 
+  // Beta 0.6.4 — pull-to-sync: lo swipe deliberato sostituisce i due pulsanti Dati.
+  // Il trasferimento non parte se l'Archivio non è in cima o se si sta editando.
+  function setupArchivePullToSync(){
+    const page=$('page-records'),indicator=$('archive-pull'),label=$('archive-pull-label'),
+      status=$('archive-pull-status'),keyboard=$('archive-sync-keyboard');
+    const LIMIT=86,MAX=108;
+    let start=null,travel=0,active=false,loading=false,resetTimer=0;
+    const atTop=()=>Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)<=5;
+    const reset=()=>{
+      active=false;travel=0;start=null;
+      indicator.style.height='0px';indicator.dataset.state='idle';
+      label.textContent='Trascina per sincronizzare';
+    };
+    const setProgress=n=>{
+      const amount=Math.min(MAX,Math.max(0,n));
+      indicator.style.height=Math.round(amount*0.72)+'px';
+      indicator.dataset.state=n>=LIMIT?'ready':'pulling';
+      label.textContent=n>=LIMIT?'Rilascia per sincronizzare':'Trascina per sincronizzare';
+    };
+    async function performSync(){
+      if(loading)return;
+      loading=true;
+      clearTimeout(resetTimer);
+      indicator.dataset.state='loading';indicator.style.height='67px';
+      label.textContent='Sincronizzazione in corso…';
+      status.hidden=false;status.dataset.result='pending';status.textContent='Sincronizzazione in corso…';
+      try{
+        const result=await window.SCCloud?.syncFromArchive?.();
+        if(!result){
+          status.dataset.result='error';
+          status.textContent='Cloud non disponibile. Riapri SalvaCivici e riprova.';
+          label.textContent='Non disponibile';
+        }else if(result.ok){
+          status.dataset.result='success';
+          status.textContent='Sincronizzazione completata · '+result.count+' civici.';
+          label.textContent='Sincronizzato';
+        }else{
+          status.dataset.result='error';
+          status.textContent=result.description||'Sincronizzazione non completata.';
+          label.textContent='Controlla l’archivio';
+        }
+      }catch(error){
+        status.dataset.result='error';
+        status.textContent='Sincronizzazione non riuscita. Nessun civico eliminato.';
+        label.textContent='Riprova';
+      }finally{
+        loading=false;
+        resetTimer=setTimeout(reset,950);
+      }
+    }
+    page.addEventListener('touchstart',event=>{
+      start=null;
+      if(page.hidden||loading||event.touches.length!==1||!atTop())return;
+      if(document.querySelector('dialog[open]'))return;
+      if(event.target.closest('input,textarea,button,select,[contenteditable="true"]'))return;
+      start={x:event.touches[0].clientX,y:event.touches[0].clientY};
+      travel=0;active=false;
+    },{passive:true});
+    page.addEventListener('touchmove',event=>{
+      if(!start||loading||event.touches.length!==1)return;
+      const dx=event.touches[0].clientX-start.x,
+        dy=event.touches[0].clientY-start.y;
+      if(!active&&(dy<9||Math.abs(dx)>dy*0.75||!atTop())){
+        if(dy<0||Math.abs(dx)>Math.max(12,Math.abs(dy)))start=null;
+        return;
+      }
+      if(!atTop()){reset();return;}
+      active=true;travel=Math.max(0,dy);
+      if(event.cancelable)event.preventDefault();
+      setProgress(travel);
+    },{passive:false});
+    page.addEventListener('touchend',()=>{
+      const shouldSync=active&&travel>=LIMIT;
+      reset();
+      if(shouldSync)void performSync();
+    },{passive:true});
+    page.addEventListener('touchcancel',reset,{passive:true});
+    keyboard.addEventListener('click',()=>void performSync());
+  }
+  setupArchivePullToSync();
+
+
   function showComune(name){
     $('comune').value=name||'';
     $('comune-display').textContent=name||'Non individuato · correggi';
