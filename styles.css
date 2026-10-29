@@ -415,3 +415,17 @@
 #page-data .drive-setup p{font-size:11px;margin:10px 0 0}
 #page-data .drive-note{margin:12px 0 0;font-size:11px;line-height:1.5}
 #page-data .drive-setup a{color:#08766f}
+
+/* Beta 0.6.0 — pannello cloud dedicato, senza menu di condivisione. */
+#page-data .cloud-card{text-align:center}
+#page-data .cloud-card .data-icon{margin:0 auto 13px}
+#page-data .cloud-status{font-size:12px;color:#0e6960;background:#edf9f5;border-radius:10px;padding:11px;line-height:1.5;margin:10px 0 15px}
+#page-data .cloud-status.warning{color:#974c16;background:#fff3e6}
+#page-data .cloud-credentials{text-align:left;padding:14px;background:#f5f9f9;border:1px solid #e2ecee;border-radius:12px;margin-bottom:13px}
+#page-data .cloud-credentials[hidden],#page-data #cloud-account[hidden]{display:none}
+#page-data .cloud-credentials h3{font-size:14px;margin:0 0 11px}
+#page-data .cloud-credentials .field-label{margin-bottom:5px;text-align:left}
+#page-data .cloud-credentials input{min-height:44px;font-size:14px;margin-bottom:12px}
+#page-data .cloud-credentials p{font-size:12px;margin:0 0 12px}
+#page-data .cloud-identity{font-size:12px;color:#467168;margin:0 0 12px;overflow-wrap:anywhere}
+#page-data .cloud-help{font-size:11px;color:#687d87;margin:13px 0 0}
