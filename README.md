@@ -100,3 +100,11 @@ Guida completa e precauzioni: [GOOGLE_LOGIN.md](GOOGLE_LOGIN.md). Test mock: `no
 ## Beta 0.6.2 (29/10/2026)
 
 Corretta una lettera maiuscola errata nella configurazione Firebase web dei due moduli di accesso. Aggiornata la cache PWA. La prova di accesso Google e sincronizzazione reale su iPhone/iPad rimane da completare. Manifest e civici locali invariati.
+
+## Beta 0.6.3 (29/10/2026) — ricezione automatica senza chiudere l'app
+
+**Confermato dal test reale:** un civico fittizio `Kennedy, 51` è stato sincronizzato da iPad e ricevuto su iPhone tramite Google/Firebase. Modificato in `Kennedy, 52` su iPhone e inviato manualmente al cloud, è comparso anche su iPad dopo chiusura e riapertura: sincronizzazione bidirezionale confermata.
+
+**Novità:** per ricevere cambiamenti già pubblicati da altri dispositivi **non è più necessario riavviare l'app**. SalvaCivici controlla Firestore al ritorno in primo piano, entrando in Archivio/Dati, e ogni 30 secondi mentre resta visibile. Dalla scheda Dati è disponibile anche «Controlla aggiornamenti cloud» per richiedere subito il controllo. La ricezione automatica è sospesa se ci sono modifiche locali in attesa, durante l'editing, quando l'app è in background o senza connessione. La risposta Firestore non effettua nessuna scrittura cloud, e il pulsante **Sincronizza i dispositivi** con conferma rimane necessario per inviare nuove modifiche.
+
+**Test effettuati:** simulazioni GET remoto, aggiornamento locale senza scritture cloud, protezione delle modifiche locali pendenti, nessuna interrogazione periodica quando l'app è nascosta. La verifica reale sui due dispositivi resta da ripetere dopo l'aggiornamento. Manifest, indirizzo Home e archivio IndexedDB invariati.
