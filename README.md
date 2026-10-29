@@ -118,3 +118,11 @@ L'utente ha confermato la sincronizzazione bidirezionale tra iPhone e iPad con i
 **Sicurezza:** l'invio non avviene in background; la ricezione automatica della Beta 0.6.3 continua solo quando è sicuro farla. La fusione confronta anche il cloud aggiornato e blocca modifiche contemporanee sullo stesso record. In caso di offline, login assente o conflitti, si mostra errore senza cancellare i civici. L'Archivio rimane operativo offline. Manifest, URL Home e IndexedDB locale non modificati.
 
 **Test:** 6 casi simulati del gesto (successo, swipe corto, pagina non in cima, input, multitouch, errore), sintassi dei moduli e controlli version/cache/identità. Da validare realmente su iPhone/iPad con Beta 0.6.4 prima di considerare completo il comportamento nativo dello swipe iOS.
+
+## Beta 0.6.5 — impulso breve all'avvio della sincronizzazione (29 ottobre 2026)
+
+Quando l'utente completa deliberatamente lo swipe verso il basso nell'Archivio, **una singola vibrazione di 20 ms** viene richiesta tramite la Web Vibration API `navigator.vibrate(20)`, prima che inizi la richiesta cloud. Non viene attivata durante lo scorrimento o il trascinamento troppo corto, né quando un'operazione è già in corso. In caso di API assente o errore, la sincronizzazione procede normalmente e rimane visibile la rotellina animata. Nessun feedback aptico al completamento, per evitare vibrazioni superflue.
+
+**Limite iPhone/iPad (iOS 27):** Safari/WebKit non implementa la Vibration API e le vecchie scorciatoie via switch HTML non possono più essere attivate programmaticamente da iOS 26.5. Pertanto **non si può garantire alcuna vibrazione fisica su iPhone** dalla PWA GitHub Pages: il feedback visivo rimane operativo. Non aggiungere hack di switch invisibili che interferiscano con lo swipe o promettere haptic iOS senza verifiche native.
+
+**Sicurezza e continuità:** invariati Firebase, dati locali, manifest, URL Home, merge cloud e regole che impediscono sovrascritture. Aggiornati soltanto `app.js`, badge release `index.html` e versione cache di `sw.js`. Sette simulazioni superate: vibrazione singola, gesto troppo corto, pagina scorsa, input, API assente, API che genera eccezione, gesto ripetuto mentre loading.
