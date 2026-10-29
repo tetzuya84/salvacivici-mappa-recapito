@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.5.8 — backup manuale Google Drive.
+/* SalvaCivici Beta 0.5.9 — backup manuale Drive + condivisione nativa iOS.
    Richiede un OAuth Client ID Web dell'utente; permesso drive.file.
    Non trasmettere dati all'apertura o durante il recapito. */
 (function(root){
@@ -29,8 +29,16 @@
     const hash=await root.crypto.subtle.digest('SHA-256',data);
     return Array.from(new Uint8Array(hash),x=>x.toString(16).padStart(2,'0')).join('');
   }
+  function isIOS(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent||'')||
+      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
   async function updateStatus(){
     if(busy)return;
+    if(isIOS()){
+      status('iPhone/iPad: scegli Google Drive dal menu Condividi. Nessun backup viene inviato in automatico.');
+      return;
+    }
     const last=getSaved(LAST_KEY),hash=getSaved(HASH_KEY);
     if(!configuredClient()){status('Collegamento Google da configurare. Nessun dato inviato.');return;}
     if(!last){status('Drive configurato. Nessun backup eseguito.');return;}
@@ -128,8 +136,55 @@
       status('Backup non confermato: '+(error.message||'errore sconosciuto')+'. Riprova senza cancellare i dati locali.',true);
     }finally{busy=false;$('drive-sync').disabled=false;}
   }
+  async function shareBackupIOS(){
+    if(busy)return;
+    busy=true;
+    const button=$('drive-sync');
+    button.disabled=true;
+    try{
+      const records=await setup.getRecords();
+      if(!Array.isArray(records)||!records.every(r=>root.SC.isRecord(r)))
+        throw new Error('Archivio locale non disponibile.');
+      if(!records.length){
+        status('Archivio vuoto: non c’è nulla da condividere.',true);
+        return;
+      }
+      const now=new Date();
+      const date=now.toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'});
+      const clock=now.toLocaleTimeString('en-GB',{timeZone:'Europe/Rome',hour12:false}).replace(/:/g,'-');
+      const filename='SalvaCivici_backup_'+date+'_'+clock+'.json';
+      const payload=JSON.stringify({app:'SalvaCivici',version:1,exportedAt:now.toISOString(),records},null,2);
+      const file=new File([payload],filename,{type:'application/json'});
+      const allowed=await setup.confirmAction('Condividere backup?', 
+        'Hai controllato '+records.length+' civici in Archivio? Seleziona Google Drive nel menu di iPhone e scegli la cartella: sarà creato un nuovo file, non un aggiornamento automatico.','Condividi');
+      if(!allowed){
+        status('Backup annullato: nessun file condiviso.');
+        return;
+      }
+      if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
+        await navigator.share({files:[file],title:'SalvaCivici - Backup'});
+        status('Condivisione terminata. Apri Google Drive per verificare che '+filename+' sia presente. Non è possibile confermare il caricamento dall’app.');
+      }else{
+        const url=URL.createObjectURL(file);
+        const link=document.createElement('a');
+        link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),10000);
+        status('Backup scaricato: aprilo nell’app File e salvalo su Google Drive.');
+      }
+    }catch(error){
+      if(error?.name==='AbortError'){
+        status('Condivisione annullata: i dati restano nell’Archivio.');
+      }else{
+        status('Impossibile condividere: '+(error?.message||'errore')+'. Puoi usare Scarica backup JSON.',true);
+      }
+    }finally{
+      busy=false;
+      button.disabled=false;
+    }
+  }
   function requestSync(){
     if(busy)return;
+    if(isIOS()){void shareBackupIOS();return;}
     const id=configuredClient();
     if(!id){openSetup();status('Prima collega Google Drive. Nessun civico inviato.',true);return;}
     if(!navigator.onLine){status('Connettiti a Internet per sincronizzare.',true);return;}
@@ -152,6 +207,13 @@
   function init(options){
     setup=options;
     if(!$('drive-sync'))return;
+    if(isIOS()){
+      $('drive-sync').textContent='Condividi backup su Drive';
+      $('drive-setup-toggle').style.display='none';
+      $('drive-setup').hidden=true;
+      const note=document.querySelector('.drive-note');
+      if(note)note.textContent='Su iPhone e iPad il login Google dall’icona Home può essere bloccato. Dopo aver controllato l’Archivio, scegli Google Drive nel menu Condividi e salva il file nella cartella desiderata. Ogni invio crea una copia con data e ora; controlla su Drive che sia arrivata.';
+    }
     $('drive-sync').addEventListener('click',requestSync);
     $('drive-setup-toggle').addEventListener('click',()=>{
       const area=$('drive-setup');area.hidden=!area.hidden;
