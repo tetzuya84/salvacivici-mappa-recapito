@@ -67,6 +67,10 @@ async function run(){
   assert.equal(corrected.gpsOriginal.lat,gps.lat);
   assert.ok(corrected.manualOffsetM>10);
   assert.equal(corrected.id,base.id);
+  const legacy={...base};delete legacy.accuracy;
+  const legacyResult=SC.applyVerifiedPosition(legacy,{original:{lat:base.lat,lon:base.lon},chosen});
+  assert.equal(legacyResult.gpsOriginal.accuracy,null,'nessuna precisione inventata sui vecchi record');
+  assert.equal(legacyResult.id,base.id);
   assert.throws(()=>SC.applyVerifiedPosition(base,{original:gps,chosen:{lat:200,lon:20}}));
   assert.match(SC.csv([corrected]),/GPS_originale_lat/);
   assert.match(SC.csv([corrected]),/manual/);
