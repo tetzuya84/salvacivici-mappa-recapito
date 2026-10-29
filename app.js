@@ -607,9 +607,11 @@
       const source=r.positionSource==='manual'?'Corretto':r.positionSource==='gps_confirmed'?'Verificato':'GPS';
       head.append(heading,elt('span','record-badge',source));
       const time=new Date(r.createdAt).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'});
+      const rawAccuracy=r.gpsOriginal?.accuracy??r.accuracy;
+      const accuracyText=Number.isFinite(rawAccuracy)&&rawAccuracy>0?'±'+Math.round(rawAccuracy)+' m':'precisione non disponibile';
       const positionText=r.positionSource==='manual'
-        ?'Pin corretto a mano · GPS origine ±'+Math.round(r.gpsOriginal?.accuracy||r.accuracy||0)+' m'
-        :'GPS ±'+Math.round(r.accuracy||0)+' m';
+        ?'Pin corretto a mano · GPS originale '+accuracyText
+        :'GPS '+accuracyText;
       const meta=elt('p','record-meta',`${time} · ${Number(r.lat).toFixed(6)}, ${Number(r.lon).toFixed(6)} · ${positionText}`);
       const actions=elt('div','record-actions');
       const map=elt('a','','Apri mappa');map.href=`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`;map.target='_blank';map.rel='noopener noreferrer';
