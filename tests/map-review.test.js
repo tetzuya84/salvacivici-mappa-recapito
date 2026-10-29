@@ -62,7 +62,7 @@ async function run(){
   const gps={lat:base.lat,lon:base.lon,accuracy:base.accuracy};
   const chosen={lat:45.16595,lon:10.51275};
   const corrected=SC.applyVerifiedPosition(base,{original:gps,chosen},'2026-10-29T20:00:00Z');
-  assert.equal(SC.isRecord(corrected),true);
+  assert.ok(SC.isRecord(corrected));
   assert.equal(corrected.positionSource,'manual');
   assert.equal(corrected.gpsOriginal.lat,gps.lat);
   assert.ok(corrected.manualOffsetM>10);
