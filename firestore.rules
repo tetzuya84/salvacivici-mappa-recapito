@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Ogni utente vede solo il proprio archivio. Vietate letture pubbliche.
+    match /users/{uid}/snapshots/{snapshotId} {
+      allow get: if request.auth != null
+        && request.auth.uid == uid && snapshotId == 'main';
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid && snapshotId == 'main'
+        && request.resource.data.keys().hasOnly(['payload', 'format'])
+        && request.resource.data.keys().hasAll(['payload', 'format'])
+        && request.resource.data.format == 1
+        && request.resource.data.payload is string
+        && request.resource.data.payload.size() < 750000;
+      allow list, delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
