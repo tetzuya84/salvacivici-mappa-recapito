@@ -200,6 +200,47 @@ async function synchronize({confirm=true}={}){
  }
  finally{busy=false;showState();}
 }
+
+/* Cancellazione totale sicura: invio SOLO dopo due conferme in app.
+   Il cloud viene svuotato con precondizione updateTime; poi il database locale.
+   Un archivio remoto diverso o non raggiungibile blocca TUTTA l'operazione. */
+async function clearAllAcquisitions({expectedCount}={}){
+ if(busy)return{ok:false,description:'Operazione cloud già in corso. Attendi e riprova.'};
+ if(!navigator.onLine)return{ok:false,description:'Sei offline. Per eliminare su tutti i dispositivi serve una connessione: nessun civico cancellato.'};
+ if(!session?.uid)return{ok:false,description:'Accedi con Google nella sezione Dati per eliminare anche dal cloud. Nessun civico cancellato.'};
+ busy=true;showState();message('Verifico che tutti i civici siano già sincronizzati prima di cancellarli…');
+ let cloudCleared=false;
+ try{
+   const owner=read(OWNER,null);
+   if(owner&&owner!==session.uid)throw Error('Account cloud diverso da quello associato al dispositivo.');
+   const before=await engine.getRecords();
+   if(!Array.isArray(before)||!before.every(root.SC.isRecord))throw Error('Archivio locale non valido; nessun dato cancellato.');
+   if(!before.length)throw Error('L’archivio del dispositivo è già vuoto.');
+   if(before.length!==expectedCount)throw Error('Il numero di civici è cambiato dopo le conferme: ripeti la verifica.');
+   const remote=await getCloud();
+   if(!sameRecords(before,remote.records))
+     throw Error('I civici sul dispositivo e nel cloud sono differenti. Sincronizza prima i dispositivi nell’Archivio, controlla che siano identici e riprova.');
+   if(!remote.updateTime)throw Error('Archivio cloud non trovato: nessun civico cancellato.');
+   if(!sameRecords(before,await engine.getRecords()))
+     throw Error('I civici locali sono stati modificati durante il controllo: riprova.');
+   // PATCH condizionale: non sovrascrivere nuove acquisizioni inviate da altri dispositivi.
+   await setCloud([],remote.updateTime);
+   cloudCleared=true;
+   await engine.applySnapshot([]);
+   saveBase([]);
+   store(OWNER,session.uid);
+   message('Eliminate '+before.length+' acquisizioni dal cloud e da questo dispositivo. Gli altri dispositivi si aggiorneranno quando si connetteranno.');
+   engine.toast('Archivio svuotato su cloud e dispositivo.');
+   return{ok:true,removed:before.length,count:0};
+ }catch(e){
+   const description=cloudCleared?
+     'Cloud già svuotato, ma non è stato possibile completare la pulizia locale: '+errorMessage(e)+'. NON aggiungere nuove acquisizioni; ricarica l’app e verifica la sincronizzazione.':
+     'Cancellazione annullata: '+errorMessage(e)+' Nessun civico è stato eliminato.';
+   message(description,true);
+   return{ok:false,description,cloudCleared};
+ }finally{busy=false;showState();}
+}
+
 function logout(){
  session=null;token='';expires=0;remove(SESSION);
  if(root.SCGoogleAuth?.logout)void root.SCGoogleAuth.logout();
@@ -229,5 +270,5 @@ function init(options){
  message(session?'Cloud pronto. Apri l’Archivio e trascina verso il basso per sincronizzare.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false})};
+root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false}),clearAll:clearAllAcquisitions};
 })(window);
