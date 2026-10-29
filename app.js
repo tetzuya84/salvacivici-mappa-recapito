@@ -262,6 +262,29 @@
   let gpsWatch=null, gpsFirstTimer=null, gpsRefineTimer=null, gpsPollTimers=[], gpsRequestId=0;
   let gpsBusy=false, gpsValidated=false, gpsSamples=[], gpsStartedAt=0;
   let gpsResolve=null,gpsPromise=null,gpsError=null;
+  const MAP_REVIEW_MAX_AGE_MS=180000;
+  const mapReview=window.SCMapReview.create({
+    getCaptureGps:()=>state.gps||SC.bestGpsSample(gpsSamples),
+    getCaptureReady:()=>gpsValidated&&state.gps?.sampleCount===GPS_TARGET_SAMPLES&&!gpsBusy,
+    onCaptureConfirm:selection=>{
+      updateGpsUI();
+      toast(selection.moved?'Ingresso corretto sulla mappa. Pronto per il salvataggio.':'Posizione GPS confermata sulla mappa.');
+    },
+    onArchiveConfirm:async(record,selection)=>{
+      if(!state.db){toast('Archivio non disponibile.');return false;}
+      const current=state.records.find(r=>r.id===record.id);
+      if(!current||!window.SCCloudMerge.same(current,record)){
+        toast('Il civico è cambiato nell’archivio. Riapri la correzione.');return false;
+      }
+      const updated=SC.applyVerifiedPosition(current,selection);
+      await writeOne(updated);
+      await refresh();
+      toast('Pin corretto. Per inviare la modifica nel cloud, sincronizza dall’Archivio.');
+      return true;
+    },
+    toast
+  });
+  $('map-open').addEventListener('click',()=>mapReview.openCapture());
 
   function stopGpsWatch(){
     if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
@@ -310,12 +333,28 @@
       message.textContent='Attendo 3 rilevazioni GPS valide prima di abilitare Salva civico.';
     }
     $('gps-retry').hidden=gpsBusy||!gpsError;
+    $('map-open').disabled=!source||!state.db;
+    const selected=mapReview.getCaptureSelection();
+    const info=$('map-review-note');
+    if(selected){
+      const offset=Math.round(SC.metersBetween(selected.original,selected.chosen));
+      info.textContent=selected.moved
+        ?'Pin spostato manualmente di '+offset+' m dal GPS originale · posizione verificata.'
+        :'Posizione GPS verificata sulla mappa · ingresso confermato.';
+      info.classList.add('reviewed');
+    }else{
+      info.textContent=source?'Il GPS non identifica necessariamente l’ingresso. Verifica il pin sulla mappa.':'Attendo il GPS per aprire la mappa.';
+      info.classList.remove('reviewed');
+    }
+    mapReview.updateGps(source,complete);
     updateNearWarning();
   }
   function updateNearWarning(){
     const box=$('nearby-warning');
     if(!state.gps||!state.records.length){box.hidden=true;return;}
-    const latest=state.records[0],distance=SC.metersBetween(state.gps,latest);
+    const latest=state.records[0],selected=mapReview.getCaptureSelection();
+    const reference=selected?.chosen||state.gps;
+    const distance=SC.metersBetween(reference,latest);
     if(distance<=5){box.textContent=`Sei a circa ${Math.round(distance)} m dall’ultimo punto salvato (${latest.via}, ${latest.civico}). Puoi comunque salvare un civico diverso allo stesso ingresso.`;box.hidden=false;}
     else box.hidden=true;
   }
@@ -347,6 +386,7 @@
       state.gps=null;gpsValidated=false;updateGpsUI();return Promise.resolve(false);
     }
     const requestId=++gpsRequestId;
+    mapReview.resetCapture();
     gpsBusy=true;gpsValidated=false;gpsError=null;state.gps=null;
     if(!comuneManual)showComune('');
     gpsSamples=[];gpsStartedAt=Date.now();
