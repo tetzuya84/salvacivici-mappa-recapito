@@ -429,3 +429,11 @@
 #page-data .cloud-credentials p{font-size:12px;margin:0 0 12px}
 #page-data .cloud-identity{font-size:12px;color:#467168;margin:0 0 12px;overflow-wrap:anywhere}
 #page-data .cloud-help{font-size:11px;color:#687d87;margin:13px 0 0}
+
+/* Beta 0.6.1: accesso Google principale, email/password secondario. */
+#page-data .cloud-google-button{display:flex;align-items:center;justify-content:center;gap:12px;min-height:50px;margin:8px 0 14px;border:1px solid #cdd8dc;background:#fff;color:#1b2934;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
+#page-data .cloud-google-button:disabled{opacity:.55;cursor:wait}
+#page-data .cloud-google-button .google-g{font-family:Arial,sans-serif;font-weight:900;font-size:24px;color:#4285f4}
+#page-data .cloud-email-fallback{border-top:1px solid #e2ebee;padding-top:13px;margin-top:7px}
+#page-data .cloud-email-fallback summary{cursor:pointer;font-size:12px;font-weight:600;color:#43656a;text-align:center}
+#page-data .cloud-email-fallback p{margin-top:13px}
