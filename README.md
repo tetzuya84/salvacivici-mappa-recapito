@@ -126,3 +126,12 @@ Quando l'utente completa deliberatamente lo swipe verso il basso nell'Archivio, 
 **Limite iPhone/iPad (iOS 27):** Safari/WebKit non implementa la Vibration API e le vecchie scorciatoie via switch HTML non possono più essere attivate programmaticamente da iOS 26.5. Pertanto **non si può garantire alcuna vibrazione fisica su iPhone** dalla PWA GitHub Pages: il feedback visivo rimane operativo. Non aggiungere hack di switch invisibili che interferiscano con lo swipe o promettere haptic iOS senza verifiche native.
 
 **Sicurezza e continuità:** invariati Firebase, dati locali, manifest, URL Home, merge cloud e regole che impediscono sovrascritture. Aggiornati soltanto `app.js`, badge release `index.html` e versione cache di `sw.js`. Sette simulazioni superate: vibrazione singola, gesto troppo corto, pagina scorsa, input, API assente, API che genera eccezione, gesto ripetuto mentre loading.
+
+## Beta 0.6.6 — Home, logo e aggiornamento GPS da Salva (29 ottobre 2026)
+
+- Apertura dell'app sempre sulla pagina **Salva / Nuovo punto**, anche dopo un ritorno in primo piano o ripristino del documento. Le altre schede restano accessibili.
+- Dalla scheda **Salva** uno swipe deliberato verso il basso con la pagina in cima (almeno 86 px) mostra la rotellina, **azzera soltanto la bozza di indirizzo e comune** e avvia una nuova lettura GPS ad alta precisione. Non cancella o modifica alcun civico registrato. Una nuova lettura non riutilizza coordinate precedenti. Durante la rilevazione compare lo stato GPS; in caso di errore l'app segnala il problema senza inventare coordinate.
+- Mantiene lo swipe **Archivio** per la sincronizzazione cloud volontaria: i due gesti hanno azioni diverse.
+- L'immagine **del logo in testata** ora usa esattamente `assets/icon-192.png`, la stessa risorsa usata dalla Home PWA; aggiornate le icone `assets/icon-192.png` e `assets/icon-512.png` con simbolo del pin turchese a contorno su riquadro scuro.
+- Badge release e cache SW portati a **0.6.6**. L'identità dell'installazione `id/start_url/scope: "./"` e la chiave IndexedDB `salvacivici-mappa-recapito-v1` non cambiano; account Firebase e merge cloud invariati.
+- **Da verificare sui dispositivi reali**: gesto Salva, ritorno in primo piano e aggiornamento icona preesistente. Su iOS le icone già installate possono essere conservate in cache e non aggiornarsi automaticamente; non eliminare la PWA senza salvare prima i civici.
