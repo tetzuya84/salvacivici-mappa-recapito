@@ -1,10 +1,10 @@
-/* Cloud sync beta 0.6.1 — Firebase Google + Email/Password e Firestore REST.
+/* Cloud sync beta 0.6.2 — Firebase Google + Email/Password e Firestore REST.
    Nessun client secret. Il salvataggio locale continua a funzionare anche offline.
    Nessun invio in background: solo consenso esplicito al pulsante Sincronizza. */
 (function(root){
 'use strict';
 const $=id=>document.getElementById(id),KEY='sc-cloud-settings-v1',SESSION='sc-cloud-session-v1',BASE='sc-cloud-base-',OWNER='sc-cloud-owner-v1';
-const DEFAULT_CONFIG={projectId:'salvacivici-mappa-recapito',apiKey:'AIzaSyAZfrIhmPy25_xDLIvb2SMPPsW_5H8hnCg'};
+const DEFAULT_CONFIG={projectId:'salvacivici-mappa-recapito',apiKey:'AIzaSyAZfrIhmPy25_xDLIvb2SMPPsw_5H8hnCg'};
 const M=root.SCCloudMerge;
 let engine=null,config=null,session=null,token='',expires=0,busy=false;
 function read(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch(e){return fallback}}
