@@ -1,4 +1,4 @@
-/* Cloud sync beta 0.6.2 — Firebase Google + Email/Password e Firestore REST.
+/* Cloud sync beta 0.6.3 — Firebase Google + Email/Password e Firestore REST.
    Nessun client secret. Il salvataggio locale continua a funzionare anche offline.
    Nessun invio in background: solo consenso esplicito al pulsante Sincronizza. */
 (function(root){
@@ -7,6 +7,7 @@ const $=id=>document.getElementById(id),KEY='sc-cloud-settings-v1',SESSION='sc-c
 const DEFAULT_CONFIG={projectId:'salvacivici-mappa-recapito',apiKey:'AIzaSyAZfrIhmPy25_xDLIvb2SMPPsw_5H8hnCg'};
 const M=root.SCCloudMerge;
 let engine=null,config=null,session=null,token='',expires=0,busy=false;
+let lastAutoPull=0;
 function read(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback}catch(e){return fallback}}
 function store(key,x){try{localStorage.setItem(key,JSON.stringify(x))}catch(e){throw Error('Spazio di archiviazione locale non disponibile.');}}
 function remove(key){try{localStorage.removeItem(key)}catch(e){}}
@@ -127,27 +128,36 @@ async function setCloud(records,updateTime){
  }
  return data.updateTime;
 }
-async function pullIfSafe(){
+async function pullIfSafe({quiet=false}={}){
  if(busy||!session?.uid||!navigator.onLine)return;
+ if($('edit-dialog')?.open)return; // Non sovrapporre un aggiornamento a una modifica in corso.
  const owner=read(OWNER,null);
- if(owner&&owner!==session.uid){message('Questo dispositivo è associato a un altro account. Nessun dato importato.',true);return;}
+ if(owner&&owner!==session.uid){if(!quiet)message('Questo dispositivo è associato a un altro account. Nessun dato importato.',true);return;}
  busy=true;showState();
  try{
    const before=await engine.getRecords(),saved=read(baseKey(),null);
    if(saved?.records&& !sameRecords(before,saved.records)){
-     message('Hai civici locali da controllare: premi Sincronizza per inviarli quando sei pronto.');return;
+     if(!quiet)message('Hai civici locali da controllare: premi Sincronizza per inviarli quando sei pronto.');return;
    }
    if(!saved&&before.length){
-     message('Archivio locale non ancora collegato: controlla i civici prima della prima sincronizzazione.');return;
+     if(!quiet)message('Archivio locale non ancora collegato: controlla i civici prima della prima sincronizzazione.');return;
    }
    const cloud=await getCloud();
    if(!sameRecords(before,await engine.getRecords()))return;
-   if(!sameRecords(before,cloud.records))await engine.applySnapshot(cloud.records);
-   saveBase(cloud.records);
+   const changed=!sameRecords(before,cloud.records);
+   if(changed)await engine.applySnapshot(cloud.records);
+   if(!saved||!sameRecords(saved.records,cloud.records))saveBase(cloud.records);
    store(OWNER,session.uid);
-   message('Archivio aggiornato dal cloud: '+cloud.records.length+' civici. Le nuove modifiche restano da confermare con Sincronizza.');
- }catch(e){message('Lettura cloud non disponibile: '+errorMessage(e),true)}
+   if(changed||!quiet)message('Archivio aggiornato dal cloud: '+cloud.records.length+' civici. Le nuove modifiche restano da confermare con Sincronizza.');
+ }catch(e){if(!quiet)message('Lettura cloud non disponibile: '+errorMessage(e),true)}
  finally{busy=false;showState();}
+}
+function autoReceive(){
+ // Nessuna trasmissione di modifiche: solo GET Firestore e applicazione protetta.
+ if(!session?.uid||!navigator.onLine||document.visibilityState==='hidden'||busy)return;
+ if(Date.now()-lastAutoPull<12000)return;
+ lastAutoPull=Date.now();
+ void pullIfSafe({quiet:true});
 }
 async function synchronize(){
  if(busy)return;
@@ -198,6 +208,16 @@ function init(options){
  $('cloud-register').addEventListener('click',()=>void login('register'));
  $('cloud-logout').addEventListener('click',logout);
  $('cloud-sync').addEventListener('click',()=>void synchronize());
+ $('cloud-refresh').addEventListener('click',()=>void pullIfSafe());
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')autoReceive();});
+ window.addEventListener('focus',autoReceive);
+ window.addEventListener('pageshow',autoReceive);
+ window.addEventListener('online',autoReceive);
+ document.querySelector('[data-tab="records"]')?.addEventListener('click',autoReceive);
+ document.querySelector('[data-tab="data"]')?.addEventListener('click',autoReceive);
+ // Controllo discreto ogni 30 secondi SOLO mentre l'app è aperta in primo piano.
+ // Non genera scritture cloud o traffico quando è in background.
+ setInterval(autoReceive,30000);
  showState();
  if(session?.uid)void pullIfSafe();
  message(session?'Cloud pronto. Controlla l’Archivio, poi premi Sincronizza.':
