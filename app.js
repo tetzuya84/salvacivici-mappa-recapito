@@ -600,14 +600,19 @@
       const card=elt('article','record');
       const head=elt('div','record-head'),heading=elt('div');
       heading.append(elt('h3','',`${r.via}, ${r.civico}`),elt('p','',r.comune));
-      head.append(heading,elt('span','record-badge','GPS'));
+      const source=r.positionSource==='manual'?'Corretto':r.positionSource==='gps_confirmed'?'Verificato':'GPS';
+      head.append(heading,elt('span','record-badge',source));
       const time=new Date(r.createdAt).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'});
-      const meta=elt('p','record-meta',`${time} · ${Number(r.lat).toFixed(6)}, ${Number(r.lon).toFixed(6)} · ±${Math.round(r.accuracy||0)} m`);
+      const positionText=r.positionSource==='manual'
+        ?'Pin corretto a mano · GPS origine ±'+Math.round(r.gpsOriginal?.accuracy||r.accuracy||0)+' m'
+        :'GPS ±'+Math.round(r.accuracy||0)+' m';
+      const meta=elt('p','record-meta',`${time} · ${Number(r.lat).toFixed(6)}, ${Number(r.lon).toFixed(6)} · ${positionText}`);
       const actions=elt('div','record-actions');
       const map=elt('a','','Apri mappa');map.href=`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`;map.target='_blank';map.rel='noopener noreferrer';
       const edit=elt('button','','Modifica');edit.type='button';edit.addEventListener('click',()=>editRecord(r));
+      const movePin=elt('button','','Sposta pin');movePin.type='button';movePin.addEventListener('click',()=>mapReview.openArchive(r));
       const del=elt('button','delete','Elimina');del.type='button';del.addEventListener('click',()=>deleteRecord(r));
-      actions.append(map,edit,del);card.append(head,meta,actions);fragment.append(card);
+      actions.append(map,edit,movePin,del);card.append(head,meta,actions);fragment.append(card);
     }
     list.append(fragment);
   }
@@ -702,7 +707,7 @@
     let lastCheck=0;
     $('apply-update').addEventListener('click',async()=>{
       if(gpsBusy){toast('Termina prima il rilevamento GPS.');return;}
-      if($('edit-dialog').open){toast('Termina prima la modifica del civico.');return;}
+      if($('edit-dialog').open||mapReview.isOpen()){toast('Chiudi prima la mappa o la modifica del civico.');return;}
       if($('indirizzo').value.trim()){
         const proceed=await confirmAction('Aggiornare SalvaCivici?','Il civico che stai compilando non è ancora salvato. I civici già presenti nell’archivio rimarranno disponibili.','Aggiorna');
         if(!proceed)return;
