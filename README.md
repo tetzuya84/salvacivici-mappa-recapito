@@ -60,3 +60,13 @@ Il token di accesso Google è mantenuto solo nella memoria della sessione, non i
 **Limiti:** la sincronizzazione non aggiorna Google My Maps. Gli upload singoli sono limitati a 5 MB (per file più grandi usare per ora l'esportazione manuale). La prova reale della login OAuth su iPhone e della scrittura nel Drive dell'utente è ancora da eseguire. Tutti i civici registrati finora nella app sono fittizi per test, e non vanno trasferiti nelle mappe reali. La PWA mantiene invariati `id`, `start_url`, `scope` e il database `salvacivici-mappa-recapito-v1`.
 
 **Test:** `node tests/core.test.js`; il backup ZIP Beta 0.5.8 contiene anche un test simulato per Drive (`node tests/drive-sync.test.js`).
+
+## Beta 0.5.9 — Condivisione backup iPhone/iPad senza accesso Google incorporato (29 ottobre 2026)
+
+Il test reale Google OAuth dalla PWA iOS/iPadOS avviata dalla Home ha restituito **«Impossibile eseguire l'accesso — Questo browser o questa app potrebbero non essere sicuri»**. È un blocco Google degli accessi in browser incorporati, non un difetto verificato del client OAuth.
+
+**Modifica correttiva:** su iPhone/iPad SalvaCivici ora mostra **«Condividi backup su Drive»** nella schermata Dati e apre il menu Condividi nativo del dispositivo con un file JSON generato dall'archivio locale della *stessa* app Home. Il click richiede conferma, non chiede un altro login Google incorporato, non modifica i dati in archivio e non tocca My Maps. Per salvare su Google Drive, l'utente deve selezionare Google Drive fra le destinazioni di condivisione e completare il salvataggio; se non disponibile, usare «Salva su File» e trasferire in Drive. Il file si chiama `SalvaCivici_backup_YYYY-MM-DD_HH-MM-SS.json` per conservare lo storico. **Non sovrascrive il backup precedente e l'app non può verificare autonomamente che il file sia arrivato su Drive.** Il successivo controllo deve avvenire in Google Drive.
+
+La precedente modalità di backup OAuth diretto rimane prevista nei browser non iOS supportati, ma aprire SalvaCivici in Safari su iPhone/iPad non permette di presumere l'accesso all'IndexedDB della PWA installata: gli archivi sono separati. Non ricreare l'icona Home. Manteniamo il manifest, la URL e `salvacivici-mappa-recapito-v1` invariati.
+
+**Test simulati:** su iOS apertura della condivisione con civici di test; nessun accesso OAuth/Google API; annullamento senza salvataggio; archivio vuoto; gestione cancellazione del menu condivisione. **Test manuale necessario** sul dispositivo per verificare che Google Drive compaia nel menu e riceva il file.
