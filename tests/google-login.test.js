@@ -7,7 +7,7 @@ async function attempt(behavior='success',ownerReject=false){
  let signedOut=0,called=0,accepted=null;
  const auth={currentUser:null},user={uid:'uid-123',email:'example@test.invalid',refreshToken:'refresh-test',getIdToken:async()=> 'token-test'};
  const provider=class{setCustomParameters(){}};
- const window={SCCloud:{notice:(text,warning)=>notices.push({text,warning}),acceptGoogleAuth:async value=>{
+ const window={SCCloud:{notice:(text,warning)=>notices.push({text,warning}),acceptGoogleAuth:value=>{
    if(ownerReject)throw Error('Account Google diverso da quello dell’archivio già sincronizzato.');
    accepted=value;
  }}};
