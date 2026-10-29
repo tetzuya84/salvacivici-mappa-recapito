@@ -36,6 +36,7 @@ function setup(){
     const GPS_FIRST_FIX_TIMEOUT_MS=16000,GPS_REFINEMENT_MS=14500;
     let comuneManual=false,gpsWatch=null,gpsFirstTimer=null,gpsRefineTimer=null,gpsPollTimers=[],gpsRequestId=0;
     let gpsBusy=false,gpsValidated=false,gpsSamples=[],gpsStartedAt=0,gpsResolve=null,gpsPromise=null,gpsError=null;
+    const mapReview={getCaptureSelection:()=>null,updateGps(){},resetCapture(){}};
     ${gpsCode}
     return {startGpsAcquisition,get:()=>({gpsBusy,gpsValidated,gpsSamples:[...gpsSamples],gpsError,gps:state.gps})};
   `);
