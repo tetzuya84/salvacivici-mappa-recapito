@@ -81,7 +81,7 @@
           <h2>Archivio cloud condiviso</h2>
           <p>Uno stesso archivio per iPhone e iPad. Correggi i civici prima di premere Sincronizza. Nessuna finestra di condivisione.</p>
           <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Cloud da configurare.</p>
-          <div id="cloud-config" class="cloud-credentials">
+          <div id="cloud-config" class="cloud-credentials" hidden>
             <h3>Collega Firebase (una volta sola)</h3>
             <label for="cloud-project" class="field-label">ID progetto Firebase</label>
             <input id="cloud-project" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="salvacivici-mappa-recapito">
@@ -90,14 +90,14 @@
             <button id="cloud-save-config" type="button" class="secondary full">Salva configurazione</button>
           </div>
           <div id="cloud-login-panel" class="cloud-credentials" hidden>
-            <h3>Accedi al tuo archivio</h3>
-            <p>Usa lo stesso account Firebase su iPhone e iPad. La password non viene registrata nell'app.</p>
+            <h3>Il tuo account SalvaCivici</h3>
+            <p>Usa la stessa email e la stessa password dell'archivio SalvaCivici su entrambi i dispositivi. Non serve la password Google.</p>
             <label for="cloud-email" class="field-label">Email</label>
             <input id="cloud-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off">
             <label for="cloud-password" class="field-label">Password Firebase</label>
             <input id="cloud-password" type="password" autocomplete="current-password">
             <button id="cloud-login" type="button" class="primary full">Accedi</button>
-            <button id="cloud-register" type="button" class="text-button">Crea nuovo account cloud</button>
+            <button id="cloud-register" type="button" class="text-button">Crea account SalvaCivici</button>
           </div>
           <div id="cloud-account" hidden>
             <p id="cloud-identity" class="cloud-identity"></p>
