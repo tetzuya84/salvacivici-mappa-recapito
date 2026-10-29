@@ -68,6 +68,19 @@
     window.scrollTo({top:0,behavior:'auto'});
   }
   document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.tab)));
+  // All'avvio e al ritorno dalla Home la prima schermata è sempre Salva.
+  // Non cancelliamo bozze durante la semplice navigazione fra applicazioni.
+  let hiddenAt=0;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){hiddenAt=Date.now();return;}
+    if(hiddenAt&&Date.now()-hiddenAt>=1200&&!document.querySelector('dialog[open]')){
+      showPage('capture');
+    }
+    hiddenAt=0;
+  });
+  window.addEventListener('pageshow',event=>{
+    if(event.persisted&&!document.querySelector('dialog[open]'))showPage('capture');
+  });
 
   // Beta 0.6.4 — pull-to-sync: lo swipe deliberato sostituisce i due pulsanti Dati.
   // Il trasferimento non parte se l'Archivio non è in cima o se si sta editando.
@@ -304,6 +317,92 @@
        !SC.isFreshGps(state.gps,Date.now(),GPS_REENTER_REFRESH_MS))startGpsAcquisition();
   });
 
+  // Beta 0.6.6: swipe Salva = azzera SOLO la bozza corrente e misura nuove coordinate.
+  // Non cancella né modifica i civici già memorizzati nell'archivio.
+  function resetCaptureForFreshGps(){
+    if(gpsBusy){
+      stopGpsWatch();
+      const resolve=gpsResolve;gpsResolve=null;gpsPromise=null;
+      if(resolve)resolve(false);
+    }
+    $('indirizzo').value='';
+    $('indirizzo-warning').hidden=true;
+    $('nearby-warning').hidden=true;
+    comuneManual=false;
+    $('comune').hidden=true;
+    $('comune-edit-label').hidden=true;
+    showComune('');
+    state.gps=null;gpsValidated=false;gpsError=null;
+    gpsSamples=[];updateGpsUI();
+    return startGpsAcquisition();
+  }
+  function setupCapturePullToRefresh(){
+    const page=$('page-capture'),indicator=$('capture-pull'),label=$('capture-pull-label'),
+      status=$('capture-pull-status'),LIMIT=86,MAX=108;
+    let start=null,travel=0,active=false,loading=false,resetTimer=0;
+    const atTop=()=>Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)<=5;
+    const reset=()=>{
+      start=null;travel=0;active=false;
+      indicator.style.height='0px';indicator.dataset.state='idle';
+      label.textContent='Trascina per aggiornare il GPS';
+    };
+    const setProgress=distance=>{
+      const amount=Math.min(MAX,Math.max(0,distance));
+      indicator.style.height=Math.round(amount*0.72)+'px';
+      indicator.dataset.state=distance>=LIMIT?'ready':'pulling';
+      label.textContent=distance>=LIMIT?'Rilascia per azzerare e aggiornare':'Trascina per aggiornare il GPS';
+    };
+    async function performRefresh(){
+      if(loading||page.hidden)return;
+      loading=true;clearTimeout(resetTimer);
+      indicator.dataset.state='loading';indicator.style.height='67px';
+      label.textContent='Nuove coordinate GPS…';
+      status.hidden=false;status.dataset.result='pending';
+      status.textContent='Campi azzerati · rilevazione GPS in corso…';
+      let success=false;
+      try{success=await resetCaptureForFreshGps();}
+      catch(_){success=false;}
+      if(success&&state.gps&&gpsValidated){
+        status.dataset.result='success';
+        status.textContent='Nuova posizione GPS acquisita · campi pronti.';
+        label.textContent='GPS aggiornato';
+      }else{
+        status.dataset.result='error';
+        status.textContent='Campi azzerati. GPS non disponibile: verifica i permessi e riprova.';
+        label.textContent='Riprova';
+      }
+      loading=false;resetTimer=setTimeout(reset,1000);
+    }
+    page.addEventListener('touchstart',event=>{
+      start=null;
+      if(page.hidden||loading||event.touches.length!==1||!atTop())return;
+      if(document.querySelector('dialog[open]'))return;
+      if(event.target.closest('input,textarea,button,select,[contenteditable="true"]'))return;
+      start={x:event.touches[0].clientX,y:event.touches[0].clientY};
+      travel=0;active=false;
+    },{passive:true});
+    page.addEventListener('touchmove',event=>{
+      if(!start||loading||event.touches.length!==1)return;
+      const dx=event.touches[0].clientX-start.x,dy=event.touches[0].clientY-start.y;
+      if(!active&&(dy<9||Math.abs(dx)>dy*0.75||!atTop())){
+        if(dy<0||Math.abs(dx)>Math.max(12,Math.abs(dy)))start=null;
+        return;
+      }
+      if(!atTop()){reset();return;}
+      active=true;travel=Math.max(0,dy);
+      if(event.cancelable)event.preventDefault();
+      setProgress(travel);
+    },{passive:false});
+    page.addEventListener('touchend',()=>{
+      const shouldRefresh=active&&travel>=LIMIT;
+      reset();
+      if(shouldRefresh)void performRefresh();
+    },{passive:true});
+    page.addEventListener('touchcancel',reset,{passive:true});
+  }
+  setupCapturePullToRefresh();
+
+
   function makeId(){return typeof crypto.randomUUID==='function'?crypto.randomUUID():`sc-${Date.now()}-${Math.random().toString(36).slice(2)}`;}
   $('capture-form').addEventListener('submit',async event=>{
     event.preventDefault();
@@ -472,8 +571,9 @@
   }
   (async()=>{
     try{state.db=await dbOpen();await refresh();}catch(error){toast('Archivio locale non disponibile: impossibile salvare i civici.');$('save-button').disabled=true;}
-    // Apertura pulita: nessun valore dei campi viene ripristinato da sessioni precedenti.
+    // Apertura sempre dalla schermata Salva: non toccare l'archivio persistente.
     $('indirizzo').value='';showComune('');
+    showPage('capture');
     updateGpsUI();
     if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,confirmAction,toast});
     setupAppUpdates();
