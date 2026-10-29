@@ -31,7 +31,7 @@ const valid=point=>!!point&&Number.isFinite(point.lat)&&Math.abs(point.lat)<=90&
   Number.isFinite(point.lon)&&Math.abs(point.lon)<=180;
 function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm,toast}){
   const $=id=>document.getElementById(id);
-  let captureSelection=null,active=null,map=null,pin=null,gpsDot=null,accuracyCircle=null,busy=false;
+  let captureSelection=null,active=null,map=null,pin=null,gpsDot=null,accuracyCircle=null,busy=false,tilesVisible=false;
   const status=$('map-review-status'),confirmButton=$('map-review-confirm');
   const point=p=>({lat:Number(p.lat),lon:Number(p.lon)});
   function redraw(){
@@ -41,9 +41,9 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     const distance=root.SC.metersBetween(original,chosen);
     const moved=active.moved&&distance>=.5;
     const accuracy=Number.isFinite(original.accuracy)?Math.round(original.accuracy):null;
-    status.textContent=moved
-      ?'Posizione corretta di '+Math.round(distance)+' m rispetto al GPS. Controlla che il pin sia sull’ingresso.'
-      :'Pin sul GPS'+(accuracy!==null?' (precisione stimata ±'+accuracy+' m)':'')+'. Trascina il pin o tocca l’ingresso sulla mappa.';
+    status.textContent=!active.mapLoaded?'Attendo la cartografia: il pin potrà essere confermato solo quando la mappa sarà visibile.':
+      moved?'Posizione corretta di '+Math.round(distance)+' m rispetto al GPS. Controlla che il pin sia sull’ingresso.':
+      'Pin sul GPS'+(accuracy!==null?' (precisione stimata ±'+accuracy+' m)':'')+'. Trascina il pin o tocca l’ingresso sulla mappa.';
     $('map-review-coordinates').textContent=chosen.lat.toFixed(7)+', '+chosen.lon.toFixed(7);
     $('map-review-gps-status').textContent=active.kind==='capture'
       ?(active.ready?'3/3 letture GPS · scegli l’ingresso':'Attendi le tre letture GPS prima di confermare')
@@ -71,10 +71,22 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     const L=root.L;
     if(!map){
       map=L.map($('map-review-canvas'),{zoomControl:true,attributionControl:true,scrollWheelZoom:false,maxZoom:19});
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
         maxZoom:19,maxNativeZoom:19,
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
-      }).addTo(map);
+      });
+      tiles.on('tileload',()=>{
+        tilesVisible=true;
+        $('map-review-loading').hidden=true;
+        if(active){active.mapLoaded=true;redraw();}
+      });
+      tiles.on('tileerror',()=>{
+        if(active&&!active.mapLoaded){
+          $('map-review-loading').hidden=false;
+          $('map-review-loading').textContent='La cartografia non si carica. Verifica Internet; il GPS resta disponibile.';
+        }
+      });
+      tiles.addTo(map);
       accuracyCircle=L.circle([active.original.lat,active.original.lon],{
         radius:Math.min(Number(active.original.accuracy)||10,500),color:'#0d8e86',
         weight:1,fillColor:'#0d8e86',fillOpacity:.08,interactive:false
@@ -86,7 +98,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
       pin.on('dragend',()=>setPosition(pin.getLatLng()));
       map.on('click',event=>setPosition(event.latlng));
     }
-    active.mapLoaded=true;
+    active.mapLoaded=tilesVisible;
     redraw();
     map.setView([active.chosen.lat,active.chosen.lon],19,{animate:false});
     requestAnimationFrame(()=>map&&map.invalidateSize({pan:false}));
