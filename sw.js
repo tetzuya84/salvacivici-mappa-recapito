@@ -1,4 +1,4 @@
-const CACHE = 'salvacivici-v0.5.8';
+const CACHE = 'salvacivici-v0.5.9';
 const CACHE_PREFIX = 'salvacivici-v';
 const ASSETS = ['./', './index.html','./styles.css','./core.js','./comuni-mantova.js','./app.js','./drive-sync.js','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
