@@ -496,3 +496,38 @@
 /* Beta 0.6.6: stessa grafica per icona Home e marchio in testata. */
 .identity-mark{background:transparent;color:inherit}
 .identity-mark img{display:block;width:41px;height:41px;object-fit:cover;border-radius:12px}
+
+/* Beta 0.6.7 — un'unica fascia logo centrata e sempre visibile nelle tre sezioni.
+   Sticky anziché fixed: mantiene il proprio spazio nel layout ed evita sovrapposizioni
+   con il modulo GPS, la lista civici, il cloud e gli indicatori degli swipe. */
+.topbar,
+.app-shell.is-capture .topbar {
+  position:-webkit-sticky;
+  position:sticky;
+  top:0;
+  z-index:20;
+  width:100%;
+  height:auto;
+  min-height:calc(86px + env(safe-area-inset-top));
+  box-sizing:border-box;
+  padding:calc(8px + env(safe-area-inset-top)) 14px 9px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  background:var(--navy);
+  box-shadow:0 2px 12px rgba(12,27,41,.12);
+}
+.topbar .identity,
+.app-shell.is-capture .topbar .identity {
+  width:max-content;
+  max-width:100%;
+  margin-inline:auto;
+  justify-content:center;
+}
+.topbar .version,
+.app-shell.is-capture .topbar .version {
+  margin:0 auto;
+  align-self:center;
+}
