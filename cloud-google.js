@@ -26,6 +26,7 @@ function notify(message,warning=false){
 }
 function readable(error){
   const code=error?.code||"";
+  if(!code&&/Account Google diverso|altro account|collegare gli account/.test(error?.message||""))return error.message;
   if(code==="auth/operation-not-allowed")return "Attiva il provider Google nella console Firebase > Authentication > Metodo di accesso.";
   if(code==="auth/unauthorized-domain")return "Aggiungi tetzuya84.github.io tra i domini autorizzati in Firebase Authentication.";
   if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment")
