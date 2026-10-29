@@ -48,7 +48,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     $('map-review-gps-status').textContent=active.kind==='capture'
       ?(active.ready?'3/3 letture GPS · scegli l’ingresso':'Attendi le tre letture GPS prima di confermare')
       :'Correzione di un civico già salvato';
-    confirmButton.disabled=busy||!active.ready;
+    confirmButton.disabled=busy||!active.ready||!active.mapLoaded;
     confirmButton.textContent=moved?'Usa posizione corretta':'Conferma questo punto';
     $('map-review-reset').disabled=busy||!active.moved;
     if(map&&pin){
@@ -86,6 +86,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
       pin.on('dragend',()=>setPosition(pin.getLatLng()));
       map.on('click',event=>setPosition(event.latlng));
     }
+    active.mapLoaded=true;
     redraw();
     map.setView([active.chosen.lat,active.chosen.lon],19,{animate:false});
     requestAnimationFrame(()=>map&&map.invalidateSize({pan:false}));
@@ -98,7 +99,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     if(!selection||!valid(selection.original)||!valid(selection.chosen)){
       toast('Attendi almeno la prima posizione GPS.');return;
     }
-    active=selection;
+    active={...selection,mapLoaded:false};
     const dialog=$('map-review-dialog');
     dialog.showModal();
     $('map-review-canvas').hidden=false;
@@ -112,6 +113,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
       ensureMap();
     }catch(error){
       if(!active||!dialog.open)return;
+      active.mapLoaded=false;
       $('map-review-canvas').hidden=true;
       $('map-review-loading').hidden=false;
       $('map-review-loading').textContent=error.message;
@@ -154,11 +156,12 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     redraw();
   });
   confirmButton.addEventListener('click',async()=>{
-    if(!active||busy||!active.ready||!valid(active.chosen))return;
+    if(!active||busy||!active.ready||!active.mapLoaded||!valid(active.chosen))return;
     const selection={
       original:{lat:active.original.lat,lon:active.original.lon,accuracy:active.original.accuracy},
       chosen:point(active.chosen),
-      moved:active.moved&&root.SC.metersBetween(active.original,active.chosen)>=.5
+      moved:active.moved&&root.SC.metersBetween(active.original,active.chosen)>=.5,
+      confirmedAt:Date.now()
     };
     if(active.kind==='capture'){
       captureSelection=selection;
