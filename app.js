@@ -569,6 +569,10 @@
     if(!gpsValidated||state.gps?.sampleCount!==GPS_TARGET_SAMPLES||gpsBusy){
       toast('GPS non più completo: salvataggio annullato.');return;
     }
+    if(!selectedPosition&&!SC.isFreshGps(state.gps,Date.now(),GPS_MAX_SAVE_AGE_MS)){
+      toast('GPS non più recente: effettuo una nuova acquisizione prima di salvare.');
+      void startGpsAcquisition();return;
+    }
     const base={id:makeId(),comune,via,civico,lat:state.gps.lat,lon:state.gps.lon,accuracy:state.gps.accuracy,createdAt:new Date().toISOString()};
     const record=selectedPosition?SC.applyVerifiedPosition(base,selectedPosition):
       {...base,positionSource:'gps_unverified',gpsOriginal:{lat:state.gps.lat,lon:state.gps.lon,accuracy:state.gps.accuracy}};
