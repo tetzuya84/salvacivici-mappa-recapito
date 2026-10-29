@@ -1,4 +1,4 @@
-/* Cloud sync beta 0.6.0 — Firebase Email/Password e Firestore REST.
+/* Cloud sync beta 0.6.1 — Firebase Google + Email/Password e Firestore REST.
    Nessun client secret. Il salvataggio locale continua a funzionare anche offline.
    Nessun invio in background: solo consenso esplicito al pulsante Sincronizza. */
 (function(root){
@@ -50,6 +50,17 @@ async function saveConfiguration(){
  if(config&&!M.same(config,next)){session=null;token='';expires=0;remove(SESSION);}
  config=next;store(KEY,config);
  showState();message('Cloud configurato. Accedi con lo stesso account su iPhone e iPad.');
+}
+function acceptGoogleAuth(data){
+ // Non scambiare due account Firebase: condividere un indirizzo email non
+ // dimostra che appartengano allo stesso UID o allo stesso archivio.
+ const owner=read(OWNER,null);
+ if(owner&&owner!==data?.localId)
+   throw Error('Account Google diverso da quello dell’archivio già sincronizzato. Prima collega gli account Firebase; nessun dato modificato.');
+ if(session?.uid&&session.uid!==data?.localId)
+   throw Error('Hai già una sessione con un altro account. Per conservare i civici occorre collegare gli account prima di cambiarla.');
+ useCredentials(data);
+ void pullIfSafe();
 }
 function useCredentials(data){
  if(!data?.localId||!data?.refreshToken||!data?.idToken)throw Error('Firebase non ha restituito una sessione valida.');
@@ -171,7 +182,11 @@ async function synchronize(){
  }catch(e){message('Sincronizzazione non completata: '+errorMessage(e),true)}
  finally{busy=false;showState();}
 }
-function logout(){session=null;token='';expires=0;remove(SESSION);showState();message('Disconnesso dal cloud. I civici locali rimangono sul dispositivo.');}
+function logout(){
+ session=null;token='';expires=0;remove(SESSION);
+ if(root.SCGoogleAuth?.logout)void root.SCGoogleAuth.logout();
+ showState();message('Disconnesso dal cloud. I civici locali rimangono sul dispositivo.');
+}
 function init(options){
  engine=options;config=DEFAULT_CONFIG;session=read(SESSION,null);
  // La configurazione web Firebase è pubblica, identica per entrambi i dispositivi.
@@ -188,5 +203,5 @@ function init(options){
  message(session?'Cloud pronto. Controlla l’Archivio, poi premi Sincronizza.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init};
+root.SCCloud={init,acceptGoogleAuth,notice:message};
 })(window);
