@@ -85,6 +85,23 @@ function splitAddress(text){
  const via=clean(m[1]).replace(/[,\s]+$/,'').trim(),civico=clean(m[2]);
  return via&&civico?{via,civico}:null;
 }
+/* Conserva il fix GPS originale anche quando il pin viene corretto a mano.
+   accuracy rimane la precisione dichiarata del GPS originario, NON della correzione. */
+function applyVerifiedPosition(record,selection,verifiedAt=new Date().toISOString()){
+ const chosen=selection?.chosen,original=selection?.original;
+ if(!validGpsPoint(chosen)||!validGpsPoint(original))throw new Error('Coordinate non valide.');
+ const accuracy=Number(original.accuracy);
+ if(!Number.isFinite(accuracy)||accuracy<=0)throw new Error('Accuratezza GPS non valida.');
+ const offset=metersBetween(original,chosen),moved=offset>=.5;
+ return {...record,lat:chosen.lat,lon:chosen.lon,accuracy,
+   gpsOriginal:{lat:original.lat,lon:original.lon,accuracy},
+   positionSource:moved?'manual':'gps_confirmed',
+   positionVerifiedAt:verifiedAt,manualOffsetM:moved?Math.round(offset*10)/10:0};
+}
+function validGpsPoint(point){
+ return !!point&&Number.isFinite(point.lat)&&Math.abs(point.lat)<=90&&
+   Number.isFinite(point.lon)&&Math.abs(point.lon)<=180;
+}
 const csvEscape = value => '"'+String(value??'').replace(/"/g,'""')+'"';
 function csv(records){
  const header=['Civico','Via','Comune','Latitudine','Longitudine','Precisione_m','Data','Google_Maps'];
@@ -92,7 +109,7 @@ function csv(records){
  return '\uFEFF'+[header,...rows].map(row=>row.map(csvEscape).join(',')).join('\r\n')+'\r\n';
 }
 function isRecord(item){return !!item && typeof item==='object' && typeof item.id==='string' && typeof item.comune==='string' && typeof item.via==='string' && typeof item.civico==='string' && typeof item.createdAt==='string' && Number.isFinite(item.lat) && Math.abs(item.lat)<=90 && Number.isFinite(item.lon)&&Math.abs(item.lon)<=180 && item.comune.trim() && item.via.trim() && item.civico.trim();}
-const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,gpsQuality,hasRequiredGpsReadings,splitAddress,getComune,csv,isRecord};
+const api={clean,normalized,normalizedCivic,isSameCivic,metersBetween,validGpsSample,isFreshGps,bestGpsSample,gpsSpread,gpsQuality,hasRequiredGpsReadings,applyVerifiedPosition,validGpsPoint,splitAddress,getComune,csv,isRecord};
 root.SC=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
