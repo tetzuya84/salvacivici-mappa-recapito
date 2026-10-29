@@ -104,8 +104,15 @@ function validGpsPoint(point){
 }
 const csvEscape = value => '"'+String(value??'').replace(/"/g,'""')+'"';
 function csv(records){
- const header=['Civico','Via','Comune','Latitudine','Longitudine','Precisione_m','Data','Google_Maps'];
- const rows = records.map(r=>[r.civico,r.via,r.comune,r.lat,r.lon,r.accuracy??'',r.createdAt,`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`]);
+ const header=['Civico','Via','Comune','Latitudine','Longitudine','Precisione_m','Data','Google_Maps',
+   'Origine_posizione','GPS_originale_lat','GPS_originale_lon','Precisione_GPS_originale_m','Scostamento_manuale_m'];
+ const rows=records.map(r=>{
+   const original=r.gpsOriginal||{lat:r.lat,lon:r.lon,accuracy:r.accuracy};
+   return [r.civico,r.via,r.comune,r.lat,r.lon,
+     r.positionSource==='manual'?'':r.accuracy??'',r.createdAt,
+     `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`,
+     r.positionSource||'gps_legacy',original.lat,original.lon,original.accuracy??'',r.manualOffsetM??0];
+ });
  return '\uFEFF'+[header,...rows].map(row=>row.map(csvEscape).join(',')).join('\r\n')+'\r\n';
 }
 function isRecord(item){return !!item && typeof item==='object' && typeof item.id==='string' && typeof item.comune==='string' && typeof item.via==='string' && typeof item.civico==='string' && typeof item.createdAt==='string' && Number.isFinite(item.lat) && Math.abs(item.lat)<=90 && Number.isFinite(item.lon)&&Math.abs(item.lon)<=180 && item.comune.trim() && item.via.trim() && item.civico.trim();}
