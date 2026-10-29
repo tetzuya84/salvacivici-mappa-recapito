@@ -543,3 +543,65 @@
 
 .modal .danger-confirm{background:#b32f2e;color:#fff;}
 .modal .danger-confirm:active{background:#8b2424;}
+
+
+/* Beta 0.6.10 — tabbar identica (dimensioni grandi) in Salva, Archivio e Dati. */
+.app-shell,.app-shell.is-capture{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.app-shell .tabbar,.app-shell.is-capture .tabbar{
+  padding:10px 10px calc(9px + env(safe-area-inset-bottom));
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  min-height:calc(82px + env(safe-area-inset-bottom));
+  align-items:center;
+}
+.app-shell .tab,.app-shell.is-capture .tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;min-height:60px;padding:7px 5px;
+  font-size:12px;line-height:1.2;font-weight:740;
+}
+.app-shell .tab svg,.app-shell.is-capture .tab svg{width:26px;height:26px;flex:none}
+.app-shell .tab span{white-space:nowrap}
+/* La qualità non è la potenza radio: barra derivata dai metri di accuratezza GPS.
+   Riquadro abolito, risultato compatto e consultabile senza perdere le coordinate. */
+#page-capture .gps-meter,
+.app-shell.is-capture #page-capture .gps-meter{
+  display:flex;flex-direction:column;gap:10px;
+  width:100%;padding:12px 2px 4px;background:transparent;
+  border:0;box-shadow:none;border-radius:0;text-align:left;
+}
+#page-capture .gps-meter-head,
+#page-capture .gps-meter-foot{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  margin:0;min-width:0;line-height:1.35;
+}
+#page-capture .gps-meter-head strong{color:#153043;font-size:15px;font-weight:790}
+#page-capture .gps-samples{font-size:12px;font-weight:750;color:#527481;white-space:nowrap}
+#page-capture .gps-meter-track{
+  height:17px;width:100%;overflow:hidden;border-radius:30px;
+  background:#d9e4e9;border:1px solid #c9d9de;
+}
+#page-capture .gps-meter-fill{
+  width:0;height:100%;background:#91a5ae;border-radius:30px;
+  transition:width .22s ease,background-color .22s ease;
+}
+#page-capture .gps-meter[data-quality="excellent"] .gps-meter-fill{background:#118c72}
+#page-capture .gps-meter[data-quality="good"] .gps-meter-fill{background:#2fa386}
+#page-capture .gps-meter[data-quality="fair"] .gps-meter-fill{background:#d6a23e}
+#page-capture .gps-meter[data-quality="poor"] .gps-meter-fill,
+#page-capture .gps-meter[data-quality="incomplete"] .gps-meter-fill{background:#c77744}
+#page-capture .gps-meter-foot{font-size:12px;color:#607782}
+#page-capture .gps-meter-foot strong{color:#155c5d;font-size:14px;white-space:nowrap}
+#page-capture .gps-meter-message,
+.app-shell.is-capture #page-capture .gps-meter-message{
+  margin:0;padding:0;background:none;border:0;border-radius:0;
+  color:#38736d;text-align:left;font-size:12px;line-height:1.4;
+}
+#page-capture .gps-meter-message.warning{color:#a65c13}
+#page-capture .gps-more{border-top:1px solid #e0e8eb;padding:8px 1px 0;color:#597580;font-size:11px}
+#page-capture .gps-more summary{cursor:pointer;list-style:revert;color:#496b75;font-weight:700}
+#page-capture .gps-more div{display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:7px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#page-capture .gps-retry{
+  align-self:stretch;min-height:42px;background:#e5f5f3;color:#0e6364;
+  border:0;border-radius:11px;font:inherit;font-size:13px;font-weight:750;
+}
+#page-capture #save-button:disabled{opacity:.56}
+@media(prefers-reduced-motion:reduce){#page-capture .gps-meter-fill{transition:none}}
