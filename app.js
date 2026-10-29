@@ -31,6 +31,14 @@
     transaction.onerror=()=>reject(transaction.error||new Error('Scrittura non riuscita.'));
     transaction.onabort=()=>reject(transaction.error||new Error('Scrittura annullata.'));
   });}
+  function applySnapshot(records){return new Promise((resolve,reject)=>{
+    const tx=state.db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE);
+    store.clear();
+    records.forEach(r=>store.put(r));
+    tx.oncomplete=()=>{refresh().then(resolve,reject);};
+    tx.onerror=()=>reject(tx.error||new Error('Ripristino archivio non riuscito.'));
+    tx.onabort=()=>reject(tx.error||new Error('Ripristino archivio annullato.'));
+  });}
   function writeMany(records){return new Promise((resolve,reject)=>{
     const transaction=state.db.transaction(STORE,'readwrite');
     const store=transaction.objectStore(STORE);
@@ -382,7 +390,7 @@
     // Apertura pulita: nessun valore dei campi viene ripristinato da sessioni precedenti.
     $('indirizzo').value='';showComune('');
     updateGpsUI();
-    if(window.SCDriveSync)window.SCDriveSync.init({getRecords:readAll,confirmAction,toast});
+    if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,confirmAction,toast});
     setupAppUpdates();
     startGpsAcquisition();
   })();
