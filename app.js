@@ -68,6 +68,51 @@
     window.scrollTo({top:0,behavior:'auto'});
   }
   document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.tab)));
+
+  // Beta 0.6.9 — swipe orizzontale fra Salva, Archivio e Dati.
+  // I gesti verticali mantengono GPS refresh / cloud sync; non intercettiamo i controlli.
+  function setupHorizontalTabSwipe(){
+    const pages=['capture','records','data'];
+    const main=document.querySelector('main');
+    const MIN_X=78,MAX_Y=85,MAX_DURATION=1000,EDGE=25;
+    let start=null,locked=false;
+    const currentTab=()=>pages.findIndex(name=>!$('page-'+name).hidden);
+    const ignoredTarget=target=>target.closest('input,textarea,select,button,a,label,summary,dialog,[contenteditable],[role="button"],[data-no-swipe]');
+    const reset=()=>{start=null;locked=false;};
+    main.addEventListener('touchstart',event=>{
+      reset();
+      if(event.touches.length!==1||document.querySelector('dialog[open]')||ignoredTarget(event.target))return;
+      const point=event.touches[0];
+      const width=window.innerWidth||document.documentElement.clientWidth;
+      // Preserva il gesto nativo Indietro di Safari ai bordi dello schermo.
+      if(point.clientX<EDGE||point.clientX>width-EDGE)return;
+      start={x:point.clientX,y:point.clientY,time:Date.now(),page:currentTab()};
+    },{passive:true});
+    main.addEventListener('touchmove',event=>{
+      if(!start||event.touches.length!==1)return;
+      const point=event.touches[0],dx=point.clientX-start.x,dy=point.clientY-start.y;
+      if(!locked){
+        if(Math.abs(dy)>18&&Math.abs(dy)>=Math.abs(dx)*0.85){reset();return;}
+        if(Math.abs(dx)<18)return;
+        if(Math.abs(dx)<Math.abs(dy)*1.35){reset();return;}
+        locked=true;
+      }
+      if(event.cancelable)event.preventDefault();
+    },{passive:false});
+    main.addEventListener('touchend',event=>{
+      if(!start)return;
+      const point=event.changedTouches[0];
+      const dx=point.clientX-start.x,dy=point.clientY-start.y;
+      const next=start.page+(dx<0?1:-1);
+      const valid=locked&&Date.now()-start.time<MAX_DURATION&&
+        Math.abs(dx)>=MIN_X&&Math.abs(dy)<=MAX_Y&&
+        Math.abs(dx)>=Math.abs(dy)*1.35&&next>=0&&next<pages.length;
+      reset();
+      if(valid&&!document.querySelector('dialog[open]'))showPage(pages[next]);
+    },{passive:true});
+    main.addEventListener('touchcancel',reset,{passive:true});
+  }
+  setupHorizontalTabSwipe();
   // All'avvio e al ritorno dalla Home la prima schermata è sempre Salva.
   // Non cancelliamo bozze durante la semplice navigazione fra applicazioni.
   let hiddenAt=0;
@@ -497,6 +542,31 @@
     if(!answer)return;
     try{await removeOne(r.id);await refresh();toast('Civico eliminato.');}catch(e){toast('Eliminazione non riuscita.');}
   }
+
+
+  // Il pulsante è volutamente separato dall'Elimina di un singolo record.
+  // Se il cloud non è accessibile o non coincide con l'archivio locale, non cancella nulla.
+  async function deleteAllAcquisitions(){
+    if(!state.db){toast('Archivio non disponibile: nessun dato eliminato.');return;}
+    const total=(await readAll()).length;
+    if(!total){toast('Archivio già vuoto.');return;}
+    const first=await confirmAction('Eliminare tutte le acquisizioni?',
+      'Sono presenti '+total+' civici. Procedi solo DOPO avere verificato il loro inserimento negli archivi e nelle mappe: il backup JSON e My Maps non sono sincronizzati automaticamente.',
+      'Prima conferma');
+    if(!first)return;
+    const second=await confirmAction('Seconda conferma: cancellazione totale',
+      'Stai eliminando '+total+' civici da questo dispositivo E dal cloud condiviso. Anche gli altri dispositivi riceveranno l’archivio vuoto. I dati non saranno recuperabili dall’app senza un backup JSON.',
+      'ELIMINA TUTTI');
+    if(!second)return;
+    const button=$('delete-all-records');
+    button.disabled=true;
+    try{
+      const result=await window.SCCloud?.clearAll?.({expectedCount:total});
+      if(!result?.ok)toast(result?.description||'Eliminazione non disponibile: nessun dato locale cancellato.');
+    }catch(_){toast('Eliminazione non completata. Verifica lo stato cloud prima di riprovare.');}
+    finally{button.disabled=false;}
+  }
+  $('delete-all-records').addEventListener('click',()=>void deleteAllAcquisitions());
 
   const filenameDate=()=>new Date().toISOString().slice(0,10);
   async function shareOrDownload(filename,mime,content){
