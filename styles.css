@@ -492,3 +492,7 @@
 #page-capture .archive-pull-status[data-result="error"]{background:#fff2e6;color:#94511c}
 #page-capture .archive-pull-status[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){#page-capture .capture-pull{transition:none}#page-capture .capture-pull[data-state="loading"] .archive-pull-spinner{animation-duration:1.7s}}
+
+/* Beta 0.6.6: stessa grafica per icona Home e marchio in testata. */
+.identity-mark{background:transparent;color:inherit}
+.identity-mark img{display:block;width:41px;height:41px;object-fit:cover;border-radius:12px}
