@@ -1,4 +1,4 @@
-/* Cloud sync beta 0.6.3 — Firebase Google + Email/Password e Firestore REST.
+/* Cloud sync beta 0.6.4 — Firebase Google + Email/Password e Firestore REST.
    Nessun client secret. Il salvataggio locale continua a funzionare anche offline.
    Nessun invio in background: solo consenso esplicito al pulsante Sincronizza. */
 (function(root){
@@ -41,8 +41,6 @@ function showState(){
  $('cloud-config').hidden=connected;
  $('cloud-login-panel').hidden=!connected||authenticated;
  $('cloud-account').hidden=!connected||!authenticated;
- $('cloud-sync').disabled=!authenticated||busy;
- $('cloud-sync').textContent=busy?'Sincronizzazione…':'Sincronizza i dispositivi';
  $('cloud-identity').textContent=authenticated?'Account: '+session.email:'';
 }
 async function saveConfiguration(){
@@ -159,10 +157,10 @@ function autoReceive(){
  lastAutoPull=Date.now();
  void pullIfSafe({quiet:true});
 }
-async function synchronize(){
- if(busy)return;
- if(!navigator.onLine){message('Non c’è connessione: i civici restano salvati sul dispositivo.',true);return;}
- if(!session?.uid){message('Prima accedi al tuo archivio cloud.',true);return;}
+async function synchronize({confirm=true}={}){
+ if(busy)return{ok:false,description:'Sincronizzazione già in corso.'};
+ if(!navigator.onLine){const description='Non c’è connessione: i civici restano salvati sul dispositivo.';message(description,true);return{ok:false,description};}
+ if(!session?.uid){const description='Accedi prima con Google nella sezione Dati.';message(description,true);return{ok:false,description};}
  busy=true;showState();message('Confronto i civici di questo dispositivo con quelli nel cloud…');
  try{
    const owner=read(OWNER,null);
@@ -171,15 +169,20 @@ async function synchronize(){
    if(!before.every(root.SC.isRecord))throw Error('Archivio locale non valido; nessuna modifica effettuata.');
    const result=M.merge(base,before,cloud.records);
    if(result.conflicts.length){
-     message('Conflitto su '+result.conflicts.length+' civici modificati su entrambi i dispositivi. Nessun dato è stato sovrascritto. Conserva entrambi gli archivi e risolvi le differenze.',true);return;
+     const description='Conflitto su '+result.conflicts.length+' civici modificati su entrambi i dispositivi. Nessun dato sovrascritto. Risolvi le differenze prima di sincronizzare.';
+     message(description,true);return{ok:false,description};
    }
    const count=result.records.length,changedCloud=!sameRecords(result.records,cloud.records),
      changedLocal=!sameRecords(result.records,before);
-   const confirmation=await engine.confirmAction('Sincronizzare i dispositivi?',
-     'Risultato: '+count+' civici; '+(changedCloud?'aggiorno il cloud':'cloud già aggiornato')+
-     (changedLocal?', aggiorno anche questo dispositivo.':'.')+
-     ' I dati locali non saranno inviati automaticamente. Procedo?','Sincronizza');
-   if(!confirmation){message('Operazione annullata, dati invariati.');return;}
+   // Lo swipe esplicito in Archivio è il consenso all'invio.
+   // La conferma resta disponibile per eventuali comandi alternativi.
+   if(confirm){
+     const confirmation=await engine.confirmAction('Sincronizzare i dispositivi?',
+       'Risultato: '+count+' civici; '+(changedCloud?'aggiorno il cloud':'cloud già aggiornato')+
+       (changedLocal?', aggiorno anche questo dispositivo.':'.')+
+       ' I dati locali non saranno inviati automaticamente. Procedo?','Sincronizza');
+     if(!confirmation){message('Operazione annullata, dati invariati.');return{ok:false,description:'Operazione annullata.'};}
+   }
    if(!navigator.onLine)throw Error('Connessione persa: dati locali conservati.');
    if(!sameRecords(before,await engine.getRecords()))throw Error('L’Archivio è stato modificato durante la verifica. Riprova.');
    if(changedCloud){message('Invio le modifiche nel cloud…');await setCloud(result.records,cloud.updateTime);}
@@ -189,7 +192,12 @@ async function synchronize(){
    store(OWNER,session.uid);
    message('Sincronizzati '+count+' civici. iPhone e iPad vedranno gli stessi dati dopo la sincronizzazione sul rispettivo dispositivo.');
    engine.toast('Sincronizzazione cloud completata.');
- }catch(e){message('Sincronizzazione non completata: '+errorMessage(e),true)}
+   return{ok:true,count,changedCloud,changedLocal};
+ }catch(e){
+   const description='Sincronizzazione non completata: '+errorMessage(e);
+   message(description,true);
+   return{ok:false,description};
+ }
  finally{busy=false;showState();}
 }
 function logout(){
@@ -207,8 +215,6 @@ function init(options){
  $('cloud-login').addEventListener('click',()=>void login('login'));
  $('cloud-register').addEventListener('click',()=>void login('register'));
  $('cloud-logout').addEventListener('click',logout);
- $('cloud-sync').addEventListener('click',()=>void synchronize());
- $('cloud-refresh').addEventListener('click',()=>void pullIfSafe());
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')autoReceive();});
  window.addEventListener('focus',autoReceive);
  window.addEventListener('pageshow',autoReceive);
@@ -223,5 +229,5 @@ function init(options){
  message(session?'Cloud pronto. Controlla l’Archivio, poi premi Sincronizza.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init,acceptGoogleAuth,notice:message};
+root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false})};
 })(window);
