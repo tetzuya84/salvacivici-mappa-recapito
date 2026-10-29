@@ -145,3 +145,31 @@ La fascia scura con simbolo e scritte SalvaCivici / MAPPA RECAPITO, e badge BETA
 L'utente ha segnalato sull'iPad una cornice scura attorno al simbolo SalvaCivici assente sulla sua icona iPhone. Verificato nel sorgente: il vecchio PNG aveva una fascia esterna #0c1b29, cioè la cornice era effettivamente disegnata dentro l'immagine. Nuove icone generate da SVG del medesimo pin turcoise (#61dbcb), fondo turchese scuro uniforme #1b4b55 **a pieno bordo senza cornice né raggi degli angoli già disegnati** (la maschera con angoli arrotondati la applica il sistema operativo). Nuovi asset versionati: `assets/icon-home-192-v068.png` e `assets/icon-home-512-v068.png`; dimensioni, integrità PNG e SHA Git verificati. Aggiornati `manifest.webmanifest`, `apple-touch-icon`, favicon, immagine del logo sulla testata, `sw.js` (nuova cache), badge `0.6.8`. I vecchi PNG rimangono solo come asset storici, per non interrompere le cache esistenti.
 
 **Limite iPadOS:** una PWA già aggiunta alla schermata Home può mantenere l'icona precedente senza riscaricarla; cambiare icona web non garantisce l'aggiornamento visivo del collegamento già installato. Non eliminare la PWA installata senza prima un backup JSON e verifica dei dati nel cloud: l'installazione può possedere dati locali separati, e rimuoverla può eliminarli. Verificare la nuova immagine in Safari sul sito e sull'icona di una eventuale nuova installazione **solo dopo** backup/sincronizzazione. URL della PWA, ID nel manifest, IndexedDB, GPS e sync Firebase non sono stati modificati.
+
+## Beta 0.6.9 — doppia conferma per svuotare le acquisizioni e swipe laterale (29 ottobre 2026)
+
+### Eliminazione acquisizioni dopo il passaggio a Mappa Recapito
+
+Dalla scheda **Dati** è disponibile **Elimina tutte le acquisizioni**. Due finestre di conferma distinte:
+1. numero totale di civici e avvertenza di verificare prima l'importazione negli archivi e soprattutto in Google My Maps;
+2. conferma esplicita `ELIMINA TUTTI`, segnala eliminazione sia locale sia dall'archivio cloud condiviso, senza intaccare i JSON di backup su Drive o i pin My Maps.
+
+**Non premere prima di aver verificato la pubblicazione in My Maps**: i CSV/fogli Drive da soli non creano automaticamente i segnaposto. Nessuna eliminazione parte automaticamente e nessuna operazione di distruzione dati è stata eseguita in fase di deploy. Il comando richiede:
+- accesso Google Firebase attivo e dispositivo online;
+- archivi locale e remoto **identici**. Se differenti, chiede di sincronizzarli nell'Archivio e ricontrollare;
+- stesso numero civici dopo le due conferme e nessun cambiamento mentre opera;
+- aggiornamento Firestore condizionale alla revisione cloud (`updateTime`), che impedisce la sovrascrittura di modifiche contemporanee;
+- **prima** aggiornamento cloud a `[]`, **solo dopo** svuotamento IndexedDB e aggiornamento baseline locale. Se l'aggiornamento cloud fallisce, nessun civico locale viene rimosso.
+
+L'archivio vuoto si propaga ai dispositivi collegati che non hanno modifiche non sincronizzate quando riaprono l'app o ricevono l'aggiornamento cloud. Eventuali nuovi civici o modifiche rimaste solo su un altro dispositivo vengono protetti dalla logica di conflitto; non è garantito che siano eliminati senza una sincronizzazione concordata. Il JSON originale in Drive continua a costituire un backup recuperabile.
+
+### Navigazione con gesto orizzontale
+
+- Da Salva, swipe verso **sinistra** → Archivio → Dati; verso **destra** → direzione opposta. Ai margini non c'è cambio ciclico.
+- Viene richiesto uno swipe laterale netto (almeno 78px) e prevalentemente orizzontale. Lo scroll e gli swipe verticali di GPS/Archivio continuano a funzionare.
+- Il gesto non parte da `input`, `button`, `a`, `label`, `select`, `dialog` o controlli modificabili; inoltre rispetta l'area del bordo per Indietro Safari.
+- Navigazione tramite pulsanti inferiori mantenuta e compatibilità tastiera garantita.
+
+**Test:** `node tests/bulk-clear-swipe.test.js`; i test simulano i casi positivi, offline, senza login, cloud divergente, conteggio locale mutato, errore CAS Firestore e gesti orizzontali/verticali. Test browser reali su iPhone/iPad ancora da effettuare.
+
+URL PWA, `manifest.webmanifest` `id`/`start_url`/`scope`, database IndexedDB e account Google/Firebase restano invariati. Badge e SW cache: **0.6.9**.
