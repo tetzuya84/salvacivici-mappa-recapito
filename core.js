@@ -91,10 +91,11 @@ function applyVerifiedPosition(record,selection,verifiedAt=new Date().toISOStrin
  const chosen=selection?.chosen,original=selection?.original;
  if(!validGpsPoint(chosen)||!validGpsPoint(original))throw new Error('Coordinate non valide.');
  const accuracy=Number(original.accuracy);
- if(!Number.isFinite(accuracy)||accuracy<=0)throw new Error('Accuratezza GPS non valida.');
+ const hasAccuracy=Number.isFinite(accuracy)&&accuracy>0;
  const offset=metersBetween(original,chosen),moved=offset>=.5;
- return {...record,lat:chosen.lat,lon:chosen.lon,accuracy,
-   gpsOriginal:{lat:original.lat,lon:original.lon,accuracy},
+ return {...record,lat:chosen.lat,lon:chosen.lon,
+   ...(hasAccuracy?{accuracy}:{}),
+   gpsOriginal:{lat:original.lat,lon:original.lon,accuracy:hasAccuracy?accuracy:null},
    positionSource:moved?'manual':'gps_confirmed',
    positionVerifiedAt:verifiedAt,manualOffsetM:moved?Math.round(offset*10)/10:0};
 }
