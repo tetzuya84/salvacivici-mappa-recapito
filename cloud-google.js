@@ -1,11 +1,11 @@
-/* SalvaCivici Beta 0.6.1 — Google login, optional SDK adapter.
+/* SalvaCivici Beta 0.6.2 — Google login, optional SDK adapter.
    Firebase Auth signInWithPopup uses Google OAuth, not the Google Drive scopes.
    Fallback email/password remains available when the OS blocks a popup. */
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 const CONFIG={
-  apiKey:"AIzaSyAZfrIhmPy25_xDLIvb2SMPPsW_5H8hnCg",
+  apiKey:"AIzaSyAZfrIhmPy25_xDLIvb2SMPPsw_5H8hnCg",
   authDomain:"salvacivici-mappa-recapito.firebaseapp.com",
   projectId:"salvacivici-mappa-recapito",
   appId:"1:378014081900:web:df612e79d0033d55398949"
