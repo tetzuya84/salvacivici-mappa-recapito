@@ -96,3 +96,7 @@ Nella scheda **Dati → Archivio cloud condiviso** il pulsante principale è **A
 **Stato tecnico:** login Google tramite `signInWithPopup()` Firebase SDK ufficiale; errori per provider inattivo, dominio non autorizzato, popup bloccato e account diverso gestiti senza cancellare l'archivio. Il vecchio blocco OAuth sulla PWA iOS significa che la compatibilità su iPhone/iPad dalla Home **deve ancora essere provata**. Non si promette il funzionamento su tutti i dispositivi finché non è testato. Non cambiare né ricreare l'icona Home. Il database locale, il manifest PWA e l'identità cloud restano invariati.
 
 Guida completa e precauzioni: [GOOGLE_LOGIN.md](GOOGLE_LOGIN.md). Test mock: `node tests/google-login.test.js`.
+
+## Beta 0.6.2 (29/10/2026)
+
+Corretta una lettera maiuscola errata nella configurazione Firebase web dei due moduli di accesso. Aggiornata la cache PWA. La prova di accesso Google e sincronizzazione reale su iPhone/iPad rimane da completare. Manifest e civici locali invariati.
