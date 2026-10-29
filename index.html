@@ -28,7 +28,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.5.9</span>
+      <span class="version">BETA 0.6.0</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -76,20 +76,35 @@
 
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
         <div class="intro"><p class="eyebrow">I TUOI DATI</p><h1 id="data-title">Esporta e proteggi</h1><p class="subtitle">I dati restano su questo dispositivo finché non decidi di esportarli.</p></div>
-        <div class="data-card drive-sync-card">
+        <div class="data-card cloud-card">
           <div class="data-icon" aria-hidden="true">☁</div>
-          <h2>Sincronizzazione Google Drive</h2>
-          <p>Prima controlla e correggi i civici in Archivio. Su iPhone e iPad scegli Drive dal menu di condivisione; il backup parte solo su tua richiesta.</p>
-          <button id="drive-sync" type="button" class="primary full">Sincronizza con Drive</button>
-          <p id="drive-status" class="drive-status" role="status" aria-live="polite">Controllo collegamento…</p>
-          <button id="drive-setup-toggle" type="button" class="text-button">Configura collegamento Google</button>
-          <div class="drive-setup" id="drive-setup" hidden>
-            <label class="field-label" for="drive-client-id">ID client OAuth Google (applicazione web)</label>
-            <input id="drive-client-id" type="text" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="1234-abc.apps.googleusercontent.com">
-            <button id="drive-config-save" type="button" class="secondary full">Salva configurazione</button>
-            <p>La prima volta serve configurare un client OAuth in Google Cloud, abilitare l’API Google Drive e autorizzare l’origine <strong>https://tetzuya84.github.io</strong>. Non incollare password né client secret. <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Apri Google Cloud</a>.</p>
+          <h2>Archivio cloud condiviso</h2>
+          <p>Uno stesso archivio per iPhone e iPad. Correggi i civici prima di premere Sincronizza. Nessuna finestra di condivisione.</p>
+          <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Cloud da configurare.</p>
+          <div id="cloud-config" class="cloud-credentials" hidden>
+            <h3>Collega Firebase (una volta sola)</h3>
+            <label for="cloud-project" class="field-label">ID progetto Firebase</label>
+            <input id="cloud-project" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="salvacivici-mappa-recapito">
+            <label for="cloud-api-key" class="field-label">Chiave API web Firebase (non è una password)</label>
+            <input id="cloud-api-key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza...">
+            <button id="cloud-save-config" type="button" class="secondary full">Salva configurazione</button>
           </div>
-          <p class="drive-note">Il backup diretto usa l’accesso Google con permesso limitato ai file dell’app. Crea in «Il mio Drive» la cartella «SalvaCivici - Backup app», che puoi spostare nella cartella del progetto. Se non hai ancora collegato Google, puoi usare «Scarica backup JSON» qui sotto.</p>
+          <div id="cloud-login-panel" class="cloud-credentials" hidden>
+            <h3>Il tuo account SalvaCivici</h3>
+            <p>Usa la stessa email e la stessa password dell'archivio SalvaCivici su entrambi i dispositivi. Non serve la password Google.</p>
+            <label for="cloud-email" class="field-label">Email</label>
+            <input id="cloud-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off">
+            <label for="cloud-password" class="field-label">Password Firebase</label>
+            <input id="cloud-password" type="password" autocomplete="current-password">
+            <button id="cloud-login" type="button" class="primary full">Accedi</button>
+            <button id="cloud-register" type="button" class="text-button">Crea account SalvaCivici</button>
+          </div>
+          <div id="cloud-account" hidden>
+            <p id="cloud-identity" class="cloud-identity"></p>
+            <button id="cloud-sync" type="button" class="primary full">Sincronizza i dispositivi</button>
+            <button id="cloud-logout" type="button" class="text-button">Disconnetti</button>
+          </div>
+          <p class="cloud-help">Il GPS e l'Archivio continuano a funzionare offline. La prima sincronizzazione richiede una conferma. Eventuali modifiche incompatibili vengono bloccate, senza sovrascrivere i civici.</p>
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate, precisione e data. Puoi importarlo nelle tue mappe.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="data-card"><div class="data-icon">▣</div><h2>Copia di sicurezza</h2><p>Salva tutti i tuoi civici in un file JSON, utile se cambi telefono o cancelli i dati del browser.</p><button id="export-json" type="button" class="secondary full">Scarica backup JSON</button><button id="import-json" type="button" class="text-button">Ripristina da backup</button><input type="file" id="import-file" accept=".json,application/json" hidden></div>
@@ -109,8 +124,8 @@
   <dialog id="edit-dialog" class="modal"><form id="edit-form" class="modal-inner" method="dialog"><h2>Modifica civico</h2><p>Le coordinate GPS rimangono invariate.</p><label for="edit-comune">Comune</label><input id="edit-comune" required maxlength="90"><label for="edit-via">Via</label><input id="edit-via" required maxlength="130"><label for="edit-civico">Civico</label><input id="edit-civico" required maxlength="35"><div class="modal-actions"><button id="edit-cancel" type="button" class="secondary">Annulla</button><button id="edit-save" type="submit" class="primary">Salva</button></div></form></dialog>
   <script src="comuni-mantova.js" defer></script>
   <script src="core.js" defer></script>
-  <script src="https://accounts.google.com/gsi/client" async></script>
-  <script src="drive-sync.js" defer></script>
+  <script src="cloud-merge.js" defer></script>
+  <script src="cloud-sync.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
