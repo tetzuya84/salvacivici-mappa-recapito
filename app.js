@@ -90,6 +90,9 @@
     };
     async function performSync(){
       if(loading)return;
+      // Un solo impulso brevissimo quando il gesto avvia davvero la sync.
+      // iOS Safari/PWA non supporta navigator.vibrate: feedback visivo invariato.
+      try{if(typeof navigator.vibrate==='function')navigator.vibrate(20);}catch(_){}
       loading=true;
       clearTimeout(resetTimer);
       indicator.dataset.state='loading';indicator.style.height='67px';
