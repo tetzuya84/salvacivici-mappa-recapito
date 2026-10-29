@@ -236,7 +236,8 @@
     return new Promise(resolve=>{
       const modal=$('confirm-dialog');
       $('dialog-title').textContent=title;$('dialog-message').textContent=message;$('dialog-confirm').textContent=confirmLabel;
-      const finish = answer=>{modal.removeEventListener('cancel',onCancel);$('dialog-cancel').removeEventListener('click',onNo);$('dialog-confirm').removeEventListener('click',onYes);if(modal.open)modal.close();resolve(answer);};
+      $('dialog-confirm').classList.toggle('danger-confirm',confirmLabel==='ELIMINA TUTTI');
+      const finish = answer=>{modal.removeEventListener('cancel',onCancel);$('dialog-cancel').removeEventListener('click',onNo);$('dialog-confirm').removeEventListener('click',onYes);$('dialog-confirm').classList.remove('danger-confirm');if(modal.open)modal.close();resolve(answer);};
       const onNo=()=>finish(false),onYes=()=>finish(true),onCancel=event=>{event.preventDefault();finish(false);};
       modal.addEventListener('cancel',onCancel);$('dialog-cancel').addEventListener('click',onNo);$('dialog-confirm').addEventListener('click',onYes);
       modal.showModal();
