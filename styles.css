@@ -605,3 +605,31 @@
 }
 #page-capture #save-button:disabled{opacity:.56}
 @media(prefers-reduced-motion:reduce){#page-capture .gps-meter-fill{transition:none}}
+
+/* Beta 0.6.11 - correzione dei pin su mappa interattiva */
+#page-capture .map-review-entry{margin:7px 0 10px;text-align:center}
+#page-capture .map-open-button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:1px solid #90c7c0;background:#e9f7f3;color:#116d68;border-radius:13px;font:inherit;font-size:13px;font-weight:760;min-height:46px;padding:9px 12px}
+#page-capture .map-open-button span{font-size:23px;line-height:1}
+#page-capture .map-open-button:disabled{opacity:.56}
+#page-capture #map-review-note{font-size:11px;color:#62818a;margin:6px 8px 0;line-height:1.4}
+#page-capture #map-review-note.reviewed{color:#087b68;font-weight:710}
+.map-review-dialog{position:fixed;inset:0;margin:auto;box-sizing:border-box;border:0;border-radius:20px;padding:0;width:min(96vw,600px);max-height:90svh;box-shadow:0 16px 55px rgba(7,24,36,.3);background:#f7f9fa;color:#142433}
+.map-review-dialog::backdrop{background:rgba(6,24,32,.7)}
+.map-review-pane{box-sizing:border-box;display:flex;flex-direction:column;gap:9px;padding:12px;max-height:90svh;overflow-y:auto}
+.map-review-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.map-review-top h2{font-size:19px;line-height:1.2;margin:0}
+.map-review-top p{font-size:12px;margin:4px 0 0;color:#4a7d79;font-weight:680}
+#map-review-close{display:grid;place-items:center;flex:none;border:0;width:37px;height:37px;background:#e5eef0;border-radius:11px;color:#28434f;font-size:26px;line-height:1}
+.map-review-instruction{margin:0;color:#4f6571;font-size:12px;line-height:1.45}
+.map-review-map-wrap{position:relative;min-height:200px}
+.map-review-canvas{height:min(44svh,440px);min-height:220px;background:#dfe9eb;border:1px solid #cbdadd;border-radius:13px;overflow:hidden;touch-action:none}
+.map-review-loading{position:absolute;z-index:600;inset:0;margin:0;padding:25px 12px;background:#eaf0f2;color:#4b6570;display:flex;align-items:center;justify-content:center;border-radius:13px;text-align:center;font-size:13px;line-height:1.5}
+.map-review-loading[hidden]{display:none!important}
+.map-review-status{margin:0;font-size:12px;line-height:1.4;color:#225f60}
+.map-review-coordinates{margin:-4px 0 1px;color:#647e87;font-size:11px;font-variant-numeric:tabular-nums}
+.map-review-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px}
+.map-review-actions button{font-size:13px;min-height:47px;line-height:1.2;padding:9px 10px}
+.map-review-cancel{min-height:36px;border:0;background:transparent;color:#6c7f86;font:inherit;font-size:12px;font-weight:730}
+.map-review-privacy{margin:0;font-size:10px;color:#72868a;line-height:1.35}
+.map-review-canvas .leaflet-control-attribution{font-size:10px!important}
+@media(max-height:670px){.map-review-canvas{height:35svh;min-height:160px}.map-review-dialog,.map-review-pane{max-height:96svh}.map-review-pane{gap:6px;padding:9px}}
