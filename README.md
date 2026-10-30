@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.17**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.18**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -238,3 +238,11 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - «Verifica pin» apre l'editor preesistente e modifica solo lo stesso record dopo conferma. Sincronizzazione cloud volontaria dall'Archivio invariata. Swipe orizzontale preservato fuori dalla superficie della mappa; pannello cartografico escluso dallo swipe per non interferire con zoom/trascinamento.
 - Mappa e libreria Leaflet si caricano solo quando la scheda viene aperta; richiedono Internet. Archiviazione ed esportazioni continuano a funzionare offline. `map-overview.js` in cache service-worker v0.6.17.
 - **Privacy**: gli attuali due fogli Sheets e la mappa My Maps Generale mantengono la condivisione «chiunque abbia il link» finché non viene rimossa manualmente tramite Google/Work; repository GitHub e GitHub Pages restano pubblici. Non applicare falsa schermata di accesso lato client: hosting privato richiede controllo server/edge, migrazione accurata di IndexedDB e test su iPhone.
+
+## Beta 0.6.18 — barre bloccate e mappa confinata
+
+- Corretto il difetto visivo confermato da due screenshot su iPad: la mappa Leaflet veniva disegnata sopra l'intestazione con il logo e sopra la barra inferiore.
+- Intestazione `position: sticky`, `z-index:2000`, sfondo opaco; navigazione `position:fixed`, `z-index:2000`, sfondo completamente bianco. Entrambe rimangono visibili mentre la parte centrale scorre.
+- La mappa generale è contenuta in un proprio stacking context (`isolation:isolate`, `contain:paint`, `overflow:hidden`): livelli Leaflet, pin e controlli non possono superare le due fasce.
+- Nessuna modifica ai record, IndexedDB, GPS, Firebase, backup, mappa dei civici o navigazione; solo CSS e versione HTML/SW/README. Dialog di verifica pin resta nel livello superiore nativo.
+- Test layout CSS: presenza e priorità di z-index rispetto ai livelli Leaflet, due barre fisse/sticky e mappa isolata; collaudo reale su iPad/iPhone ancora da verificare dopo l'aggiornamento.

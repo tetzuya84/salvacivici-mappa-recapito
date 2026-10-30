@@ -670,3 +670,40 @@
 .overview-actions .primary,.overview-actions .secondary{min-height:47px;text-align:center;text-decoration:none;font-size:12px;padding:8px 7px;}
 .overview-alt-nav{display:block;text-align:center;margin:12px 0 0;color:#13786f;font-size:12px;font-weight:720;}
 .overview-privacy{font-size:10px;color:#687f89;line-height:1.5;margin:12px 3px;}
+
+/* Beta 0.6.18 — corregge l'ordine di sovrapposizione Leaflet in Safari/iPad.
+   Le fasce restano fuori dal riquadro cartografico; la pagina centrale continua a scorrere.
+   Non usare overflow:hidden su body/app-shell: interromperebbe Archivio e swipe GPS. */
+.app-shell .topbar,
+.app-shell.is-capture .topbar {
+  position:-webkit-sticky;
+  position:sticky;
+  top:0;
+  z-index:2000;
+  background:var(--navy);
+  isolation:isolate;
+}
+.app-shell .tabbar,
+.app-shell.is-capture .tabbar {
+  position:fixed;
+  bottom:0;
+  z-index:2000;
+  background:#fff;
+  opacity:1;
+  box-shadow:0 -3px 16px rgba(12,27,41,.1);
+  isolation:isolate;
+}
+/* I livelli Leaflet (200–1000) non possono più uscire dalla propria mappa. */
+.app-shell #page-map {isolation:isolate;}
+.app-shell #page-map .overview-map-wrap {
+  position:relative;
+  z-index:0;
+  isolation:isolate;
+  contain:paint;
+  overflow:hidden;
+}
+.app-shell #page-map #overview-canvas {
+  position:relative;
+  z-index:0;
+}
+.app-shell .toast,.toast{z-index:2100;}
