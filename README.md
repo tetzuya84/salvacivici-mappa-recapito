@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.5.8**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.14**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -10,7 +10,7 @@ La rilevazione impiega normalmente alcuni secondi dopo il primo fix; se il segna
 
 ## Dati e backup
 
-I civici restano nell'archivio locale IndexedDB dell'app. L'aggiornamento mantiene lo **stesso database** della Beta 0.2. Le nuove versioni **non sincronizzano automaticamente** Google My Maps o Google Drive. Usare periodicamente **Dati → Scarica backup JSON** e **Esporta CSV**.
+I civici restano nell'archivio locale IndexedDB dell'app. L'aggiornamento mantiene lo **stesso database** della Beta 0.2. Le nuove versioni **non sincronizzano automaticamente** Google My Maps o Google Drive. Usare periodicamente **Dati → Scarica tutte le acquisizioni** e **Esporta CSV**.
 
 Repository pubblico: **non aggiungere dati reali dei civici**.
 
@@ -203,3 +203,11 @@ Motivazione: rilievi del 29/10 in Piazza Castello (Redondesco) riscontrati anche
 ### Correzione lotto 29/10 già importato su My Maps
 
 I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'utente ha segnalato di averli già importati su Google My Maps. Per correggerli su My Maps, identificare mappa e layer, poi modificare il marker esistente o reimportare una copia rettificata dopo backup del layer. La correzione effettuata dentro SalvaCivici NON sposta automaticamente il marker precedentemente importato in My Maps. Non eliminare mappe o layer con civici storici.
+
+## Beta 0.6.14 — Zoom a due dita senza rimbalzo (30/10/2026)
+
+- Corretto il problema per cui l'utente ingrandiva la mappa con due dita e questa tornava al livello iniziale: la mappa partiva già al massimo zoom 19 e Leaflet applicava il rimbalzo ai limiti.
+- `maxZoom:21`, `zoomSnap:0.25`, `touchZoom:true` e `bounceAtZoomLimits:false` per mantenere il livello scelto dopo il pinch; le tessere OpenStreetMap hanno `maxNativeZoom:19` e vengono ingrandite oltre 19, senza richiedere livelli nativi inesistenti. Lo zoom oltre 19 può risultare meno nitido.
+- Non è cambiato nulla nell'applicazione delle coordinate, GPS, trascinamento e conferma del pin, dati IndexedDB/Firebase, mappe My Maps o URL PWA.
+- Regressione in `tests/map-review.test.js`: opzioni zoom, tenuta del livello scelto dopo un aggiornamento GPS e dopo spostamento manuale del pin; verifica logica simulata riuscita. Prova touch su iPhone ancora necessaria.
+- In Beta 0.6.13 è stato rimosso dalla scheda Salvataggi il pulsante di ripristino manuale, mantenendo «Scarica tutte le acquisizioni» e il download JSON.
