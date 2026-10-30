@@ -690,20 +690,7 @@
     const backup={app:'SalvaCivici',version:1,exportedAt:new Date().toISOString(),records:state.records};
     await shareOrDownload(`SalvaCivici_backup_${filenameDate()}.json`,'application/json',JSON.stringify(backup,null,2));
   });
-  $('import-json').addEventListener('click',()=>$('import-file').click());
-  $('import-file').addEventListener('change',async event=>{
-    const file=event.target.files?.[0];event.target.value='';if(!file)return;
-    if(file.size>25*1024*1024){toast('Il file è troppo grande.');return;}
-    let records;
-    try{const backup=JSON.parse(await file.text());
-      if(backup?.app!=='SalvaCivici'||backup?.version!==1||!Array.isArray(backup.records)||backup.records.length>100000||!backup.records.every(SC.isRecord))throw new Error('bad format');
-      const ids=new Set();for(const r of backup.records){if(ids.has(r.id))throw new Error('duplicate ID');ids.add(r.id);}
-      records=backup.records;
-    }catch(e){toast('Backup non valido o formato non riconosciuto.');return;}
-    const answer=await confirmAction('Ripristina backup',`Importare ${records.length} civici? I dati già presenti resteranno; eventuali punti con lo stesso ID saranno aggiornati.`,'Importa');
-    if(!answer)return;
-    try{await writeMany(records);await refresh();toast(`${records.length} civici importati.`);}catch(e){toast('Importazione non riuscita.');}
-  });
+
 
   /* Aggiornamento versioni: nessun reset IndexedDB o localStorage. */
   function setupAppUpdates(){
