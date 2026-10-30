@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.16**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.17**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
