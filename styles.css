@@ -633,3 +633,9 @@
 .map-review-privacy{margin:0;font-size:10px;color:#72868a;line-height:1.35}
 .map-review-canvas .leaflet-control-attribution{font-size:10px!important}
 @media(max-height:670px){.map-review-canvas{height:35svh;min-height:160px}.map-review-dialog,.map-review-pane{max-height:96svh}.map-review-pane{gap:6px;padding:9px}}
+
+/* Beta 0.6.16 — verifica immediata del singolo civico. */
+.archive-map-help{font-size:12px;color:#50737a;line-height:1.5;margin:-7px 3px 14px;text-align:center}
+.record-find-pin{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;padding:11px 12px;border:0;border-radius:11px;color:#fff;background:#0b817a;font-size:14px;font-weight:750;margin:0 0 11px;touch-action:manipulation}
+.record-find-pin:active{background:#065e59}.record-find-pin:focus-visible{outline:3px solid #7bdbcc;outline-offset:2px}
+.record-badge{max-width:45%;text-align:center;white-space:normal}

@@ -1,4 +1,4 @@
-/* Beta 0.6.14 — revisione del pin su cartografia, senza geocoding o scritture cloud.
+/* Beta 0.6.16 — revisione del pin su cartografia, senza geocoding o scritture cloud.
    Leaflet viene caricato solo quando l'utente apre la mappa; i tile OSM richiedono rete. */
 (function(root){
 'use strict';
@@ -47,9 +47,11 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     $('map-review-coordinates').textContent=chosen.lat.toFixed(7)+', '+chosen.lon.toFixed(7);
     $('map-review-gps-status').textContent=active.kind==='capture'
       ?(active.ready?'3/3 letture GPS · scegli l’ingresso':'Attendi le tre letture GPS prima di confermare')
-      :'Correzione di un civico già salvato';
+      :'Punto già salvato · conferma dopo aver controllato l’ingresso';
     confirmButton.disabled=busy||!active.ready||!active.mapLoaded;
-    confirmButton.textContent=moved?'Usa posizione corretta':'Conferma questo punto';
+    confirmButton.textContent=active.kind==='archive'
+      ?(moved?'Salva pin corretto':'Conferma posizione verificata')
+      :(moved?'Usa posizione corretta':'Conferma questo punto');
     $('map-review-reset').disabled=busy||!active.moved;
     if(map&&pin){
       pin.setLatLng([chosen.lat,chosen.lon]);
@@ -112,6 +114,9 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
       toast('Attendi almeno la prima posizione GPS.');return;
     }
     active={...selection,mapLoaded:false};
+    $('map-review-title').textContent=selection.kind==='archive'
+      ?'Trova pin: '+selection.record.via+', '+selection.record.civico
+      :'Posizione sulla mappa';
     const dialog=$('map-review-dialog');
     dialog.showModal();
     $('map-review-canvas').hidden=false;

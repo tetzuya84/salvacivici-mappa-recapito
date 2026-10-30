@@ -1,4 +1,4 @@
-/* Beta 0.6.14: test della mappa su Leaflet simulato, senza connessione o dati reali.
+/* Beta 0.6.16: test della mappa su Leaflet simulato, senza connessione o dati reali.
    Eseguire con: node tests/map-review.test.js */
 'use strict';
 const assert=require('node:assert/strict');
@@ -105,13 +105,24 @@ async function run(){
   h.review.resetCapture();
   assert.equal(h.review.getCaptureSelection(),null);
   h.review.openArchive(base);await flush();
+  assert.match(h.$('map-review-title').textContent,/Piazza Castello, 20/);
+  assert.match(h.$('map-review-gps-status').textContent,/Punto già salvato/);
+  assert.equal(h.$('map-review-confirm').textContent,'Conferma posizione verificata');
   h.map.events.click({latlng:{lat:chosen.lat,lng:chosen.lon}});
+  assert.equal(h.$('map-review-confirm').textContent,'Salva pin corretto');
   await h.$('map-review-confirm').onclick();await flush();
   assert.equal(h.savedArchive.id,base.id);
   assert.equal(h.savedArchive.positionSource,'manual');
   h.review.openArchive(base);await flush();
   h.$('map-review-cancel').onclick();
   assert.equal(h.review.isOpen(),false);
-  console.log('Beta 0.6.14: test mappa/coordinate, pinch e tenuta zoom superati.');
+  assert.equal(h.savedArchive.positionSource,'manual','La semplice apertura non cambia il record');
+  h.review.openArchive(base);await flush();
+  await h.$('map-review-confirm').onclick();await flush();
+  assert.equal(h.savedArchive.positionSource,'gps_confirmed','Punto non spostato verificato');
+  assert.equal(h.savedArchive.id,base.id,'ID originale preservato');
+  assert.equal(h.savedArchive.lat,base.lat);
+  assert.equal(h.savedArchive.lon,base.lon);
+  console.log('Beta 0.6.16: test mappa e verifica archivio superati.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.15**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.16**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -220,3 +220,11 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - La scheda CSV per Google My Maps è stata spostata dopo «Elimina tutte le acquisizioni», mantenendo invariati export e dati.
 - Nuovo set di icone ispirato all'immagine di riferimento: fondo verde petrolio, pin turchese, senza testo nell'icona (nome mostrato dal sistema). Asset versionati SVG, favicon 16/32, Apple touch 180, PNG 192, PNG 512 e maskable 512; riferimenti nel manifest e HTML aggiornati. Su iOS l'icona già presente sulla Home può restare in cache: non rimuovere la PWA senza prima un backup verificato dei civici.
 - Resta necessario il collaudo touch sul dispositivo reale e la conferma visiva della nuova icona installata; le modifiche non toccano dati GPS, Firebase, Sheets o My Maps.
+
+## Beta 0.6.16 — «Trova pin sulla mappa» per ogni civico
+
+- La scheda del singolo civico nell'Archivio mostra un pulsante principale «Trova pin sulla mappa» (ex «Sposta pin»). Apre la cartografia interna sul pin già salvato; il dialogo indica la via e il civico.
+- La mappa consente sola visione oppure tap/trascinamento sul punto reale; la conferma esplicita aggiorna lo stesso record con ID e data originali, GPS di origine conservato, spostamento e timestamp verifica. Chiudere/annullare non salva nulla.
+- Distinzione dei badge: «Da verificare» per dati GPS storici non confermati, «Verificato» per conferma senza spostamento, «Pin corretto» per ingresso riposizionato.
+- L'esportazione JSON/CSV riflette i record aggiornati. Google My Maps e i fogli su Drive NON si aggiornano automaticamente: richiedono successiva sincronizzazione controllata, evitando duplicati. Le operazioni cloud rispettano il flusso già esistente.
+- Test di regressione aggiornato per apertura archivio, nome civico, annullamento senza scritture e conferma mantenendo ID, oltre agli esistenti controlli GPS/pinch. Collaudo su iPhone ancora necessario.

@@ -30,7 +30,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.15</span>
+      <span class="version">BETA 0.6.16</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -108,6 +108,7 @@
         <button id="archive-sync-keyboard" class="sr-only" type="button">Sincronizza archivio cloud</button>
         <div class="stats-row"><div class="stat"><strong id="total-records">0</strong><span>Civici</span></div><div class="stat"><strong id="total-towns">0</strong><span>Comuni</span></div></div>
         <label class="sr-only" for="search">Cerca civici</label><input id="search" class="search" type="search" placeholder="Cerca via, civico o comune…">
+        <p class="archive-map-help">Apri <strong>Trova pin sulla mappa</strong> per controllare ogni ingresso. Sposta il punto solo se necessario, poi conferma prima di esportare i civici.</p>
         <div id="record-list" class="records-list"></div>
         <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>I punti salvati compariranno qui.</p></div>
       </section>
@@ -171,7 +172,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="confirm-dialog" class="modal"><div class="modal-inner"><h2 id="dialog-title">Confermi?</h2><p id="dialog-message"></p><div class="modal-actions"><button id="dialog-cancel" type="button" class="secondary">Annulla</button><button id="dialog-confirm" type="button" class="primary">Conferma</button></div></div></dialog>
-  <dialog id="edit-dialog" class="modal"><form id="edit-form" class="modal-inner" method="dialog"><h2>Modifica civico</h2><p>Per correggere le coordinate usa «Sposta pin» nell’Archivio.</p><label for="edit-comune">Comune</label><input id="edit-comune" required maxlength="90"><label for="edit-via">Via</label><input id="edit-via" required maxlength="130"><label for="edit-civico">Civico</label><input id="edit-civico" required maxlength="35"><div class="modal-actions"><button id="edit-cancel" type="button" class="secondary">Annulla</button><button id="edit-save" type="submit" class="primary">Salva</button></div></form></dialog>
+  <dialog id="edit-dialog" class="modal"><form id="edit-form" class="modal-inner" method="dialog"><h2>Modifica civico</h2><p>Per verificare o correggere le coordinate usa «Trova pin sulla mappa» nell’Archivio.</p><label for="edit-comune">Comune</label><input id="edit-comune" required maxlength="90"><label for="edit-via">Via</label><input id="edit-via" required maxlength="130"><label for="edit-civico">Civico</label><input id="edit-civico" required maxlength="35"><div class="modal-actions"><button id="edit-cancel" type="button" class="secondary">Annulla</button><button id="edit-save" type="submit" class="primary">Salva</button></div></form></dialog>
   <dialog id="map-review-dialog" class="map-review-dialog" aria-labelledby="map-review-title">
     <div class="map-review-pane">
       <div class="map-review-top">

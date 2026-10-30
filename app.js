@@ -604,7 +604,7 @@
       const card=elt('article','record');
       const head=elt('div','record-head'),heading=elt('div');
       heading.append(elt('h3','',`${r.via}, ${r.civico}`),elt('p','',r.comune));
-      const source=r.positionSource==='manual'?'Corretto':r.positionSource==='gps_confirmed'?'Verificato':'GPS';
+      const source=r.positionSource==='manual'?'Pin corretto':r.positionSource==='gps_confirmed'?'Verificato':'Da verificare';
       head.append(heading,elt('span','record-badge',source));
       const time=new Date(r.createdAt).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'});
       const rawAccuracy=r.gpsOriginal?.accuracy??r.accuracy;
@@ -613,12 +613,16 @@
         ?'Pin corretto a mano · GPS originale '+accuracyText
         :'GPS '+accuracyText;
       const meta=elt('p','record-meta',`${time} · ${Number(r.lat).toFixed(6)}, ${Number(r.lon).toFixed(6)} · ${positionText}`);
+      // Verifica individuale sull'archivio senza esportazione e senza duplicare il record.
+      const findPin=elt('button','record-find-pin','⌖ Trova pin sulla mappa');
+      findPin.type='button';
+      findPin.setAttribute('aria-label',`Trova e verifica il pin di ${r.via}, ${r.civico}, ${r.comune}`);
+      findPin.addEventListener('click',()=>mapReview.openArchive(r));
       const actions=elt('div','record-actions');
-      const map=elt('a','','Apri mappa');map.href=`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`;map.target='_blank';map.rel='noopener noreferrer';
+      const map=elt('a','','Google Maps');map.href=`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`;map.target='_blank';map.rel='noopener noreferrer';
       const edit=elt('button','','Modifica');edit.type='button';edit.addEventListener('click',()=>editRecord(r));
-      const movePin=elt('button','','Sposta pin');movePin.type='button';movePin.addEventListener('click',()=>mapReview.openArchive(r));
       const del=elt('button','delete','Elimina');del.type='button';del.addEventListener('click',()=>deleteRecord(r));
-      actions.append(map,edit,movePin,del);card.append(head,meta,actions);fragment.append(card);
+      actions.append(map,edit,del);card.append(head,meta,findPin,actions);fragment.append(card);
     }
     list.append(fragment);
   }
