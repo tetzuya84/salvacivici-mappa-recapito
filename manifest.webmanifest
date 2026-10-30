@@ -11,16 +11,22 @@
   "description": "Salvataggio civici con coordinate GPS e esportazione per Google My Maps",
   "icons": [
     {
-      "src": "assets/icon-home-192-v068.png",
+      "src": "assets/icon-192-v06515.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "assets/icon-home-512-v068.png",
+      "src": "assets/icon-512-v06515.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-maskable-512-v06515.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

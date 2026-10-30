@@ -692,37 +692,21 @@
   });
 
 
-  /* Aggiornamento versioni: nessun reset IndexedDB o localStorage. */
+  /* Aggiornamenti: un tocco, senza mai resettare IndexedDB o localStorage. */
   function setupAppUpdates(){
-    if(!('serviceWorker'in navigator)||location.protocol!=='https:')return;
-    const banner=$('update-banner');
-    let controller=navigator.serviceWorker.controller;
-    let lastCheck=0;
-    $('apply-update').addEventListener('click',async()=>{
-      if(gpsBusy){toast('Termina prima il rilevamento GPS.');return;}
-      if($('edit-dialog').open||mapReview.isOpen()){toast('Chiudi prima la mappa o la modifica del civico.');return;}
-      if($('indirizzo').value.trim()){
-        const proceed=await confirmAction('Aggiornare SalvaCivici?','Il civico che stai compilando non è ancora salvato. I civici già presenti nell’archivio rimarranno disponibili.','Aggiorna');
-        if(!proceed)return;
+    window.SCUpdates?.setup({
+      notify:toast,
+      beforeUpdate:async()=>{
+        if(gpsBusy){toast('Termina prima il rilevamento GPS.');return false;}
+        if($('edit-dialog').open||mapReview.isOpen()){toast('Chiudi prima la mappa o la modifica del civico.');return false;}
+        if($('indirizzo').value.trim()){
+          return await confirmAction('Aggiornare SalvaCivici?',
+            'Il civico che stai compilando non è ancora salvato. I civici già presenti nell’archivio rimarranno disponibili.',
+            'Aggiorna');
+        }
+        return true;
       }
-      location.reload();
     });
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{
-      const next=navigator.serviceWorker.controller;
-      if(controller&&next&&controller!==next)banner.hidden=false;
-      controller=next;
-    });
-    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
-      const check=()=>{
-        if(!navigator.onLine||document.visibilityState==='hidden'||Date.now()-lastCheck<45000)return;
-        lastCheck=Date.now();
-        reg.update().catch(()=>{});
-      };
-      check();
-      document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
-      window.addEventListener('online',check);
-      window.addEventListener('pageshow',check);
-    }).catch(()=>{});
   }
   (async()=>{
     try{state.db=await dbOpen();await refresh();}catch(error){toast('Archivio locale non disponibile: impossibile salvare i civici.');$('save-button').disabled=true;}

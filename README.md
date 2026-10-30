@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.14**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.15**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -211,3 +211,12 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Non è cambiato nulla nell'applicazione delle coordinate, GPS, trascinamento e conferma del pin, dati IndexedDB/Firebase, mappe My Maps o URL PWA.
 - Regressione in `tests/map-review.test.js`: opzioni zoom, tenuta del livello scelto dopo un aggiornamento GPS e dopo spostamento manuale del pin; verifica logica simulata riuscita. Prova touch su iPhone ancora necessaria.
 - In Beta 0.6.13 è stato rimosso dalla scheda Salvataggi il pulsante di ripristino manuale, mantenendo «Scarica tutte le acquisizioni» e il download JSON.
+
+## Beta 0.6.15 — aggiornamento e icone (30/10/2026)
+
+- Il pulsante «Aggiorna» ora gestisce il nuovo service worker e usa una navigazione con parametro anti-cache, con una singola ricarica protetta da doppio tocco. L'avvio da una versione precedente può dipendere dal vecchio codice ancora in memoria. La verifica non cancella IndexedDB né credenziali.
+- Nuovo modulo `updates.js` con protezioni per GPS in corso, finestra mappa aperta e bozza non salvata; ritorno da background e controlli rete mantengono il limite di 45 secondi.
+- Service worker v0.6.15 network-first per le navigazioni; la cache delle pagine con query di refresh è normalizzata su `index.html`, evitando copie progressive; attivazione `SKIP_WAITING` supportata.
+- La scheda CSV per Google My Maps è stata spostata dopo «Elimina tutte le acquisizioni», mantenendo invariati export e dati.
+- Nuovo set di icone ispirato all'immagine di riferimento: fondo verde petrolio, pin turchese, senza testo nell'icona (nome mostrato dal sistema). Asset versionati SVG, favicon 16/32, Apple touch 180, PNG 192, PNG 512 e maskable 512; riferimenti nel manifest e HTML aggiornati. Su iOS l'icona già presente sulla Home può restare in cache: non rimuovere la PWA senza prima un backup verificato dei civici.
+- Resta necessario il collaudo touch sul dispositivo reale e la conferma visiva della nuova icona installata; le modifiche non toccano dati GPS, Firebase, Sheets o My Maps.
