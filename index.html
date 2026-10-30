@@ -30,7 +30,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.18</span>
+      <span class="version">BETA 0.6.19</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -129,7 +129,9 @@
         <div class="overview-map-wrap" data-no-swipe>
           <div id="overview-canvas" class="overview-map" aria-label="Mappa di tutti i civici salvati"></div>
           <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
+          <button id="overview-locate" type="button" class="overview-locate" disabled aria-label="Torna alla mia posizione GPS" title="Torna alla mia posizione GPS">◎ La mia posizione</button>
         </div>
+        <p id="overview-location-status" class="overview-location-status" role="status" aria-live="polite" hidden></p>
         <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
         <div id="overview-detail" class="overview-detail" hidden>
           <p class="eyebrow">CIVICO SELEZIONATO</p>

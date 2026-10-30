@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.18**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.19**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -246,3 +246,11 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - La mappa generale è contenuta in un proprio stacking context (`isolation:isolate`, `contain:paint`, `overflow:hidden`): livelli Leaflet, pin e controlli non possono superare le due fasce.
 - Nessuna modifica ai record, IndexedDB, GPS, Firebase, backup, mappa dei civici o navigazione; solo CSS e versione HTML/SW/README. Dialog di verifica pin resta nel livello superiore nativo.
 - Test layout CSS: presenza e priorità di z-index rispetto ai livelli Leaflet, due barre fisse/sticky e mappa isolata; collaudo reale su iPad/iPhone ancora da verificare dopo l'aggiornamento.
+
+## Beta 0.6.19 — «La mia posizione» nella mappa generale
+
+- Pulsante in alto a destra del riquadro cartografico «◎ La mia posizione». La richiesta GPS parte **solo su pressione esplicita**; un fix ad alta precisione, timeout 14 s, `maximumAge:0` per evitare coordinate vecchie.
+- La mappa si ricentra sulla posizione attuale (zoom 18), con un punto azzurro bordato bianco e un cerchio di precisione stimata (solo per accuracy ≤500 m), distinti dai civici. Il punto GPS rimane visibile anche filtrando i civici.
+- Indicatore per ricerca, successo, permesso negato, scadenza GPS o assenza segnale. Durante la ricerca la pressione ripetuta viene bloccata; una nuova pressione successiva legge un fix nuovo.
+- Nessun tracciamento in background, nessuna nuova acquisizione, nessuna scrittura IndexedDB o sincronizzazione Firebase/Drive/My Maps. Tasto confinato nel riquadro della mappa, senza interferire con le barre fisse della Beta 0.6.18.
+- Verifica automatica simulata e collaudo iPhone/iPad sono parte del rilascio.

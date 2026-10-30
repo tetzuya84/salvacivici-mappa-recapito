@@ -707,3 +707,20 @@
   z-index:0;
 }
 .app-shell .toast,.toast{z-index:2100;}
+
+/* Beta 0.6.19 — pulsante GPS, limitato al riquadro della mappa isolata. */
+.app-shell #page-map .overview-locate{
+  position:absolute;top:12px;right:12px;z-index:1100;
+  display:flex;align-items:center;justify-content:center;
+  min-height:42px;max-width:52%;border:1px solid #cbd8de;
+  border-radius:10px;padding:8px 12px;background:#fff;
+  color:#145f68;font-size:12px;line-height:1.25;font-weight:800;
+  box-shadow:0 2px 9px rgba(12,27,41,.19);
+  touch-action:manipulation;
+}
+.app-shell #page-map .overview-locate:disabled{opacity:.7;}
+.app-shell #page-map .overview-locate:focus-visible{outline:3px solid #1478e3;outline-offset:2px;}
+.overview-location-status{
+  font-size:12px;line-height:1.4;color:#23637c;
+  text-align:center;margin:9px 2px 0;
+}

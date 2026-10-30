@@ -1,4 +1,4 @@
-/* Beta 0.6.17 — panorama civici e avvio navigazione, dati solo locali. */
+/* Beta 0.6.19 — mappa civici con pulsante GPS «La mia posizione». */
 (function(root){
 'use strict';
 function valid(r){
@@ -14,8 +14,10 @@ function create({getRecords,onVerify,notify}){
    summary=$('overview-summary'),empty=$('overview-empty'),detail=$('overview-detail'),
    title=$('overview-selected-title'),sub=$('overview-selected-status'),
    coord=$('overview-selected-coordinates'),apple=$('overview-apple'),google=$('overview-google'),
-   verify=$('overview-verify'),loading=$('overview-loading');
+   verify=$('overview-verify'),loading=$('overview-loading'),
+   locateButton=$('overview-locate'),locationStatus=$('overview-location-status');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
+ let locationMarker=null,locationAccuracy=null,locating=false;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
  function options(){
@@ -69,6 +71,61 @@ function create({getRecords,onVerify,notify}){
      else map.fitBounds(L.latLngBounds(bounds).pad(.15),{maxZoom:17,padding:[28,28],animate:false});
    }
  }
+ function showLocationMessage(message){
+   locationStatus.hidden=false;
+   locationStatus.textContent=message;
+ }
+ function finishLocate(){locating=false;locateButton.disabled=!map;locateButton.textContent='◎ La mia posizione';}
+ // Richiesta GPS volontaria, senza tracciare, sincronizzare o registrare dati civici.
+ function locate(){
+   if(!map||locating)return;
+   if(!navigator.geolocation||typeof navigator.geolocation.getCurrentPosition!=='function'){
+     showLocationMessage('Posizione non disponibile: attiva la geolocalizzazione sul dispositivo.');
+     notify?.('Geolocalizzazione non disponibile.');
+     return;
+   }
+   locating=true;locateButton.disabled=true;locateButton.textContent='Ricerca GPS…';
+   showLocationMessage('Ricerca della posizione attuale…');
+   try{
+     navigator.geolocation.getCurrentPosition(position=>{
+       const {latitude,longitude,accuracy}=position?.coords||{};
+       if(!valid({lat:latitude,lon:longitude})){
+         showLocationMessage('Il GPS ha restituito coordinate non valide. Riprova.');
+         finishLocate();return;
+       }
+       const point=[latitude,longitude];
+       const gpsAccuracy=Number.isFinite(accuracy)&&accuracy>0?Math.round(accuracy):null;
+       if(locationMarker)locationMarker.setLatLng(point);
+       else locationMarker=L.circleMarker(point,{
+         radius:9,color:'#ffffff',weight:3,fillColor:'#1478e3',fillOpacity:1,
+         interactive:false,bubblingMouseEvents:false
+       }).addTo(map);
+       // Il cerchio di precisione non è né un civico né una posizione salvata.
+       if(gpsAccuracy!==null&&gpsAccuracy<=500){
+         if(locationAccuracy){
+           locationAccuracy.setLatLng(point);
+           locationAccuracy.setRadius(gpsAccuracy);
+         }else locationAccuracy=L.circle(point,{
+           radius:gpsAccuracy,color:'#1478e3',weight:1,fillColor:'#1478e3',
+           fillOpacity:.08,interactive:false,bubblingMouseEvents:false
+         }).addTo(map);
+       }else if(locationAccuracy){locationAccuracy.remove();locationAccuracy=null;}
+       map.setView(point,18,{animate:false});
+       showLocationMessage('Posizione attuale individuata'+(gpsAccuracy===null?'':' · GPS ±'+gpsAccuracy+' m')+'.');
+       finishLocate();
+     },error=>{
+       const reason=error?.code===1?'Consenti la posizione nelle impostazioni del browser o dell’app.':
+         error?.code===3?'Tempo GPS scaduto. Riprova in un punto con segnale migliore.':
+         'Posizione GPS non disponibile. Riprova.';
+       showLocationMessage(reason);
+       finishLocate();
+       notify?.(reason);
+     },{enableHighAccuracy:true,maximumAge:0,timeout:14000});
+   }catch(_){
+     showLocationMessage('Impossibile accedere alla posizione GPS.');
+     finishLocate();
+   }
+ }
  function update(){if(map&&visible())render(false);}
  async function open(){
    if(!visible())return;
@@ -83,6 +140,7 @@ function create({getRecords,onVerify,notify}){
        map=L.map($('overview-canvas'),{zoomControl:true,scrollWheelZoom:false,touchZoom:true,
          bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21});
        layer=L.layerGroup().addTo(map);
+       locateButton.disabled=false;
        const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
          {maxZoom:21,maxNativeZoom:19,
           attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'});
@@ -101,6 +159,7 @@ function create({getRecords,onVerify,notify}){
  town.addEventListener('change',()=>render(true));
  filter.addEventListener('change',()=>render(true));
  verify.addEventListener('click',()=>{const r=selectedRecord();if(r)onVerify(r);});
+ locateButton.addEventListener('click',locate);
  if(!initialized){
    root.addEventListener('salvacivici:datachanged',update);
    initialized=true;
