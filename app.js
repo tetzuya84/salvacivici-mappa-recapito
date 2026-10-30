@@ -57,13 +57,14 @@
 
   function showPage(tab){
     document.querySelector('.app-shell').classList.toggle('is-capture',tab==='capture');
-    ['capture','records','data'].forEach(name=>{
+    ['capture','records','map','data'].forEach(name=>{
       $('page-'+name).hidden=name!==tab;
       const button=document.querySelector(`[data-tab="${name}"]`);
       button.classList.toggle('active',name===tab);
       if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
     });
     if(tab==='records')renderRecords();
+    if(tab==='map')void mapOverview.open();
     if(tab==='capture'&&state.db&&!gpsBusy&&!SC.isFreshGps(state.gps,Date.now(),GPS_REENTER_REFRESH_MS))startGpsAcquisition();
     window.scrollTo({top:0,behavior:'auto'});
   }
@@ -72,7 +73,7 @@
   // Beta 0.6.9 — swipe orizzontale fra Salva, Archivio e Dati.
   // I gesti verticali mantengono GPS refresh / cloud sync; non intercettiamo i controlli.
   function setupHorizontalTabSwipe(){
-    const pages=['capture','records','data'];
+    const pages=['capture','records','map','data'];
     const main=document.querySelector('main');
     const MIN_X=78,MAX_Y=85,MAX_DURATION=1000,EDGE=25;
     let start=null,locked=false;
@@ -283,6 +284,15 @@
       return true;
     },
     toast
+  });
+  const mapOverview=window.SCMapOverview.create({
+    getRecords:()=>state.records,
+    onVerify:record=>{
+      const current=state.records.find(r=>r.id===record.id);
+      if(current)mapReview.openArchive(current);
+      else toast('Il civico non è più nell’archivio. Aggiorna la mappa.');
+    },
+    notify:toast
   });
   $('map-open').addEventListener('click',()=>mapReview.openCapture());
 

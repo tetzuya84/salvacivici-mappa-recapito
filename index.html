@@ -30,7 +30,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.16</span>
+      <span class="version">BETA 0.6.17</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -113,6 +113,38 @@
         <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>I punti salvati compariranno qui.</p></div>
       </section>
 
+      <section id="page-map" class="page" hidden aria-labelledby="overview-title">
+        <div class="intro"><p class="eyebrow">MAPPA RECAPITO</p><h1 id="overview-title">Tutti i civici</h1>
+          <p class="subtitle">Seleziona un numero, controlla il pin o avvia la navigazione. Usa le coordinate già salvate, senza duplicare i punti.</p>
+        </div>
+        <div class="overview-filters">
+          <div><label for="overview-town">Comune</label><select id="overview-town"><option value="">Tutti i comuni</option></select></div>
+          <div><label for="overview-status-filter">Stato</label><select id="overview-status-filter">
+            <option value="">Tutti i punti</option><option value="unverified">Da verificare</option>
+            <option value="verified">Verificati</option><option value="manual">Pin corretti</option>
+          </select></div>
+        </div>
+        <p class="overview-legend"><span class="overview-legend-dot unknown"></span> Da verificare <span class="overview-legend-dot checked"></span> Verificato <span class="overview-legend-dot moved"></span> Corretto</p>
+        <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Visualizzazione dell’archivio locale</p>
+        <div class="overview-map-wrap" data-no-swipe>
+          <div id="overview-canvas" class="overview-map" aria-label="Mappa di tutti i civici salvati"></div>
+          <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
+        </div>
+        <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
+        <div id="overview-detail" class="overview-detail" hidden>
+          <p class="eyebrow">CIVICO SELEZIONATO</p>
+          <h2 id="overview-selected-title"></h2>
+          <p id="overview-selected-status" class="overview-detail-status"></p>
+          <p id="overview-selected-coordinates" class="overview-detail-coordinates"></p>
+          <div class="overview-actions">
+            <button id="overview-verify" type="button" class="secondary">Verifica pin</button>
+            <a id="overview-apple" class="primary" target="_blank" rel="noopener noreferrer">Naviga con Apple Mappe</a>
+          </div>
+          <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
+        </div>
+        <p class="overview-privacy">La mappa legge solo i civici del tuo archivio. Per la cartografia serve Internet; OpenStreetMap riceve le richieste delle tessere visualizzate, non i nominativi o l'elenco dei civici.</p>
+      </section>
+
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
         <div class="intro"><p class="eyebrow">I TUOI DATI</p><h1 id="data-title">Esporta e proteggi</h1><p class="subtitle">I civici restano disponibili sul dispositivo. Solo tu decidi quando sincronizzarli nel cloud.</p></div>
         <div class="data-card cloud-card">
@@ -166,6 +198,7 @@
     <nav class="tabbar" aria-label="Navigazione principale">
       <button class="tab active" data-tab="capture" type="button" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.68 7-12a7 7 0 0 0-14 0c0 4.32 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg><span>Salva</span></button>
       <button class="tab" data-tab="records" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14M5 12h14M5 19h14"/></svg><span>Archivio</span></button>
+      <button class="tab" data-tab="map" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Zm6-2v16m6-14v16"/></svg><span>Mappa</span></button>
       <button class="tab" data-tab="data" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 18v2h14v-2"/></svg><span>Dati</span></button>
     </nav>
   </div>
@@ -199,6 +232,7 @@
   <script src="cloud-merge.js" defer></script>
   <script src="cloud-sync.js" defer></script>
   <script src="map-review.js" defer></script>
+  <script src="map-overview.js" defer></script>
   <script src="updates.js" defer></script>
   <script src="app.js" defer></script>
   <script type="module" src="cloud-google.js"></script>

@@ -194,5 +194,5 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
   });
   return{openCapture,openArchive,updateGps,resetCapture,getCaptureSelection,isOpen:()=>!!active};
 }
-root.SCMapReview={create};
+root.SCMapReview={create,loadLeaflet};
 })(window);

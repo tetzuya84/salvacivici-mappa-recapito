@@ -228,3 +228,13 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Distinzione dei badge: «Da verificare» per dati GPS storici non confermati, «Verificato» per conferma senza spostamento, «Pin corretto» per ingresso riposizionato.
 - L'esportazione JSON/CSV riflette i record aggiornati. Google My Maps e i fogli su Drive NON si aggiornano automaticamente: richiedono successiva sincronizzazione controllata, evitando duplicati. Le operazioni cloud rispettano il flusso già esistente.
 - Test di regressione aggiornato per apertura archivio, nome civico, annullamento senza scritture e conferma mantenendo ID, oltre agli esistenti controlli GPS/pinch. Collaudo su iPhone ancora necessario.
+
+## Beta 0.6.17 — Mappa generale e navigazione Apple Mappe (30/10/2026)
+
+- Nuova scheda «Mappa» accanto a Salva, Archivio e Dati: tutti i record del database locale IndexedDB su mappa Leaflet/OSM, senza trasmettere l'elenco a terzi.
+- Numero civico visualizzato sul segnaposto. Colori diversi per «Da verificare», «Verificato» e «Pin corretto». Filtri per comune e stato.
+- Toccare il civico apre una scheda con nome, comune, coordinate e i comandi «Verifica pin», «Naviga con Apple Mappe» e «Alternativa: Google Maps». La navigazione usa le coordinate effettivamente salvate, non l'indirizzo rilevato da un geocoder.
+- Apple Mappe: URL `https://maps.apple.com/?daddr=<lat>,<lon>&dirflg=d`; Google: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lon>&travelmode=driving`. L'utente sceglie l'avvio, nessun tracciamento in background. Il routing stradale potrebbe terminare nella strada accessibile più vicina all'ingresso.
+- «Verifica pin» apre l'editor preesistente e modifica solo lo stesso record dopo conferma. Sincronizzazione cloud volontaria dall'Archivio invariata. Swipe orizzontale preservato fuori dalla superficie della mappa; pannello cartografico escluso dallo swipe per non interferire con zoom/trascinamento.
+- Mappa e libreria Leaflet si caricano solo quando la scheda viene aperta; richiedono Internet. Archiviazione ed esportazioni continuano a funzionare offline. `map-overview.js` in cache service-worker v0.6.17.
+- **Privacy**: gli attuali due fogli Sheets e la mappa My Maps Generale mantengono la condivisione «chiunque abbia il link» finché non viene rimossa manualmente tramite Google/Work; repository GitHub e GitHub Pages restano pubblici. Non applicare falsa schermata di accesso lato client: hosting privato richiede controllo server/edge, migrazione accurata di IndexedDB e test su iPhone.
