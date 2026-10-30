@@ -724,3 +724,15 @@
   font-size:12px;line-height:1.4;color:#23637c;
   text-align:center;margin:9px 2px 0;
 }
+
+/* Beta 0.6.20 — Satellite e bussola. Comandi fuori dalla superficie Leaflet;
+   barre header/footer, riquadri e gesti GPS restano come nelle versioni approvate. */
+.map-style-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:3px 0 10px}
+.map-style-toggle{display:flex;align-items:center;justify-content:center;min-height:42px;
+  padding:7px 9px;border:1px solid #cbdce0;background:#fff;color:#17645e;border-radius:10px;
+  font:inherit;font-size:12px;font-weight:790;line-height:1.3;touch-action:manipulation;}
+.map-style-toggle[aria-pressed="true"]{background:#d7f3ed;border-color:#69b6a8;color:#075f53}
+.map-style-toggle:focus-visible{outline:3px solid #087e78;outline-offset:2px}
+.map-layer-status{margin:5px 0 10px;font-size:11px;text-align:center;color:#375e70;line-height:1.45}
+.map-review-style-controls{margin:2px 0 0}
+.map-review-style-controls .map-style-toggle{min-height:39px;font-size:12px;padding:7px}

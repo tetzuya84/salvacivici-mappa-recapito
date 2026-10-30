@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.19**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.20**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -254,3 +254,12 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Indicatore per ricerca, successo, permesso negato, scadenza GPS o assenza segnale. Durante la ricerca la pressione ripetuta viene bloccata; una nuova pressione successiva legge un fix nuovo.
 - Nessun tracciamento in background, nessuna nuova acquisizione, nessuna scrittura IndexedDB o sincronizzazione Firebase/Drive/My Maps. Tasto confinato nel riquadro della mappa, senza interferire con le barre fisse della Beta 0.6.18.
 - Verifica automatica simulata e collaudo iPhone/iPad sono parte del rilascio.
+
+## Beta 0.6.20 — Vista Satellite, rotazione a due dita e bussola iOS
+
+- Aggiunti comandi «Satellite/Stradale» e «Segui bussola» sia nella Mappa generale sia nell'editor «Verifica pin». La cartografia stradale OSM resta predefinita; il livello satellite usa ArcGIS World Imagery (Esri e fornitori, attribuzione obbligatoria), e si carica solo dopo averlo selezionato. L'uso continuativo professionale può richiedere autorizzazione/licenza del fornitore: verificarne le condizioni prima della diffusione o dello sfruttamento commerciale.
+- Rotazione manuale con due dita attivata mediante componente leaflet-rotate v0.3.0, distribuito localmente con licenza MIT nel repository. Nessuna dipendenza di rete aggiuntiva per il plugin, ma libreria Leaflet e map tiles richiedono Internet alla prima apertura.
+- «Segui bussola» richiede il permesso dei sensori iOS *solo al tocco*; quando disponibile la mappa viene orientata in base al telefono. Un nuovo tocco interrompe la modalità; la rotazione manuale interrompe l'inseguimento per evitare conflitti. Il sensore bussola può non essere disponibile su iPad o in alcuni browser; in tal caso la rotazione a due dita rimane operativa. Nessun ascolto sensori persistente quando si lascia la scheda o si chiude il dialog.
+- L'uso della cartografia satellitare invia al provider soltanto le tile dell'area inquadrata, non l'archivio civici; la posizione esatta non viene caricata come record. Le immagini possono essere datate e non costituiscono conferma della posizione del portone. Nessun cambiamento a IndexedDB, GPS multiplo, Firebase, dati cloud, record, backup o Google My Maps.
+- Entrambe le barre fisse mantengono il layout approvato 0.6.18; nessun CSS globale di overflow.
+- Test statici e simulati da eseguire e prova reale iPhone/iPad ancora necessaria.

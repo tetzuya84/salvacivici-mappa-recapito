@@ -64,6 +64,7 @@
       if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
     });
     if(tab==='records')renderRecords();
+    if(tab!=='map')mapOverview.pauseCompass();
     if(tab==='map')void mapOverview.open();
     if(tab==='capture'&&state.db&&!gpsBusy&&!SC.isFreshGps(state.gps,Date.now(),GPS_REENTER_REFRESH_MS))startGpsAcquisition();
     window.scrollTo({top:0,behavior:'auto'});

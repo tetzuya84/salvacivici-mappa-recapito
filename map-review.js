@@ -31,7 +31,7 @@ const valid=point=>!!point&&Number.isFinite(point.lat)&&Math.abs(point.lat)<=90&
   Number.isFinite(point.lon)&&Math.abs(point.lon)<=180;
 function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm,toast}){
   const $=id=>document.getElementById(id);
-  let captureSelection=null,active=null,map=null,pin=null,gpsDot=null,accuracyCircle=null,busy=false,tilesVisible=false;
+  let captureSelection=null,active=null,map=null,pin=null,gpsDot=null,accuracyCircle=null,busy=false,tilesVisible=false,cartography=null;
   const status=$('map-review-status'),confirmButton=$('map-review-confirm');
   const point=p=>({lat:Number(p.lat),lon:Number(p.lon)});
   function redraw(){
@@ -72,7 +72,15 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     if(!active||!root.L)return;
     const L=root.L;
     if(!map){
-      map=L.map($('map-review-canvas'),{zoomControl:true,attributionControl:true,scrollWheelZoom:false,touchZoom:true,bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21});
+      map=L.map($('map-review-canvas'),{zoomControl:true,attributionControl:true,scrollWheelZoom:false,touchZoom:true,bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21,
+        rotate:typeof L.Map?.prototype?.setBearing==='function',touchRotate:true,rotateControl:false,preventPageGestures:true});
+      if(root.SCMapFeatures){
+        cartography=root.SCMapFeatures.create({L,map,
+          baseButton:$('map-review-basemap'),compassButton:$('map-review-compass'),status:$('map-review-layer-status'),
+          onTileLoad:()=>{tilesVisible=true;$('map-review-loading').hidden=true;if(active){active.mapLoaded=true;redraw();}},
+          onTileError:()=>{if(active&&!active.mapLoaded){$('map-review-loading').hidden=false;$('map-review-loading').textContent='Cartografia non disponibile. Verifica Internet.';}}
+        });
+      }else{
       const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
         maxZoom:21,maxNativeZoom:19,
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
@@ -89,6 +97,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
         }
       });
       tiles.addTo(map);
+      }
       accuracyCircle=L.circle([active.original.lat,active.original.lon],{
         radius:Math.min(Number(active.original.accuracy)||10,500),color:'#0d8e86',
         weight:1,fillColor:'#0d8e86',fillOpacity:.08,interactive:false
@@ -106,6 +115,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     requestAnimationFrame(()=>map&&map.invalidateSize({pan:false}));
   }
   function close(){
+    cartography?.pause();
     if($('map-review-dialog').open)$('map-review-dialog').close();
     active=null;busy=false;confirmButton.disabled=false;
   }
@@ -124,7 +134,7 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     $('map-review-loading').textContent='Caricamento della mappa…';
     redraw();
     try{
-      await loadLeaflet();
+      await (root.SCMapFeatures?.load?.()||loadLeaflet());
       if(!active||!dialog.open)return;
       $('map-review-loading').hidden=true;
       ensureMap();

@@ -17,7 +17,7 @@ function create({getRecords,onVerify,notify}){
    verify=$('overview-verify'),loading=$('overview-loading'),
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
- let locationMarker=null,locationAccuracy=null,locating=false;
+ let locationMarker=null,locationAccuracy=null,locating=false,cartography=null;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
  function options(){
@@ -135,18 +135,27 @@ function create({getRecords,onVerify,notify}){
    loading.textContent='Caricamento cartografia…';
    loadingPromise=(async()=>{
      try{
-       L=await root.SCMapReview.loadLeaflet();
+       L=await (root.SCMapFeatures?.load?.()||root.SCMapReview.loadLeaflet());
        if(!visible())return;
        map=L.map($('overview-canvas'),{zoomControl:true,scrollWheelZoom:false,touchZoom:true,
-         bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21});
+         bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21,rotate:typeof L.Map?.prototype?.setBearing==='function',
+         touchRotate:true,rotateControl:false,preventPageGestures:true});
        layer=L.layerGroup().addTo(map);
        locateButton.disabled=false;
+       if(root.SCMapFeatures){
+         cartography=root.SCMapFeatures.create({L,map,baseButton:$('overview-basemap'),compassButton:$('overview-compass'),
+           status:$('overview-layer-status'),
+           onTileLoad:()=>{hasTiles=true;loading.hidden=true;},
+           onTileError:()=>{if(!hasTiles){loading.hidden=false;loading.textContent='Cartografia non disponibile. Controlla Internet.';}}
+         });
+       }else{
        const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
          {maxZoom:21,maxNativeZoom:19,
           attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'});
        tiles.on('tileload',()=>{hasTiles=true;loading.hidden=true;});
        tiles.on('tileerror',()=>{if(!hasTiles){loading.hidden=false;loading.textContent='Cartografia non disponibile. Controlla Internet.';}});
        tiles.addTo(map);
+       }
        options();render(true);
        root.requestAnimationFrame(()=>map.invalidateSize({pan:false}));
      }catch(e){
@@ -164,7 +173,7 @@ function create({getRecords,onVerify,notify}){
    root.addEventListener('salvacivici:datachanged',update);
    initialized=true;
  }
- return {open,refresh:update,select,helpers:{valid,statusOf,appleDirections,googleDirections}};
+ return {open,refresh:update,select,pauseCompass:()=>cartography?.pause(),helpers:{valid,statusOf,appleDirections,googleDirections}};
 }
 root.SCMapOverview={create};
 })(window);

@@ -30,7 +30,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.19</span>
+      <span class="version">BETA 0.6.20</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -126,6 +126,11 @@
         </div>
         <p class="overview-legend"><span class="overview-legend-dot unknown"></span> Da verificare <span class="overview-legend-dot checked"></span> Verificato <span class="overview-legend-dot moved"></span> Corretto</p>
         <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Visualizzazione dell’archivio locale</p>
+        <div class="map-style-controls" data-no-swipe>
+          <button id="overview-basemap" type="button" class="map-style-toggle" aria-pressed="false">▧ Satellite</button>
+          <button id="overview-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
+        </div>
+        <p id="overview-layer-status" class="map-layer-status" role="status" aria-live="polite" hidden></p>
         <div class="overview-map-wrap" data-no-swipe>
           <div id="overview-canvas" class="overview-map" aria-label="Mappa di tutti i civici salvati"></div>
           <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
@@ -144,7 +149,7 @@
           </div>
           <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
         </div>
-        <p class="overview-privacy">La mappa legge solo i civici del tuo archivio. Per la cartografia serve Internet; OpenStreetMap riceve le richieste delle tessere visualizzate, non i nominativi o l'elenco dei civici.</p>
+        <p class="overview-privacy">La mappa legge solo i civici locali. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
       </section>
 
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
@@ -214,7 +219,12 @@
         <div><h2 id="map-review-title">Posizione sulla mappa</h2><p id="map-review-gps-status" role="status">In attesa del GPS</p></div>
         <button id="map-review-close" type="button" aria-label="Chiudi la mappa">×</button>
       </div>
-      <p class="map-review-instruction">Zoom con due dita. <strong>Trascina il pin oppure tocca l’ingresso effettivo.</strong> Il punto GPS originale rimane indicato in verde.</p>
+      <p class="map-review-instruction">Zoom e rotazione con due dita. <strong>Trascina il pin oppure tocca l’ingresso effettivo.</strong> Il GPS originale resta indicato in verde.</p>
+      <div class="map-style-controls map-review-style-controls" data-no-swipe>
+        <button id="map-review-basemap" type="button" class="map-style-toggle" aria-pressed="false">▧ Satellite</button>
+        <button id="map-review-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
+      </div>
+      <p id="map-review-layer-status" class="map-layer-status" role="status" aria-live="polite" hidden></p>
       <div class="map-review-map-wrap">
         <div id="map-review-canvas" class="map-review-canvas" aria-label="Mappa interattiva per correggere il segnaposto"></div>
         <p id="map-review-loading" class="map-review-loading" role="status">Caricamento cartografia…</p>
@@ -226,7 +236,7 @@
         <button id="map-review-confirm" type="button" class="primary">Conferma questo punto</button>
       </div>
       <button id="map-review-cancel" type="button" class="map-review-cancel">Annulla, non modificare</button>
-      <p class="map-review-privacy">Cartografia © OpenStreetMap. Serve Internet; non viene effettuata ricerca di indirizzi. La mappa usa solo il riquadro visibile.</p>
+      <p class="map-review-privacy">Cartografia © OpenStreetMap / immagini satellitari © Esri e fornitori. Serve Internet; l’area visualizzata viene richiesta al servizio mappe. Le immagini potrebbero non essere aggiornate; controlla sempre l’ingresso sul posto.</p>
     </div>
   </dialog>
   <script src="comuni-mantova.js" defer></script>
@@ -234,6 +244,7 @@
   <script src="cloud-merge.js" defer></script>
   <script src="cloud-sync.js" defer></script>
   <script src="map-review.js" defer></script>
+  <script src="map-features.js" defer></script>
   <script src="map-overview.js" defer></script>
   <script src="updates.js" defer></script>
   <script src="app.js" defer></script>
