@@ -1,4 +1,4 @@
-/* Beta 0.6.11: test della mappa su Leaflet simulato, senza connessione o dati reali.
+/* Beta 0.6.14: test della mappa su Leaflet simulato, senza connessione o dati reali.
    Eseguire con: node tests/map-review.test.js */
 'use strict';
 const assert=require('node:assert/strict');
@@ -25,10 +25,10 @@ function harness(){
     getLatLng(){return{lat:this.position[0],lng:this.position[1]};},
     on(name,fn){this.events[name]=fn;return this;}});
   const Leaflet={
-    map(){fakeMap={events:{},on(name,fn){this.events[name]=fn;return this;},
+    map(element,options){fakeMap={options,events:{},on(name,fn){this.events[name]=fn;return this;},
       setView(p,z){this.center=p;this.zoom=z;},invalidateSize(){}};
       return fakeMap;},
-    tileLayer(){tiles=layer();return tiles;},
+    tileLayer(url,options){tiles=layer();tiles.options=options;return tiles;},
     circle(){return layer();},circleMarker(){return layer();},
     marker(pos){marker=layer();marker.position=pos;return marker;}
   };
@@ -79,13 +79,23 @@ async function run(){
   const h=harness();
   h.review.openCapture();await flush();
   assert.equal(h.$('map-review-dialog').open,true);
+  assert.equal(h.map.options.touchZoom,true,'Pinch zoom abilitato');
+  assert.equal(h.map.options.bounceAtZoomLimits,false,'Nessun rimbalzo al limite');
+  assert.equal(h.map.options.zoomSnap,0.25,'Zoom fine disponibile');
+  assert.equal(h.map.options.maxZoom,21,'Disponibile zoom oltre il livello iniziale 19');
+  assert.equal(h.tiles.options.maxZoom,21);
+  assert.equal(h.tiles.options.maxNativeZoom,19,'Non richiedere tile native inesistenti');
   assert.equal(h.$('map-review-confirm').disabled,true,'La mappa deve essere visibile');
   h.tiles.events.tileload();
   assert.equal(h.$('map-review-confirm').disabled,true,'Tre letture obbligatorie');
   h.setReady(true);
   h.review.updateGps(gps,true);
   assert.equal(h.$('map-review-confirm').disabled,false);
+  h.map.zoom=20.25; // Simula il livello raggiunto con un pinch sul display.
+  h.review.updateGps(gps,true);
+  assert.equal(h.map.zoom,20.25,'Un aggiornamento GPS non ripristina lo zoom precedente');
   h.map.events.click({latlng:{lat:chosen.lat,lng:chosen.lon}});
+  assert.equal(h.map.zoom,20.25,'Lo spostamento del pin non azzera lo zoom');
   assert.match(h.$('map-review-status').textContent,/corretta/);
   await h.$('map-review-confirm').onclick();await flush();
   assert.equal(h.review.isOpen(),false);
@@ -102,6 +112,6 @@ async function run(){
   h.review.openArchive(base);await flush();
   h.$('map-review-cancel').onclick();
   assert.equal(h.review.isOpen(),false);
-  console.log('Beta 0.6.11: test mappa/coordinate/GPS originale/archivio superati.');
+  console.log('Beta 0.6.14: test mappa/coordinate, pinch e tenuta zoom superati.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
