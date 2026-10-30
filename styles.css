@@ -736,3 +736,58 @@
 .map-layer-status{margin:5px 0 10px;font-size:11px;text-align:center;color:#375e70;line-height:1.45}
 .map-review-style-controls{margin:2px 0 0}
 .map-review-style-controls .map-style-toggle{min-height:39px;font-size:12px;padding:7px}
+
+/* Beta 0.6.21 — accesso immediato all'editor dalla panoramica e footer pin sempre visibile.
+   Non cambiare lo scorrimento dell'Archivio né lo stacking delle due fasce dell'app. */
+.app-shell #page-map .overview-edit-pin{
+  position:absolute;right:12px;bottom:12px;z-index:1100;
+  appearance:none;border:2px solid #fff;border-radius:12px;
+  background:#0a8179;color:#fff;min-height:46px;padding:10px 16px;
+  font:inherit;font-weight:800;font-size:13px;line-height:1.2;
+  box-shadow:0 2px 12px rgba(7,36,42,.35);touch-action:manipulation;
+}
+.app-shell #page-map .overview-edit-pin[hidden]{display:none!important;}
+.app-shell #page-map .overview-edit-pin:focus-visible{outline:3px solid #074645;outline-offset:3px;}
+.map-review-dialog{
+  width:min(96vw,600px);
+  max-height:calc(100dvh - 22px);
+  overflow:hidden;
+}
+.map-review-pane{
+  box-sizing:border-box;display:flex;flex-direction:column;
+  height:min(92dvh,770px);
+  max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height:0;overflow:hidden;padding:0;gap:0;
+}
+.map-review-scroll{
+  flex:1 1 auto;min-height:0;overflow-y:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:9px;
+  padding:12px 12px 14px;
+}
+.map-review-footer{
+  position:relative;flex:0 0 auto;z-index:2;
+  isolation:isolate;background:#f7f9fa;
+  padding:11px 12px calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid #d7e2e5;
+  box-shadow:0 -4px 13px rgba(7,36,42,.10);
+  display:flex;flex-direction:column;gap:4px;
+}
+.map-review-footer .map-review-actions{margin:0;}
+.map-review-footer .map-review-cancel{align-self:stretch;min-height:39px;}
+.map-review-map-wrap{
+  position:relative;min-height:0;z-index:0;
+  isolation:isolate;contain:paint;overflow:hidden;
+  border-radius:13px;flex:none;
+}
+.map-review-canvas{
+  height:clamp(190px,34dvh,330px);
+  min-height:190px;max-height:330px;
+}
+@media(max-height:670px){
+  .map-review-dialog{max-height:calc(100dvh - 12px);}
+  .map-review-pane{max-height:calc(100dvh - 15px);height:94dvh;}
+  .map-review-scroll{gap:6px;padding:9px 9px 8px;}
+  .map-review-footer{padding:8px 9px calc(8px + env(safe-area-inset-bottom));}
+  .map-review-canvas{height:clamp(150px,29dvh,220px);min-height:150px;}
+}

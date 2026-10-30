@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.20**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.21**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -263,3 +263,9 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - L'uso della cartografia satellitare invia al provider soltanto le tile dell'area inquadrata, non l'archivio civici; la posizione esatta non viene caricata come record. Le immagini possono essere datate e non costituiscono conferma della posizione del portone. Nessun cambiamento a IndexedDB, GPS multiplo, Firebase, dati cloud, record, backup o Google My Maps.
 - Entrambe le barre fisse mantengono il layout approvato 0.6.18; nessun CSS globale di overflow.
 - Test statici e simulati da eseguire e prova reale iPhone/iPad ancora necessaria.
+
+## Beta 0.6.21 — Modifica pin nella Mappa generale e pulsanti di salvataggio sempre visibili
+
+- Un pulsante verde «✎ Modifica pin» compare **nel riquadro della Mappa generale** dopo aver toccato un civico e apre lo stesso editor usato dall'Archivio. Anche il pulsante nella scheda di dettaglio è ora «Modifica pin». Se non si è selezionato un civico, il pulsante sulla mappa non è presente. Nessun nuovo record viene creato; si lavora sull'ID selezionato e si salva solo alla conferma.
+- Risolto il difetto su iPhone in cui Leaflet e il pannello satellite coprivano i comandi in basso dell'editor. La finestra di correzione ha ora una **zona centrale a scorrimento autonomo** (titolo, istruzioni, controlli mappa, cartografia, coordinate, informativa) e un **footer indipendente sempre visibile** con «Torna al GPS», «Salva pin corretto/Conferma posizione verificata» e «Annulla, non modificare». La mappa è contenuta nel proprio stacking context (`isolation:isolate`, `contain:paint`, `overflow:hidden`), non può più coprire il footer.
+- Altezza cartografia responsive in base alla finestra e safe-area iPhone; test su device reale da confermare. Restano invariati satellite, bussola, rotazione a due dita, barra logo e tabbar, acqusizioni GPS, IndexedDB, Firebase, esportazioni, backup e My Maps.

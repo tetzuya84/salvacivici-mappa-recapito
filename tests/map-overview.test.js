@@ -1,4 +1,4 @@
-/* Test Beta 0.6.17 — panoramica civici senza accesso rete, dati immutati. */
+/* Test Beta 0.6.21 — panoramica civici e accesso alla correzione pin. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,9 +8,10 @@ async function run(){
   const nodes=new Map();
   const node=id=>{
     if(!nodes.has(id)){
-      const n={value:'',textContent:'',hidden:id==='overview-detail'||id==='overview-empty'||id==='page-map',href:'',children:[],events:{},
+      const n={value:'',textContent:'',hidden:id==='overview-detail'||id==='overview-empty'||id==='page-map'||id==='overview-edit-pin',href:'',children:[],events:{},attrs:{},
         append(c){this.children.push(c);},replaceChildren(){this.children=[];},
-        addEventListener(k,fn){this.events[k]=fn;}};
+        addEventListener(k,fn){this.events[k]=fn;},
+        setAttribute(k,v){this.attrs[k]=v;}};
       nodes.set(id,n);
     }
     return nodes.get(id);
@@ -48,8 +49,13 @@ async function run(){
   assert.equal(overlay.layers[1].opts.icon.className,'overview-pin overview-pin-manual');
   assert.equal(overlay.layers[2].opts.icon.className,'overview-pin overview-pin-verified');
   tiles.events.tileload();assert.equal(node('overview-loading').hidden,true);
+  assert.equal(node('overview-edit-pin').hidden,true,'Il comando non deve comparire senza selezione');
   overlay.layers[0].events.click();
   assert.equal(node('overview-detail').hidden,false);
+  assert.equal(node('overview-edit-pin').hidden,false,'Il comando deve comparire sul civico selezionato');
+  assert.match(node('overview-edit-pin').attrs['aria-label'],/Piazza Castello, 42/);
+  node('overview-edit-pin').events.click();
+  assert.equal(verified.id,'a','Il comando diretto deve aprire la correzione dello stesso record');
   assert.match(node('overview-selected-title').textContent,/Piazza Castello, 42/);
   assert.equal(node('overview-apple').href,'https://maps.apple.com/?daddr=45.16595,10.51232&dirflg=d');
   assert.match(node('overview-google').href,/destination=45.16595,10.51232/);
@@ -59,6 +65,7 @@ async function run(){
   node('overview-town').value='Mariana Mantovana';node('overview-town').events.change();
   assert.equal(overlay.layers.length,1);
   assert.equal(node('overview-detail').hidden,true);
+  assert.equal(node('overview-edit-pin').hidden,true,'Cambiare comune nasconde il comando del civico non presente');
   assert.equal(node('overview-summary').textContent,'1 civici sulla mappa');
   node('overview-town').value='Redondesco';node('overview-town').events.change();
   node('overview-status-filter').value='manual';node('overview-status-filter').events.change();
@@ -71,6 +78,6 @@ async function run(){
   assert.equal(overlay.layers.length,2);
   await o.open();assert.equal(libLoads,1,'Leaflet condiviso: niente caricamenti doppi');
   assert.equal(o.helpers.valid({lat:91,lon:10}),false);
-  console.log('PASS Beta 0.6.17: mappa, filtri, pin, navigazione, dati e cache Leaflet.');
+  console.log('PASS Beta 0.6.21: mappa, accesso editor, filtri e dati invariati.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

@@ -15,7 +15,8 @@ function create({getRecords,onVerify,notify}){
    title=$('overview-selected-title'),sub=$('overview-selected-status'),
    coord=$('overview-selected-coordinates'),apple=$('overview-apple'),google=$('overview-google'),
    verify=$('overview-verify'),loading=$('overview-loading'),
-   locateButton=$('overview-locate'),locationStatus=$('overview-location-status');
+   locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
+   editPinButton=$('overview-edit-pin');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null;
  const visible=()=>!$('page-map').hidden;
@@ -36,7 +37,9 @@ function create({getRecords,onVerify,notify}){
    selectedId=r?.id||null;
    const item=selectedRecord();
    detail.hidden=!item;
+   editPinButton.hidden=!item;
    if(!item)return;
+   editPinButton.setAttribute('aria-label','Modifica pin: '+item.via+', '+item.civico+', '+item.comune);
    title.textContent=item.via+', '+item.civico;
    sub.textContent=item.comune+' · '+(statusOf(item)==='manual'?'Pin corretto':statusOf(item)==='verified'?'Verificato':'Da verificare');
    coord.textContent=item.lat.toFixed(7)+', '+item.lon.toFixed(7);
@@ -167,7 +170,9 @@ function create({getRecords,onVerify,notify}){
  }
  town.addEventListener('change',()=>render(true));
  filter.addEventListener('change',()=>render(true));
- verify.addEventListener('click',()=>{const r=selectedRecord();if(r)onVerify(r);});
+ function editSelected(){const r=selectedRecord();if(r)onVerify(r);}
+ verify.addEventListener('click',editSelected);
+ editPinButton.addEventListener('click',editSelected);
  locateButton.addEventListener('click',locate);
  if(!initialized){
    root.addEventListener('salvacivici:datachanged',update);
