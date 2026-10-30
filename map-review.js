@@ -1,4 +1,4 @@
-/* Beta 0.6.11 — revisione del pin su cartografia, senza geocoding o scritture cloud.
+/* Beta 0.6.14 — revisione del pin su cartografia, senza geocoding o scritture cloud.
    Leaflet viene caricato solo quando l'utente apre la mappa; i tile OSM richiedono rete. */
 (function(root){
 'use strict';
@@ -70,9 +70,9 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     if(!active||!root.L)return;
     const L=root.L;
     if(!map){
-      map=L.map($('map-review-canvas'),{zoomControl:true,attributionControl:true,scrollWheelZoom:false,maxZoom:19});
+      map=L.map($('map-review-canvas'),{zoomControl:true,attributionControl:true,scrollWheelZoom:false,touchZoom:true,bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21});
       const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        maxZoom:19,maxNativeZoom:19,
+        maxZoom:21,maxNativeZoom:19,
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
       });
       tiles.on('tileload',()=>{
