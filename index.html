@@ -17,6 +17,9 @@
   <title>SalvaCivici • Mappa Recapito</title>
 </head>
 <body>
+  <!-- iOS 27: il sistema campiona un elemento fixed opaco sul bordo superiore
+       per evitare la sfumatura della status bar nella PWA installata. -->
+  <div class="status-bar-color-anchor" aria-hidden="true"></div>
   <div class="app-shell is-capture">
     <header class="topbar" role="banner">
       <div class="identity">
@@ -194,7 +197,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.24</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.25</p>
       </section>
     </main>
 

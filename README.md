@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.24**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.25**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -290,3 +290,11 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Testata scura: solo logo + dicitura SalvaCivici / MAPPA RECAPITO, centrati; altezza minima `58px + safe-area-inset-top` e spaziature compatte, icona `40px`, scritta SVG `130×42px`. Rimane `sticky` sopra i livelli Leaflet e l'intestazione è condivisa da tutte le quattro sezioni.
 - Indicazione `SalvaCivici · BETA 0.6.24` trasferita alla fine della sezione **Dati**, fuori dalla barra scura. Badge precedente rimosso dal DOM della testata. Non vengono duplicati i loghi o create nuove barre fisse.
 - Service worker cache v0.6.24 per aggiornare CSS e HTML. Nessuna modifica alle acquisizioni, localizzazione, verifica pin, navigazione, Firebase, backup o Google My Maps. L'anteprima CSS è verificata automaticamente; resa effettiva su iPhone da confermare.
+
+## Beta 0.6.25 — rimozione sfumatura barra di stato iOS 27 (31 ottobre 2026)
+
+- Feedback EXIF IMG_4617.jpeg: «Mi va bene l'altezza della fascia scura, ma non sopporto quella sfumatura». La fascia blu notte 0.6.24 (altezza e logo) è approvata, **non modificarla**.
+- La sfumatura mostrata tra status bar e intestazione è applicata dal sistema iOS 27 alle PWA installate con `apple-mobile-web-app-status-bar-style=black-translucent` (segnalazione WebKit 317153). Lo stile gradient non è presente nel CSS dell'app. Un riscontro di test su iOS 27 suggerisce un elemento fixed reale al bordo superiore, alto almeno 6 px e largo almeno l'80% del viewport, per indurre il sistema a usare uno sfondo opaco uniforme.
+- Inserito `div.status-bar-color-anchor[aria-hidden=true]` come figlio diretto di body prima di app-shell, e in CSS soltanto sui browser WebKit iOS `@supports (-webkit-touch-callout: none)` un elemento opaco blu notte `position:fixed;top:0;left:0;width:100%;height:8px;background:#0c1b29;z-index:2002;pointer-events:none`.
+- Si è scelto di **non cambiare** la meta `black-translucent` perché iOS può fissare il suo valore quando si installa la PWA: richiedere una nuova installazione rischierebbe di separare l'archivio IndexedDB locale dalla vecchia icona. Si conserva inoltre il `viewport-fit=cover`, le safe-area, la testata sticky e la navigazione fissa.
+- Nessuna modifica a GPS, dati civici, Firebase, backup, URL, My Maps, autorizzazioni, altezza fascia scura e logo. Validazione automatica HTML/CSS e pubblicazione server; risultato della sfumatura sul reale iPhone va confermato dall'utente, perché il rendering è controllato da iOS.
