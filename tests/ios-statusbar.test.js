@@ -1,4 +1,4 @@
-/* Beta 0.6.25 — workaround status bar opaca iOS 27, senza migrazione dati. */
+/* Beta 0.6.27 — non usare il meta deprecato statusbar; preservare stile. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const html=fs.readFileSync('index.html','utf8');
@@ -20,10 +20,10 @@ assert.match(previous,/min-height:calc\(58px \+ env\(safe-area-inset-top\)\)/);
 assert.match(previous,/width:40px;height:40px;/);
 const header=html.slice(html.indexOf('<header class="topbar"'),html.indexOf('</header>'));
 assert.ok(!header.includes('BETA'));
-assert.match(html,/SalvaCivici · BETA 0\.6\.25/);
-assert.match(html,/apple-mobile-web-app-status-bar-style" content="black-translucent"/);
+assert.match(html,/SalvaCivici · BETA 0\.6\.27/);
+assert.doesNotMatch(html,/<meta\s+name="apple-mobile-web-app-status-bar-style"/,"WebKit: rimuovere il meta deprecato");
 assert.match(html,/viewport-fit=cover/);
-assert.match(sw,/salvacivici-v0\.6\.25/);
-assert.ok(readme.includes('Beta **0.6.25**:'));
+assert.match(sw,/salvacivici-v0\.6\.27/);
+assert.ok(readme.includes('Beta **0.6.27**:'));
 assert.ok(html.includes('id="capture-form"') && html.includes('id="map-review-dialog"') && html.includes('id="page-map"'));
-console.log('PASS Beta 0.6.25: sfondo statusbar fisso, altezza invariata, PWA e dati intatti');
+console.log('PASS Beta 0.6.27: meta WebKit deprecato rimosso, layout e dati intatti');

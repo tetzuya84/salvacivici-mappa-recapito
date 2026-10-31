@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.26**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.27**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -307,3 +307,11 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Sparisce l'avviso iniziale «Il GPS non identifica necessariamente l'ingresso». Si mostra il feedback verde solo dopo effettiva conferma o correzione del pin (foto 4621).
 - Il messaggio «3 letture completate · Puoi salvare il civico» è centrato (foto 4620).
 - L'archivio civici IndexedDB, i fix multipli GPS, l'originale GPS di ogni record, il salvataggio, i CSV, la navigazione, Firebase e My Maps non sono cambiati. Prova reale dei sensori su iPhone ancora necessaria.
+
+## Beta 0.6.27 — correzioni da foto IMG_4630/4628/4623/4624 (31 ottobre 2026)
+
+- IMG_4630.jpeg (EXIF «Sfumatura ancora presente»): il workaround CSS Beta 0.6.25 con elemento fixed di 8px non risolve nell'installazione iOS dell'utente. Allineato il markup all'indicazione ufficiale WebKit bug 317153: **rimosso il meta deprecato** `apple-mobile-web-app-status-bar-style=black-translucent` da index.html, mantenendo `viewport-fit=cover`, `theme-color`, intestazione approvata e attuale fixed anchor per campionamento colore. Nota: sulle PWA già installate il sistema iOS può mantenere le impostazioni della status bar al momento dell'installazione, quindi il fix non è garantito per l'icona già presente. NON richiedere di eliminare/reinstallare l'app perché l'archivio IndexedDB potrebbe essere perso. Nessuna pretesa di risultato visivo prima del test iPhone.
+- IMG_4628(1).jpeg (EXIF «Snellisci questa frase»): aiuto Archivio abbreviato in «Verifica i pin sulla mappa prima di esportare i civici.»; funzioni archivio invarianti.
+- IMG_4623(1).jpeg (EXIF «Se premo il pulsante di aggiornamento appena aperta l’app, mi dice che deve prima trovare il gps, ma vorrei fosse una operazione indipendente»): rimosso il guard `gpsBusy` dal callback `beforeUpdate`. Ora Aggiorna procede anche durante le tre rilevazioni iniziali, purché la pagina abbia accesso a Internet. Resta il blocco durante edit/pin dialog e la conferma per una bozza di indirizzo non salvata; l’archivio esistente IndexedDB resta intatto. Al reload, il GPS si riacquisisce automaticamente come previsto.
+- IMG_4624.png: screenshot tastiera durante inserimento indirizzo, senza didascalia specifica; nessuna modifica arbitraria alla tastiera, al testo o ai dati del civico.
+- Nessuna cancellazione/migrazione IndexedDB, modifiche a GPS, backup, Firebase, My Maps, permessi o coordinate. Test e collaudo fisico iOS da verificare.

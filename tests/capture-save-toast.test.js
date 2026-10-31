@@ -1,4 +1,4 @@
-/* Beta 0.6.23 — nessuna notifica copre Salva civico dopo la conferma pin. */
+/* Beta 0.6.27 — nessuna notifica copre Salva civico dopo la conferma pin. */
 'use strict';
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
@@ -21,6 +21,6 @@ assert.match(html,/id="save-button" type="submit"/);
 assert.match(app,/SC\.applyVerifiedPosition\(base,selectedPosition\)/);
 assert.match(app,/GPS_TARGET_SAMPLES=3/);
 assert.match(app,/SC\.isFreshGps\(state\.gps,Date\.now\(\),GPS_MAX_SAVE_AGE_MS\)/);
-assert.match(html,/BETA 0\.6\.23/);
-assert.match(sw,/salvacivici-v0\.6\.23/);
-console.log('PASS Beta 0.6.23: conferma inline, Salva libero, GPS e dati invariati');
+assert.match(html,/BETA 0\.6\.27/);
+assert.match(sw,/salvacivici-v0\.6\.27/);
+console.log('PASS Beta 0.6.27: conferma inline, Salva libero, GPS e dati invariati');

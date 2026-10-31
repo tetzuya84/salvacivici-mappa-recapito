@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0c1b29">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- WebKit iOS 27: black-translucent è deprecato e causa sfumatura di sistema. -->
   <meta name="apple-mobile-web-app-title" content="SalvaCivici">
   <meta name="description" content="Raccogli civici e coordinate GPS per Mappa Recapito, anche offline.">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32-v06515.png">
@@ -106,7 +106,7 @@
         <button id="archive-sync-keyboard" class="sr-only" type="button">Sincronizza archivio cloud</button>
         <div class="stats-row"><div class="stat"><strong id="total-records">0</strong><span>Civici</span></div><div class="stat"><strong id="total-towns">0</strong><span>Comuni</span></div></div>
         <label class="sr-only" for="search">Cerca civici</label><input id="search" class="search" type="search" placeholder="Cerca via, civico o comune…">
-        <p class="archive-map-help">Apri <strong>Trova pin sulla mappa</strong> per controllare ogni ingresso. Sposta il punto solo se necessario, poi conferma prima di esportare i civici.</p>
+        <p class="archive-map-help">Verifica i pin sulla mappa prima di esportare i civici.</p>
         <div id="record-list" class="records-list"></div>
         <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>I punti salvati compariranno qui.</p></div>
       </section>
@@ -197,7 +197,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.26</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.27</p>
       </section>
     </main>
 

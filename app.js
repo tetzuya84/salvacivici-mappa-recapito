@@ -712,7 +712,8 @@
     window.SCUpdates?.setup({
       notify:toast,
       beforeUpdate:async()=>{
-        if(gpsBusy){toast('Termina prima il rilevamento GPS.');return false;}
+        // Gli aggiornamenti dell’app non dipendono dalle rilevazioni GPS.
+        // Resta il controllo sulla bozza non salvata e sui dialoghi aperti.
         if($('edit-dialog').open||mapReview.isOpen()){toast('Chiudi prima la mappa o la modifica del civico.');return false;}
         if($('indirizzo').value.trim()){
           return await confirmAction('Aggiornare SalvaCivici?',
