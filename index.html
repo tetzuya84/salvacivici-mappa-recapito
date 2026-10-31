@@ -63,7 +63,7 @@
             </div>
           </div>
 
-          <div class="section-head"><h2>Posizione GPS</h2><span class="light-label" id="gps-chip">Non rilevata</span></div>
+          <div class="section-head gps-section-heading" id="gps-heading" data-quality="none"><h2>Posizione GPS</h2></div>
           <div class="gps-meter" id="gps-card" data-quality="none">
             <div class="gps-meter-head">
               <strong id="gps-title">Qualità posizione GPS</strong>
@@ -75,7 +75,7 @@
               <div class="gps-meter-fill" id="gps-meter-fill"></div>
             </div>
             <div class="gps-meter-foot">
-              <span id="gps-description">Attendo tre letture GPS valide…</span>
+              <span id="gps-description">Precisione stimata</span>
               <strong id="gps-details">—</strong>
             </div>
             <p id="gps-quality" class="gps-meter-message" role="status" aria-live="polite"></p>
@@ -85,7 +85,7 @@
             <button id="map-open" class="map-open-button" type="button" disabled>
               <span aria-hidden="true">⌖</span> Verifica o sposta il pin sulla mappa
             </button>
-            <p id="map-review-note" role="status" aria-live="polite">GPS non ancora pronto. Potrai verificare la posizione sulla mappa e correggerla.</p>
+            <p id="map-review-note" role="status" aria-live="polite" hidden></p>
           </div>
           <p class="inline-alert" id="nearby-warning" role="status" hidden></p>
           <p class="inline-alert" id="indirizzo-warning" role="status" hidden></p>
@@ -197,7 +197,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.25</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.26</p>
       </section>
     </main>
 

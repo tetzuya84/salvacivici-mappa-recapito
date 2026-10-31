@@ -1,10 +1,28 @@
-/* Beta 0.6.20 — cartografia condivisa: Satellite, rotazione a due dita, bussola opzionale. */
+/* Beta 0.6.26 — bussola automatica su Mappa, rispettando i permessi iOS. */
 (function(root){
 'use strict';
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const IMAGERY='https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const SAT_ATTR='Immagini: &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a>, Vantor, Earthstar Geographics e GIS User Community';
 let rotationPromise=null;
+let autoCompassPermission=null,autoCompassDenied=false;
+// Questo metodo deve essere chiamato dentro il click sul tab Mappa,
+// PRIMA del caricamento asincrono di Leaflet (user activation Safari).
+function primeAutoCompass(){
+ const Orientation=root.DeviceOrientationEvent;
+ if(typeof Orientation!=='function')return Promise.resolve(false);
+ if(autoCompassDenied)return Promise.resolve(false);
+ if(autoCompassPermission)return autoCompassPermission;
+ try{
+  const asked=typeof Orientation.requestPermission==='function'
+    ?Orientation.requestPermission():Promise.resolve('granted');
+  autoCompassPermission=Promise.resolve(asked).then(result=>{
+   if(result!=='granted'){autoCompassDenied=true;return false;}
+   return true;
+  }).catch(()=>{autoCompassDenied=true;return false;});
+ }catch(_){autoCompassDenied=true;autoCompassPermission=Promise.resolve(false);}
+ return autoCompassPermission;
+}
 async function load(){
  const L=await root.SCMapReview.loadLeaflet();
  if(typeof L.Map?.prototype?.setBearing==='function')return L;
@@ -51,7 +69,9 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
   baseButton.textContent=satellite?'▤ Stradale':'▧ Satellite';
   baseButton.setAttribute('aria-pressed',satellite?'true':'false');
  }
+ let compassAttempt=0;
  function stopCompass(){
+  compassAttempt++;
   if(orientationListener){
    root.removeEventListener('deviceorientation',orientationListener);
    root.removeEventListener('deviceorientationabsolute',orientationListener);
@@ -72,36 +92,57 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
   else map.setBearing(-angle);
   compassButton.textContent='◉ Bussola attiva';
  }
- function startCompass(){
-  if(compassOn){stopCompass();return;}
-  if(!canRotate){setStatus('Rotazione non disponibile su questo dispositivo.');return;}
-  const Orientation=root.DeviceOrientationEvent;
-  if(typeof Orientation!=='function'){
-   setStatus('Sensore bussola non disponibile: puoi ruotare la mappa con due dita.');
-   return;
-  }
-  // La richiesta su Safari deve partire nel click, prima di qualsiasi await.
-  let perm;
-  try{perm=typeof Orientation.requestPermission==='function'?Orientation.requestPermission():Promise.resolve('granted');}
-  catch(_){setStatus('Autorizzazione bussola non disponibile.');return;}
-  Promise.resolve(perm).then(result=>{
-   if(result!=='granted'){setStatus('Bussola non autorizzata: resta disponibile la rotazione con due dita.');return;}
-   if(compassOn)return;
+ function activateCompass(permission,isStillVisible){
+  const attempt=++compassAttempt;
+  return Promise.resolve(permission).then(result=>{
+   if(attempt!==compassAttempt||(isStillVisible&&!isStillVisible()))return false;
+   if(result!==true&&result!=='granted'){
+    setStatus('Bussola non autorizzata. Tocca Segui bussola per riprovare.');
+    return false;
+   }
+   if(compassOn)return true;
    compassOn=true;
    compassButton.setAttribute('aria-pressed','true');
    compassButton.textContent='◉ Bussola attiva';
    orientationListener=heading;
    root.addEventListener('deviceorientation',heading);
    root.addEventListener('deviceorientationabsolute',heading);
-   setStatus('Bussola attiva. Tocca di nuovo per fermarla; con due dita puoi orientare manualmente.');
-  }).catch(()=>setStatus('Non è stato possibile attivare la bussola.'));
+   setStatus('Bussola attiva. Puoi ruotare con due dita per fermarla.');
+   return true;
+  }).catch(()=>{
+   if(attempt===compassAttempt)setStatus('Non è stato possibile attivare la bussola.');
+   return false;
+  });
+ }
+ function startCompass(){
+  if(compassOn){stopCompass();return;}
+  if(!canRotate){setStatus('Rotazione non disponibile su questo dispositivo.');return;}
+  const Orientation=root.DeviceOrientationEvent;
+  if(typeof Orientation!=='function'){
+   setStatus('Sensore bussola non disponibile: puoi ruotare la mappa con due dita.');return;
+  }
+  let permission;
+  try{
+   permission=typeof Orientation.requestPermission==='function'
+    ?Orientation.requestPermission():Promise.resolve('granted');
+  }catch(_){setStatus('Autorizzazione bussola non disponibile.');return;}
+  autoCompassDenied=false;
+  autoCompassPermission=Promise.resolve(permission).then(result=>{
+   if(result!=='granted'){autoCompassDenied=true;return false;}
+   return true;
+  }).catch(()=>{autoCompassDenied=true;return false;});
+  return activateCompass(permission);
+ }
+ function autoStartCompass(permission,isStillVisible){
+  if(!canRotate||!permission)return Promise.resolve(false);
+  return activateCompass(permission,isStillVisible);
  }
  baseButton.addEventListener('click',toggleBasemap);
  compassButton.disabled=!canRotate;
  compassButton.title=canRotate?'Orientamento tramite bussola; tocca per attivare/disattivare':'Rotazione non disponibile';
  compassButton.addEventListener('click',startCompass);
  map.on?.('rotatestart',()=>{if(compassOn)stopCompass();});
- return {pause:stopCompass,isSatellite:()=>satellite,canRotate};
+ return {pause:stopCompass,isSatellite:()=>satellite,canRotate,autoStartCompass};
 }
-root.SCMapFeatures={load,create};
+root.SCMapFeatures={load,create,primeAutoCompass};
 })(window);

@@ -1,0 +1,34 @@
+/* Beta 0.6.26 — cinque didascalie, regressione markup/stili/dati. */
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const html=fs.readFileSync('index.html','utf8'),css=fs.readFileSync('styles.css','utf8');
+const app=fs.readFileSync('app.js','utf8'),overview=fs.readFileSync('map-overview.js','utf8');
+const features=fs.readFileSync('map-features.js','utf8'),sw=fs.readFileSync('sw.js','utf8');
+const block=css.slice(css.lastIndexOf('/* Beta 0.6.26'));
+assert.ok(block.includes('.gps-section-heading[data-quality="good"]'));
+for(const state of ['excellent','good','fair','poor','incomplete'])
+ assert.ok(block.includes('data-quality="'+state+'"'), 'Colore GPS per '+state);
+assert.match(html,/id="gps-heading" data-quality="none"/);
+assert.doesNotMatch(html,/id="gps-chip"/);
+assert.doesNotMatch(app,/gps-chip|GPS pronto/);
+assert.match(app,/gps-heading'\)\.dataset\.quality=gpsError\?'incomplete':source\?quality\.tone:'none'/);
+assert.match(html,/<span id="gps-description">Precisione stimata<\/span>/);
+assert.match(app,/gps-description'\)\.textContent='Precisione stimata'/);
+assert.match(block,/\.gps-meter-foot[\s\S]*?flex-direction:column;align-items:center;/);
+assert.match(block,/\.gps-meter-message[\s\S]*?text-align:center/);
+assert.match(app,/3 letture completate · Puoi salvare il civico/);
+assert.doesNotMatch(app,/Il GPS non identifica necessariamente l’ingresso/);
+assert.match(html,/id="map-review-note"[^>]*hidden/);
+assert.match(app,/info\.hidden=true/);
+assert.match(app,/info\.hidden=false/);
+assert.match(app,/SC\.isFreshGps\(gps,Date\.now\(\),GPS_MAX_SAVE_AGE_MS\)/);
+assert.match(app,/gps\.sampleCount>=GPS_TARGET_SAMPLES/);
+assert.match(app,/SC\.applyVerifiedPosition\(base,selectedPosition\)/);
+assert.match(app,/const compassPermission=window\.SCMapFeatures\?\.primeAutoCompass\?\.\(\)/);
+assert.match(app,/mapOverview\.open\(compassPermission\)/);
+assert.match(features,/function primeAutoCompass\(\)/);
+assert.match(features,/requestPermission\(\)/);
+assert.match(overview,/autoStartCompass\(autoCompassPermission,visible\)/);
+assert.match(html,/BETA 0\.6\.26/);
+assert.match(sw,/salvacivici-v0\.6\.26/);
+console.log('PASS Beta 0.6.26: 5 richieste, flussi GPS e record invariati');

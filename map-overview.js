@@ -18,7 +18,7 @@ function create({getRecords,onVerify,notify}){
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
    editPinButton=$('overview-edit-pin');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
- let locationMarker=null,locationAccuracy=null,locating=false,cartography=null;
+ let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
  function options(){
@@ -130,9 +130,15 @@ function create({getRecords,onVerify,notify}){
    }
  }
  function update(){if(map&&visible())render(false);}
- async function open(){
+ async function open(permission){
    if(!visible())return;
-   if(map){render(false);root.requestAnimationFrame(()=>map.invalidateSize({pan:false}));return;}
+   if(permission)autoCompassPermission=permission;
+   if(map){
+     render(false);
+     root.requestAnimationFrame(()=>map.invalidateSize({pan:false}));
+     void cartography?.autoStartCompass(autoCompassPermission,visible);
+     return;
+   }
    if(loadingPromise)return loadingPromise;
    loading.hidden=false;
    loading.textContent='Caricamento cartografia…';
@@ -161,6 +167,7 @@ function create({getRecords,onVerify,notify}){
        }
        options();render(true);
        root.requestAnimationFrame(()=>map.invalidateSize({pan:false}));
+       void cartography?.autoStartCompass(autoCompassPermission,visible);
      }catch(e){
        loading.hidden=false;loading.textContent=e?.message||'Impossibile caricare la mappa.';
        notify?.('La cartografia richiede Internet.');
@@ -177,7 +184,7 @@ function create({getRecords,onVerify,notify}){
    root.addEventListener('salvacivici:datachanged',update);
    initialized=true;
  }
- return {open,refresh:update,select,pauseCompass:()=>cartography?.pause(),helpers:{valid,statusOf,appleDirections,googleDirections}};
+ return {open,refresh:update,select,pauseCompass:()=>{autoCompassPermission=null;cartography?.pause();},helpers:{valid,statusOf,appleDirections,googleDirections}};
 }
 root.SCMapOverview={create};
 })(window);

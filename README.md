@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.25**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.26**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -298,3 +298,12 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Inserito `div.status-bar-color-anchor[aria-hidden=true]` come figlio diretto di body prima di app-shell, e in CSS soltanto sui browser WebKit iOS `@supports (-webkit-touch-callout: none)` un elemento opaco blu notte `position:fixed;top:0;left:0;width:100%;height:8px;background:#0c1b29;z-index:2002;pointer-events:none`.
 - Si è scelto di **non cambiare** la meta `black-translucent` perché iOS può fissare il suo valore quando si installa la PWA: richiedere una nuova installazione rischierebbe di separare l'archivio IndexedDB locale dalla vecchia icona. Si conserva inoltre il `viewport-fit=cover`, le safe-area, la testata sticky e la navigazione fissa.
 - Nessuna modifica a GPS, dati civici, Firebase, backup, URL, My Maps, autorizzazioni, altezza fascia scura e logo. Validazione automatica HTML/CSS e pubblicazione server; risultato della sfumatura sul reale iPhone va confermato dall'utente, perché il rendering è controllato da iOS.
+
+## Beta 0.6.26 — didascalie IMG_4619/4618/4622/4621/4620 (31/10/2026)
+
+- Precisione GPS: al posto del testo lungo, solo «Precisione stimata» con valore ±metri, entrambi centrati (foto 4619).
+- Mappa: all'ingresso si tenta l'attivazione della bussola; l'eventuale permesso iOS viene chiesto nel gesto di apertura, prima del caricamento asincrono della cartografia. L'esito è memorizzato solo nella sessione; dopo un diniego l'utente può riprovare con il pulsante. I listener sensore si fermano uscendo dalla scheda (foto 4618).
+- Salva: badge «GPS pronto» eliminato e intestazione «Posizione GPS» colorata secondo precisione stimata GPS del sistema già in uso: buona verde, discreta gialla, scarsa arancione, assente grigia; non è potenza radio né prova di correttezza dell'ingresso (foto 4622).
+- Sparisce l'avviso iniziale «Il GPS non identifica necessariamente l'ingresso». Si mostra il feedback verde solo dopo effettiva conferma o correzione del pin (foto 4621).
+- Il messaggio «3 letture completate · Puoi salvare il civico» è centrato (foto 4620).
+- L'archivio civici IndexedDB, i fix multipli GPS, l'originale GPS di ogni record, il salvataggio, i CSV, la navigazione, Firebase e My Maps non sono cambiati. Prova reale dei sensori su iPhone ancora necessaria.

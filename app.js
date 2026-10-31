@@ -65,7 +65,11 @@
     });
     if(tab==='records')renderRecords();
     if(tab!=='map')mapOverview.pauseCompass();
-    if(tab==='map')void mapOverview.open();
+    if(tab==='map'){
+      // iOS: la richiesta di accesso alla bussola deve partire dal tocco sul tab.
+      const compassPermission=window.SCMapFeatures?.primeAutoCompass?.();
+      void mapOverview.open(compassPermission);
+    }
     if(tab==='capture'&&state.db&&!gpsBusy&&!SC.isFreshGps(state.gps,Date.now(),GPS_REENTER_REFRESH_MS))startGpsAcquisition();
     window.scrollTo({top:0,behavior:'auto'});
   }
@@ -313,15 +317,14 @@
     const fresh=complete&&SC.isFreshGps(gps,Date.now(),GPS_MAX_SAVE_AGE_MS);
     const count=gpsBusy||gpsError?gpsSamples.length:complete?gps.sampleCount:0;
     $('save-button').disabled=gpsBusy||!complete||!state.db;
-    $('gps-chip').textContent=gpsBusy?`GPS ${count}/3`:fresh?'GPS pronto':gpsError?'GPS da ripetere':gps?'Da aggiornare':'GPS automatico';
-    $('gps-chip').classList.toggle('ready',fresh&&!gpsBusy);
+    $('gps-heading').dataset.quality=gpsError?'incomplete':source?quality.tone:'none';
     $('gps-title').textContent=gpsBusy?'Misurazione GPS…':complete?`Qualità ${quality.label.toLowerCase()}`:gpsError?'GPS non pronto':'Qualità posizione GPS';
     $('gps-samples').textContent=`${count}/${GPS_TARGET_SAMPLES} letture`;
     $('gps-meter-fill').style.width=quality.score+'%';
     $('gps-meter').setAttribute('aria-valuenow',String(quality.score));
     $('gps-meter').setAttribute('aria-valuetext',`${count} letture su ${GPS_TARGET_SAMPLES}; ${source?'precisione stimata ±'+Math.round(source.accuracy)+' metri':'posizione non disponibile'}; ${complete?'pronto':gpsBusy?'in acquisizione':'non pronto'}`);
     $('gps-card').dataset.quality=gpsError?'incomplete':source?quality.tone:'none';
-    $('gps-description').textContent=gpsBusy?`Attendi ${GPS_TARGET_SAMPLES} letture valide`:complete?'Precisione stimata, non potenza del segnale':gpsError?'Ripeti la rilevazione per salvare':'In attesa della posizione…';
+    $('gps-description').textContent='Precisione stimata';
     $('gps-details').textContent=source?`±${Math.round(source.accuracy)} m`:'—';
     const message=$('gps-quality');
     message.classList.toggle('warning',!!gpsError);
@@ -348,8 +351,10 @@
         ?'Pin spostato manualmente di '+offset+' m dal GPS originale · posizione verificata.'
         :'Posizione GPS verificata sulla mappa · ingresso confermato.';
       info.classList.add('reviewed');
+      info.hidden=false;
     }else{
-      info.textContent=source?'Il GPS non identifica necessariamente l’ingresso. Verifica il pin sulla mappa.':'Attendo il GPS per aprire la mappa.';
+      info.textContent='';
+      info.hidden=true;
       info.classList.remove('reviewed');
     }
     mapReview.updateGps(source,complete);
