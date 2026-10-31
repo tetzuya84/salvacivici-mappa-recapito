@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.23**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.24**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -283,3 +283,10 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Dalla prova iPhone dell'utente: dopo aver confermato il pin corretto, la notifica scura fixed `toast('Ingresso corretto sulla mappa. Pronto per il salvataggio.')` copriva temporaneamente il bottone «Salva civico» (notifica globale, NON parte della mappa).
 - Tolta **solo** la notifica `toast` da `onCaptureConfirm`; il feedback resta nel testo inline `#map-review-note.reviewed`, aggiornato da `updateGpsUI`, che mostra distanza della correzione dal fix originale e «posizione verificata» o, se non spostato, «ingresso confermato». Non interrompe né impedisce il clic su «Salva civico».
 - Nessuna modifica a CSS del toast globale (mantiene messaggi errori/salvataggio), IndexedDB, GPS, regole di freschezza, salvataggio, mappe, backup, condivisioni o fonti My Maps. Nessuna cancellazione dati; test su dispositivo da confermare.
+
+## Beta 0.6.24 — intestazione ridotta, versione in Dati (31 ottobre 2026)
+
+- Richiesta dalla didascalia EXIF di `IMG_4596.jpeg`: «Diminuisci altezza fascia scura, sposta versione da qualche altra parte».
+- Testata scura: solo logo + dicitura SalvaCivici / MAPPA RECAPITO, centrati; altezza minima `58px + safe-area-inset-top` e spaziature compatte, icona `40px`, scritta SVG `130×42px`. Rimane `sticky` sopra i livelli Leaflet e l'intestazione è condivisa da tutte le quattro sezioni.
+- Indicazione `SalvaCivici · BETA 0.6.24` trasferita alla fine della sezione **Dati**, fuori dalla barra scura. Badge precedente rimosso dal DOM della testata. Non vengono duplicati i loghi o create nuove barre fisse.
+- Service worker cache v0.6.24 per aggiornare CSS e HTML. Nessuna modifica alle acquisizioni, localizzazione, verifica pin, navigazione, Firebase, backup o Google My Maps. L'anteprima CSS è verificata automaticamente; resa effettiva su iPhone da confermare.

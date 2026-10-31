@@ -1,0 +1,27 @@
+/* Beta 0.6.24 — riduzione header e versione fuori dalla fascia, senza regressioni. */
+'use strict';
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const html=fs.readFileSync('index.html','utf8');
+const css=fs.readFileSync('styles.css','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+const header=html.slice(html.indexOf('<header class="topbar"'),html.indexOf('</header>'));
+const data=html.slice(html.indexOf('<section id="page-data"'),html.indexOf('</section>',html.indexOf('<section id="page-data"')));
+assert.ok(!header.includes('BETA'),'Il numero di versione non deve occupare la fascia scura');
+assert.ok(header.includes('class="identity"')&&header.includes('identity-wordmark'));
+assert.ok(!header.includes('class="version"'));
+assert.match(data,/<p class="app-version"[^>]*>SalvaCivici · BETA 0\.6\.24<\/p>/);
+assert.equal((html.match(/BETA 0\.6\.24/g)||[]).length,1);
+const fix=css.slice(css.lastIndexOf('/* Beta 0.6.24'));
+assert.match(fix,/min-height:calc\(58px \+ env\(safe-area-inset-top\)\)/);
+assert.match(fix,/position:sticky;/);
+assert.match(fix,/z-index:2000;/);
+assert.match(fix,/justify-content:center;/);
+assert.match(fix,/width:40px;height:40px;/);
+assert.match(fix,/width:130px;height:42px;/);
+assert.match(fix,/#page-data \.app-version/);
+assert.ok(!fix.includes('.tabbar{')&&!fix.includes('overflow:hidden;'));
+assert.ok(css.includes('contain:paint;overflow:hidden;'),'Non alterare confinamento Leaflet');
+assert.ok(html.includes('id="page-map"')&&html.includes('id="map-review-dialog"'));
+assert.ok(html.includes('id="capture-form"')&&html.includes('id="save-button"'));
+assert.match(sw,/salvacivici-v0\.6\.24/);
+console.log('PASS Beta 0.6.24: fascia compatta, version in Dati, GPS/mappe/salvataggi invariati');
