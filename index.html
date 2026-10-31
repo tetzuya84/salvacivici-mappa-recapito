@@ -30,7 +30,7 @@
           </svg>
         </div>
       </div>
-      <span class="version">BETA 0.6.21</span>
+      <span class="version">BETA 0.6.22</span>
     </header>
     <div class="update-banner" id="update-banner" hidden role="status" aria-live="polite">
       <div><strong>Nuova versione disponibile</strong><p>I civici salvati restano nell'archivio locale.</p></div>
@@ -77,10 +77,6 @@
               <strong id="gps-details">—</strong>
             </div>
             <p id="gps-quality" class="gps-meter-message" role="status" aria-live="polite"></p>
-            <details class="gps-more" id="gps-coordinates" hidden>
-              <summary>Mostra coordinate GPS</summary>
-              <div><span>Lat: <strong id="gps-lat">—</strong></span><span>Lon: <strong id="gps-lon">—</strong></span></div>
-            </details>
             <button id="gps-retry" class="gps-retry" type="button" hidden>Riprova GPS senza cancellare i campi</button>
           </div>
           <div class="map-review-entry">
@@ -115,7 +111,7 @@
 
       <section id="page-map" class="page" hidden aria-labelledby="overview-title">
         <div class="intro"><p class="eyebrow">MAPPA RECAPITO</p><h1 id="overview-title">Tutti i civici</h1>
-          <p class="subtitle">Seleziona un numero, controlla il pin o avvia la navigazione. Usa le coordinate già salvate, senza duplicare i punti.</p>
+          
         </div>
         <div class="overview-filters">
           <div><label for="overview-town">Comune</label><select id="overview-town"><option value="">Tutti i comuni</option></select></div>
@@ -135,8 +131,8 @@
           <div id="overview-canvas" class="overview-map" aria-label="Mappa di tutti i civici salvati"></div>
           <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
           <button id="overview-locate" type="button" class="overview-locate" disabled aria-label="Torna alla mia posizione GPS" title="Torna alla mia posizione GPS">◎ La mia posizione</button>
-          <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
         </div>
+        <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
         <p id="overview-location-status" class="overview-location-status" role="status" aria-live="polite" hidden></p>
         <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
         <div id="overview-detail" class="overview-detail" hidden>
@@ -145,8 +141,7 @@
           <p id="overview-selected-status" class="overview-detail-status"></p>
           <p id="overview-selected-coordinates" class="overview-detail-coordinates"></p>
           <div class="overview-actions">
-            <button id="overview-verify" type="button" class="secondary">✎ Modifica pin</button>
-            <a id="overview-apple" class="primary" target="_blank" rel="noopener noreferrer">Naviga con Apple Mappe</a>
+            <a id="overview-apple" class="primary" target="_blank" rel="noopener noreferrer" aria-label="Naviga con Apple Mappe">Naviga</a>
           </div>
           <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
         </div>

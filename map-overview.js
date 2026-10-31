@@ -14,7 +14,7 @@ function create({getRecords,onVerify,notify}){
    summary=$('overview-summary'),empty=$('overview-empty'),detail=$('overview-detail'),
    title=$('overview-selected-title'),sub=$('overview-selected-status'),
    coord=$('overview-selected-coordinates'),apple=$('overview-apple'),google=$('overview-google'),
-   verify=$('overview-verify'),loading=$('overview-loading'),
+   loading=$('overview-loading'),
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
    editPinButton=$('overview-edit-pin');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
@@ -171,7 +171,6 @@ function create({getRecords,onVerify,notify}){
  town.addEventListener('change',()=>render(true));
  filter.addEventListener('change',()=>render(true));
  function editSelected(){const r=selectedRecord();if(r)onVerify(r);}
- verify.addEventListener('click',editSelected);
  editPinButton.addEventListener('click',editSelected);
  locateButton.addEventListener('click',locate);
  if(!initialized){

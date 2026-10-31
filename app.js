@@ -313,7 +313,6 @@
     const fresh=complete&&SC.isFreshGps(gps,Date.now(),GPS_MAX_SAVE_AGE_MS);
     const count=gpsBusy||gpsError?gpsSamples.length:complete?gps.sampleCount:0;
     $('save-button').disabled=gpsBusy||!complete||!state.db;
-    $('gps-coordinates').hidden=!gps;
     $('gps-chip').textContent=gpsBusy?`GPS ${count}/3`:fresh?'GPS pronto':gpsError?'GPS da ripetere':gps?'Da aggiornare':'GPS automatico';
     $('gps-chip').classList.toggle('ready',fresh&&!gpsBusy);
     $('gps-title').textContent=gpsBusy?'Misurazione GPS…':complete?`Qualità ${quality.label.toLowerCase()}`:gpsError?'GPS non pronto':'Qualità posizione GPS';
@@ -324,10 +323,6 @@
     $('gps-card').dataset.quality=gpsError?'incomplete':source?quality.tone:'none';
     $('gps-description').textContent=gpsBusy?`Attendi ${GPS_TARGET_SAMPLES} letture valide`:complete?'Precisione stimata, non potenza del segnale':gpsError?'Ripeti la rilevazione per salvare':'In attesa della posizione…';
     $('gps-details').textContent=source?`±${Math.round(source.accuracy)} m`:'—';
-    if(gps){
-      $('gps-lat').textContent=String(gps.lat);
-      $('gps-lon').textContent=String(gps.lon);
-    }
     const message=$('gps-quality');
     message.classList.toggle('warning',!!gpsError);
     if(gpsBusy){

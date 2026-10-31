@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.21**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.22**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -269,3 +269,11 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - Un pulsante verde «✎ Modifica pin» compare **nel riquadro della Mappa generale** dopo aver toccato un civico e apre lo stesso editor usato dall'Archivio. Anche il pulsante nella scheda di dettaglio è ora «Modifica pin». Se non si è selezionato un civico, il pulsante sulla mappa non è presente. Nessun nuovo record viene creato; si lavora sull'ID selezionato e si salva solo alla conferma.
 - Risolto il difetto su iPhone in cui Leaflet e il pannello satellite coprivano i comandi in basso dell'editor. La finestra di correzione ha ora una **zona centrale a scorrimento autonomo** (titolo, istruzioni, controlli mappa, cartografia, coordinate, informativa) e un **footer indipendente sempre visibile** con «Torna al GPS», «Salva pin corretto/Conferma posizione verificata» e «Annulla, non modificare». La mappa è contenuta nel proprio stacking context (`isolation:isolate`, `contain:paint`, `overflow:hidden`), non può più coprire il footer.
 - Altezza cartografia responsive in base alla finestra e safe-area iPhone; test su device reale da confermare. Restano invariati satellite, bussola, rotazione a due dita, barra logo e tabbar, acqusizioni GPS, IndexedDB, Firebase, esportazioni, backup e My Maps.
+
+## Beta 0.6.22 — didascalie delle fotografie del 31 ottobre 2026
+
+- IMG_4609.jpeg (didascalia EXIF): «Portare modifica pin della mappa subito sotto la mappa; rimuovere modifica pin dal salvataggio civico; Naviga con apple mappe deve diventate solo naviga». Il comando `overview-edit-pin` passa immediatamente sotto il riquadro mappa e rimane visibile solo dopo scelta di un civico. Tolto il pulsante duplicato `overview-verify` dalla scheda «Civico selezionato». Titolo visibile del link Apple Maps ora «Naviga»; link e funzione restano invariati.
+- IMG_4608.jpeg (didascalia EXIF «Togliere»): eliminata la spiegazione «Seleziona un numero…» dalla Mappa generale.
+- IMG_4605.jpeg (didascalia EXIF «Togli questa sezione»): rimossa la sezione espandibile «Mostra coordinate GPS» da Salva, insieme alle sue dipendenze di rendering e CSS; coordinate, letture GPS, controllo freschezza, precisione, verifiche, persistenza ed esportazione intatti.
+- IMG_4607.png: screenshot di Salva privo di didascalia personalizzata incorporata (solo «Screenshot»); la logica GPS non viene arbitrariamente cambiata. Non confondere lo stato GPS «Da aggiornare» con la verifica manuale del pin, perché la freschezza GPS rimane un controllo di sicurezza del salvataggio.
+- Nessuna migrazione database, modifica record, sincronizzazione automatica, aggiornamento cloud o My Maps. Test simulati e verifica pubblicazione richiesti prima di considerare il rilascio completato.

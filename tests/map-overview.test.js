@@ -1,4 +1,4 @@
-/* Test Beta 0.6.21 — panoramica civici e accesso alla correzione pin. */
+/* Test Beta 0.6.22 — un solo comando di correzione sotto la mappa. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -59,8 +59,6 @@ async function run(){
   assert.match(node('overview-selected-title').textContent,/Piazza Castello, 42/);
   assert.equal(node('overview-apple').href,'https://maps.apple.com/?daddr=45.16595,10.51232&dirflg=d');
   assert.match(node('overview-google').href,/destination=45.16595,10.51232/);
-  node('overview-verify').events.click();
-  assert.equal(verified.id,'a');
   assert.equal(JSON.stringify(records),original,'Apertura e navigazione non devono scrivere i civici');
   node('overview-town').value='Mariana Mantovana';node('overview-town').events.change();
   assert.equal(overlay.layers.length,1);
@@ -78,6 +76,6 @@ async function run(){
   assert.equal(overlay.layers.length,2);
   await o.open();assert.equal(libLoads,1,'Leaflet condiviso: niente caricamenti doppi');
   assert.equal(o.helpers.valid({lat:91,lon:10}),false);
-  console.log('PASS Beta 0.6.21: mappa, accesso editor, filtri e dati invariati.');
+  console.log('PASS Beta 0.6.22: mappa, unico edit, filtri e dati invariati.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

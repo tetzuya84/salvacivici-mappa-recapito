@@ -1,4 +1,4 @@
-/* Beta 0.6.21 — struttura dell'editor e stacking del footer su iOS. */
+/* Beta 0.6.22 — struttura dell'editor e stacking del footer su iOS. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const html=fs.readFileSync('index.html','utf8'),css=fs.readFileSync('styles.css','utf8');
@@ -20,5 +20,5 @@ assert.match(styles,/\.map-review-map-wrap\s*\{[^}]*contain:paint;overflow:hidde
 assert.match(styles,/safe-area-inset-bottom/);
 assert.match(styles,/\.overview-edit-pin/);
 assert.match(html,/id="overview-edit-pin"[^>]*hidden/);
-assert.match(html,/BETA 0\.6\.21/);
-console.log('Beta 0.6.21: footer salvataggio sempre visibile e mappa confinata, PASS.');
+assert.match(html,/BETA 0\.6\.22/);
+console.log('Beta 0.6.22: footer salvataggio sempre visibile e mappa confinata, PASS.');

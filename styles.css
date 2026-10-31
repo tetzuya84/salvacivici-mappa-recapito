@@ -596,9 +596,6 @@
   color:#38736d;text-align:left;font-size:12px;line-height:1.4;
 }
 #page-capture .gps-meter-message.warning{color:#a65c13}
-#page-capture .gps-more{border-top:1px solid #e0e8eb;padding:8px 1px 0;color:#597580;font-size:11px}
-#page-capture .gps-more summary{cursor:pointer;list-style:revert;color:#496b75;font-weight:700}
-#page-capture .gps-more div{display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:7px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 #page-capture .gps-retry{
   align-self:stretch;min-height:42px;background:#e5f5f3;color:#0e6364;
   border:0;border-radius:11px;font:inherit;font-size:13px;font-weight:750;
@@ -666,8 +663,8 @@
 .overview-detail h2{font-size:17px;line-height:1.2;margin:0;}
 .overview-detail-status{font-size:13px;color:#3d6571;margin:6px 0 0;}
 .overview-detail-coordinates{font-size:11px;color:#70858d;font-variant-numeric:tabular-nums;margin:4px 0 12px;}
-.overview-actions{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr);gap:7px;}
-.overview-actions .primary,.overview-actions .secondary{min-height:47px;text-align:center;text-decoration:none;font-size:12px;padding:8px 7px;}
+.overview-actions{display:block;}
+.overview-actions .primary{display:flex;width:100%;min-height:47px;text-align:center;text-decoration:none;font-size:14px;padding:9px 12px;}
 .overview-alt-nav{display:block;text-align:center;margin:12px 0 0;color:#13786f;font-size:12px;font-weight:720;}
 .overview-privacy{font-size:10px;color:#687f89;line-height:1.5;margin:12px 3px;}
 
@@ -740,11 +737,12 @@
 /* Beta 0.6.21 — accesso immediato all'editor dalla panoramica e footer pin sempre visibile.
    Non cambiare lo scorrimento dell'Archivio né lo stacking delle due fasce dell'app. */
 .app-shell #page-map .overview-edit-pin{
-  position:absolute;right:12px;bottom:12px;z-index:1100;
-  appearance:none;border:2px solid #fff;border-radius:12px;
-  background:#0a8179;color:#fff;min-height:46px;padding:10px 16px;
-  font:inherit;font-weight:800;font-size:13px;line-height:1.2;
-  box-shadow:0 2px 12px rgba(7,36,42,.35);touch-action:manipulation;
+  position:relative;display:flex;align-items:center;justify-content:center;
+  width:100%;margin:11px 0 9px;
+  appearance:none;border:1px solid #08756e;border-radius:12px;
+  background:#0a8179;color:#fff;min-height:47px;padding:11px 16px;
+  font:inherit;font-weight:800;font-size:14px;line-height:1.2;
+  box-shadow:0 2px 10px rgba(7,36,42,.12);touch-action:manipulation;
 }
 .app-shell #page-map .overview-edit-pin[hidden]{display:none!important;}
 .app-shell #page-map .overview-edit-pin:focus-visible{outline:3px solid #074645;outline-offset:3px;}
