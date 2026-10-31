@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.22**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
+Beta **0.6.23**: applicazione PWA per raccolta locale di civici e coordinate GPS da iPhone.
 
 ## GPS migliorato
 
@@ -277,3 +277,9 @@ I 26 punti distinti del 29/10 sono segnalati DA VERIFICARE nei fogli Drive; l'ut
 - IMG_4605.jpeg (didascalia EXIF «Togli questa sezione»): rimossa la sezione espandibile «Mostra coordinate GPS» da Salva, insieme alle sue dipendenze di rendering e CSS; coordinate, letture GPS, controllo freschezza, precisione, verifiche, persistenza ed esportazione intatti.
 - IMG_4607.png: screenshot di Salva privo di didascalia personalizzata incorporata (solo «Screenshot»); la logica GPS non viene arbitrariamente cambiata. Non confondere lo stato GPS «Da aggiornare» con la verifica manuale del pin, perché la freschezza GPS rimane un controllo di sicurezza del salvataggio.
 - Nessuna migrazione database, modifica record, sincronizzazione automatica, aggiornamento cloud o My Maps. Test simulati e verifica pubblicazione richiesti prima di considerare il rilascio completato.
+
+## Beta 0.6.23 — conferma pin non sovrapposta a «Salva civico» (31 ottobre 2026)
+
+- Dalla prova iPhone dell'utente: dopo aver confermato il pin corretto, la notifica scura fixed `toast('Ingresso corretto sulla mappa. Pronto per il salvataggio.')` copriva temporaneamente il bottone «Salva civico» (notifica globale, NON parte della mappa).
+- Tolta **solo** la notifica `toast` da `onCaptureConfirm`; il feedback resta nel testo inline `#map-review-note.reviewed`, aggiornato da `updateGpsUI`, che mostra distanza della correzione dal fix originale e «posizione verificata» o, se non spostato, «ingresso confermato». Non interrompe né impedisce il clic su «Salva civico».
+- Nessuna modifica a CSS del toast globale (mantiene messaggi errori/salvataggio), IndexedDB, GPS, regole di freschezza, salvataggio, mappe, backup, condivisioni o fonti My Maps. Nessuna cancellazione dati; test su dispositivo da confermare.

@@ -268,9 +268,9 @@
   const mapReview=window.SCMapReview.create({
     getCaptureGps:()=>state.gps||SC.bestGpsSample(gpsSamples),
     getCaptureReady:()=>gpsValidated&&state.gps?.sampleCount===GPS_TARGET_SAMPLES&&!gpsBusy,
-    onCaptureConfirm:selection=>{
+    onCaptureConfirm:()=>{
+      // Conferma già presente nel messaggio inline: nessun toast a coprire «Salva civico».
       updateGpsUI();
-      toast(selection.moved?'Ingresso corretto sulla mappa. Pronto per il salvataggio.':'Posizione GPS confermata sulla mappa.');
     },
     onArchiveConfirm:async(record,selection)=>{
       if(!state.db){toast('Archivio non disponibile.');return false;}

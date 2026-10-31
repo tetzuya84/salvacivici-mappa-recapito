@@ -1,0 +1,26 @@
+/* Beta 0.6.23 — nessuna notifica copre Salva civico dopo la conferma pin. */
+'use strict';
+const fs=require('node:fs');
+const assert=require('node:assert/strict');
+const app=fs.readFileSync('app.js','utf8');
+const html=fs.readFileSync('index.html','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+const css=fs.readFileSync('styles.css','utf8');
+const begin=app.indexOf('onCaptureConfirm:');
+const end=app.indexOf('onArchiveConfirm:',begin);
+assert.ok(begin>=0&&end>begin,'Il callback conferma pin deve esistere');
+const callback=app.slice(begin,end);
+assert.match(callback,/updateGpsUI\(\)/);
+assert.doesNotMatch(callback,/toast\(/,'Nessun toast di successo deve coprire Salva civico');
+assert.ok(!app.includes('Ingresso corretto sulla mappa. Pronto per il salvataggio.'));
+assert.match(app,/info\.textContent=selected\.moved[\s\S]*?'Pin spostato manualmente di '/);
+assert.match(app,/posizione verificata/);
+assert.match(html,/id="map-review-note"/);
+assert.match(css,/#page-capture #map-review-note\.reviewed/);
+assert.match(html,/id="save-button" type="submit"/);
+assert.match(app,/SC\.applyVerifiedPosition\(base,selectedPosition\)/);
+assert.match(app,/GPS_TARGET_SAMPLES=3/);
+assert.match(app,/SC\.isFreshGps\(state\.gps,Date\.now\(\),GPS_MAX_SAVE_AGE_MS\)/);
+assert.match(html,/BETA 0\.6\.23/);
+assert.match(sw,/salvacivici-v0\.6\.23/);
+console.log('PASS Beta 0.6.23: conferma inline, Salva libero, GPS e dati invariati');
