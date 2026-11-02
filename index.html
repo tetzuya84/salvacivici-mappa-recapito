@@ -197,6 +197,9 @@
               <h3 id="drive-service-title">Backup su Google Drive</h3>
               <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Drive si attiva con lo stesso accesso Google.</p>
               <button id="drive-backup" type="button" class="secondary full">Salva copia su Drive ora</button>
+              <button id="drive-view" type="button" class="secondary full">Prepara elenco leggibile in Fogli Google</button>
+              <a id="drive-sheet-link" class="secondary full" target="_blank" rel="noopener noreferrer" hidden>Apri elenco in Fogli Google</a>
+              <p class="cloud-help">Il file JSON rimane il backup tecnico. L’elenco Google è una copia di consultazione dell’ultimo backup, non modifica la mappa dell’app.</p>
               <p class="cloud-help">Le copie precedenti restano nel tuo Drive. Per ora Firebase sincronizza i dispositivi; Google My Maps non viene modificata.</p>
             </section>
           </div>
@@ -209,7 +212,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.31</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.32</p>
       </section>
     </main>
 
