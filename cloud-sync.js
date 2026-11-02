@@ -203,6 +203,12 @@ async function synchronize({confirm=true}={}){
    if(changedLocal)await engine.applySnapshot(result.records);
    saveBase(result.records);
    store(OWNER,session.uid);
+   // Backup Google Drive per-account, append-only e con lettura di verifica.
+   // Un errore Drive non annulla la sincronizzazione Firebase già riuscita.
+   if(root.SCDrive?.backupAfterSync){
+     try{await root.SCDrive.backupAfterSync(result.records);}
+     catch(_){/* Stato Drive mostrato nel suo riquadro, dati Firebase intatti. */}
+   }
    message('Sincronizzati '+count+' civici. iPhone e iPad vedranno gli stessi dati dopo la sincronizzazione sul rispettivo dispositivo.');
    engine.toast('Sincronizzazione cloud completata.');
    return{ok:true,count,changedCloud,changedLocal};
@@ -256,6 +262,7 @@ async function clearAllAcquisitions({expectedCount}={}){
 
 function logout(){
  session=null;token='';expires=0;remove(SESSION);
+ root.SCDrive?.clear?.();
  if(root.SCGoogleAuth?.logout)void root.SCGoogleAuth.logout();
  showState();message('Disconnesso dal cloud. I civici locali rimangono sul dispositivo.');
 }
@@ -283,5 +290,5 @@ function init(options){
  message(session?'Cloud pronto. Apri l’Archivio e trascina verso il basso per sincronizzare.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullIfSafe({quiet:true}),clearAll:clearAllAcquisitions};
+root.SCCloud={init,acceptGoogleAuth,notice:message,getIdentity:()=>session?{uid:session.uid,email:session.email}:null,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullIfSafe({quiet:true}),clearAll:clearAllAcquisitions};
 })(window);
