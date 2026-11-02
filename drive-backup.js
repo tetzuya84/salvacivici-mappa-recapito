@@ -99,8 +99,8 @@ async function createBackup(folderId,records){
    throw Error('Archivio troppo grande per il backup sperimentale. Usa l’esportazione JSON locale.');
  const boundary='sc-'+crypto.randomUUID().replace(/-/g,'');
  const meta=JSON.stringify({name,mimeType:'application/json',parents:[folderId]});
- const body='--'+boundary+'\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n'+meta+
-   '\\r\\n--'+boundary+'\\r\\nContent-Type: application/json\\r\\n\\r\\n'+payload+'\\r\\n--'+boundary+'--';
+ const body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+
+   '\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+payload+'\r\n--'+boundary+'--';
  const response=await fetchGoogle(UPLOAD,{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body});
  const saved=await response.json();
  if(!saved.id)throw Error('Google Drive non ha confermato il salvataggio.');
