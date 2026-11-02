@@ -738,9 +738,14 @@
     try{await writeOne(updated);$('edit-dialog').close();await refresh();toast('Civico aggiornato.');}catch(e){toast('Modifica non riuscita.');}
   });
   async function deleteRecord(r){
-    const answer=await confirmAction('Eliminare il civico?',`Il punto ${r.via}, ${r.civico} (${r.comune}) sarà eliminato da questo dispositivo.`, 'Elimina');
+    const published=state.mapRecords.some(p=>p.id===r.id);
+    const answer=await confirmAction('Eliminare il civico dall’Archivio?',
+      published
+        ?`Il civico ${r.via} ${r.civico} sarà eliminato dalle acquisizioni, ma RIMARRÀ nella Mappa permanente. Sincronizza per aggiornare l’Archivio degli altri dispositivi.`
+        :`Il civico ${r.via} ${r.civico} non è ancora pubblicato sulla Mappa. Eliminandolo ora non sarà possibile ritrovarlo nella Mappa.`,
+      'Elimina dall’Archivio');
     if(!answer)return;
-    try{await removeOne(r.id);await refresh();toast('Civico eliminato.');}catch(e){toast('Eliminazione non riuscita.');}
+    try{await removeOne(r.id);await refresh();toast('Acquisizione eliminata; Mappa permanente invariata.');}catch(e){toast('Eliminazione non riuscita.');}
   }
 
 
@@ -751,11 +756,11 @@
     const total=(await readAll()).length;
     if(!total){toast('Archivio già vuoto.');return;}
     const first=await confirmAction('Eliminare tutte le acquisizioni?',
-      'Sono presenti '+total+' civici. Procedi solo DOPO avere verificato il loro inserimento negli archivi e nelle mappe: il backup JSON e My Maps non sono sincronizzati automaticamente.',
+      'Sono presenti '+total+' acquisizioni. Cancelleremo SOLO l’Archivio, non i punti pubblicati sulla Mappa permanente. Verifica prima di procedere: i civici non sincronizzati non saranno sulla Mappa.',
       'Prima conferma');
     if(!first)return;
     const second=await confirmAction('Seconda conferma: cancellazione totale',
-      'Stai eliminando '+total+' civici da questo dispositivo E dal cloud condiviso. Anche gli altri dispositivi riceveranno l’archivio vuoto. I dati non saranno recuperabili dall’app senza un backup JSON.',
+      'Stai eliminando '+total+' acquisizioni dall’Archivio del dispositivo e da quello condiviso. LA MAPPA PERMANENTE NON SARÀ CANCELLATA. Le acquisizioni mai pubblicate possono andare perse.',
       'ELIMINA TUTTI');
     if(!second)return;
     const button=$('delete-all-records');
@@ -784,8 +789,8 @@
     toast(`Esportazione di ${filename} avviata.`);
   }
   $('export-csv').addEventListener('click',async()=>{
-    if(!state.records.length){toast('Non ci sono civici da esportare.');return;}
-    await shareOrDownload(`MappaCivici_${filenameDate()}.csv`,'text/csv;charset=utf-8',SC.csv(state.records));
+    if(!state.mapRecords.length){toast('La Mappa non contiene ancora civici pubblicati. Sincronizza prima dall’Archivio.');return;}
+    await shareOrDownload(`MappaCivici_${filenameDate()}.csv`,'text/csv;charset=utf-8',SC.csv(state.mapRecords));
   });
   $('export-json').addEventListener('click',async()=>{
     if(!state.records.length){toast('Non ci sono civici da salvare.');return;}
