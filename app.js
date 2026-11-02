@@ -385,6 +385,22 @@
         mapReview.openArchive(record);
       }catch(_){toast('Non posso preparare la correzione: controlla l’Archivio.');}
     },
+    onEditData:async record=>{
+      const current=state.records.find(r=>r.id===record.id);
+      if(current){editRecord(current);return;}
+      // Un dato pubblicato non si riscrive direttamente sulla Mappa:
+      // viene copiato in Archivio per essere verificato e sincronizzato.
+      const approved=await confirmAction('Modificare i dati del civico?',
+        'Riporterò il civico pubblicato nell’Archivio per correggere comune, via o numero. La Mappa manterrà i vecchi dati finché non sincronizzi la modifica.',
+        'Prepara modifica');
+      if(!approved)return;
+      try{
+        await addRecoveredRecords([record]);
+        const staged=state.records.find(r=>r.id===record.id);
+        if(!staged)throw Error('Record non presente dopo il recupero.');
+        editRecord(staged);
+      }catch(_){toast('Non posso preparare la modifica: verifica l’Archivio.');}
+    },
     notify:toast
   });
   $('map-open').addEventListener('click',()=>mapReview.openCapture());
@@ -736,7 +752,8 @@
     const comune=SC.clean($('edit-comune').value),via=SC.clean($('edit-via').value),civico=SC.clean($('edit-civico').value);
     if(!comune||!via||!civico){toast('Compila tutti i campi.');return;}
     const updated={...record,comune,via,civico};
-    try{await writeOne(updated);$('edit-dialog').close();await refresh();toast('Civico aggiornato.');}catch(e){toast('Modifica non riuscita.');}
+    try{await writeOne(updated);$('edit-dialog').close();await refresh();
+      toast('Dati aggiornati nell’Archivio. Sincronizza per aggiornare anche la Mappa permanente.');}catch(e){toast('Modifica non riuscita.');}
   });
   async function deleteRecord(r){
     const published=state.mapRecords.some(p=>p.id===r.id);
