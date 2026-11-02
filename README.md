@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.35**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
+Beta **0.6.36**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
 
 ## GPS migliorato
 
@@ -411,3 +411,16 @@ Verifica V8 della sintassi JS. Simulazione integrata del Firestore REST (documen
 - Test V8 con Leaflet/dom simulati: due indirizzi con numero 51 a 5,14 m, mappa iniziale con 2 marker e zoom 20, a zoom 17 messaggio di sovrapposizione e selezione funzionante fra le due voci; coordinate inalterate. I dati reali, il Firestore dell'utente, Drive e My Maps non sono stati modificati.
 
 **Verifica sul dispositivo da effettuare:** dopo aggiornamento PWA, completare sincronizzazione e leggere in Archivio entrambi i contatori; aprire Mappa con filtri `Tutti i comuni` e `Tutti i punti`, verificare il conteggio `2 civici sulla mappa`, cliccare `Kennedy` e `Kennedy Prova` e controllare i dettagli. Se il conteggio Mappa è 1 dopo una sync riuscita, il problema non è solo visivo: non cancellare acquisizioni, raccogliere esatto stato e correggere il backend. Non eliminare backup o civici di prova fino a test completo.
+
+
+## Beta 0.6.36 — responsabilità definitive delle quattro sezioni (2 novembre 2026)
+
+**Decisione utente:**
+1. **Salva**: acquisizione GPS già concreta e approvata. Non modificata.
+2. **Archivio**: spazio di lavoro per civici acquisiti durante il turno, consultabili e modificabili (dati e pin). Lo swipe di sincronizzazione pubblica le acquisizioni nella Mappa permanente. I dati acquisiti restano in Archivio fino a cancellazione manuale; NON vengono cancellati automaticamente al termine del turno o della sincronizzazione. Il catalogo Mappa NON viene cancellato insieme all'Archivio. Ogni scheda in Archivio indica `Da pubblicare nella Mappa`, `Già pubblicato nella Mappa` oppure `Modifiche da sincronizzare`, in base al confronto con il punto già pubblicato.
+3. **Mappa**: mantiene l'attuale cartografia, i pin numerati, filtri e navigazione. Nuovi controlli: ricerca per comune/via/civico e **tendina dei civici già sincronizzati** (ordinate per comune e via); scegliere un civico azzera i filtri che lo nascondono, lo seleziona, centra il pin a zoom 19 e ne mostra informazioni, coordinate e navigazione. Conservata la scelta dei punti a pochi metri, introdotta in Beta 0.6.35. **Modifica pin** e nuovo **Modifica dati** sono due operazioni distinte. Una correzione su un civico già pubblicato viene preparata nell'Archivio (stesso ID): Mappa rimane al dato pubblicato fino a successiva sincronizzazione, così un cambio accidentale non altera il catalogo permanente. Se il civico è ancora nell'Archivio, i comandi riutilizzano quella scheda. Nessuna riscrittura diretta di Firebase, Drive o Google My Maps.
+4. **Dati**: connessione Google, sincronizzazione/backup e export come già approvati. Non modificata.
+
+**Implementazione:** `index.html` aggiunta ricerca e select native accessibili nel tab Mappa, nuovo pulsante Modifica dati e descrizioni Archivio/Mappa; `map-overview.js` ricerca dinamica, selezione, centratura, callback correzione dati; `app.js` riutilizzo del dialogo modifica dati con recupero conservativo dal catalogo Mappa all'Archivio quando necessario; badge di pubblicazione sulle acquisizioni, messaggio chiaro che una correzione diventa visibile sulla Mappa solo dopo nuova sync; `styles.css` stile selettore e pulsanti; `sw.js` cache 0.6.36. NON modificati codice di acquisizione, backend cloud-sync, modello dati IndexedDB, File Drive, 122 civici storici, My Maps, né permessi Firestore.
+
+**Test:** JS parsing eseguito sui file modificati. Simulazione controlli Mappa con 3 punti pubblicati: tendina include tutti; filtro «Prova» riduce la lista a uno; scelta seleziona Kennedy Prova 51, centra lat/lon originali con zoom19 e richiama callback Modifica dati. Mancano ancora il test effettivo sull'iPhone/iPad e l'esito di una correzione in Firebase reale. NON svuotare Archivio con acquisizioni di prova non ancora pubblicate. L'idea «Archivio per turno» è per ora implementata come elenco di lavoro svuotabile manualmente, SENZA data di scadenza e senza eliminazioni automatiche: non chiamare implementata una sessione giornaliera automatica.
