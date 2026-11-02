@@ -822,7 +822,7 @@
     $('indirizzo').value='';showComune('');
     showPage('capture');
     updateGpsUI();
-    if(window.SCDrive)window.SCDrive.init({getRecords:readAll,addRecoveredRecords,confirmAction});
+    if(window.SCDrive)window.SCDrive.init({getRecords:readAll,getMapRecords:readMapAll,addRecoveredRecords,confirmAction});
     if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,getMapRecords:readMapAll,applyMapSnapshot,confirmAction,toast});
     setupAppUpdates();
     startGpsAcquisition();
