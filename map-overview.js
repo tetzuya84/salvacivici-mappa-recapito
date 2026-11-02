@@ -1,4 +1,4 @@
-/* Beta 0.6.19 — mappa civici con pulsante GPS «La mia posizione». */
+/* Beta 0.6.35 — mappa permanente: distinzione dei civici a pochi metri. */
 (function(root){
 'use strict';
 function valid(r){
@@ -16,7 +16,9 @@ function create({getRecords,onVerify,notify}){
    coord=$('overview-selected-coordinates'),apple=$('overview-apple'),google=$('overview-google'),
    loading=$('overview-loading'),
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
-   editPinButton=$('overview-edit-pin');
+   editPinButton=$('overview-edit-pin'),
+   nearbyPanel=$('overview-nearby'),nearbyTitle=$('overview-nearby-title'),
+   nearbyOptions=$('overview-nearby-options');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
@@ -33,11 +35,43 @@ function create({getRecords,onVerify,notify}){
  function selectedRecord(){
    return records().find(r=>r.id===selectedId)||null;
  }
+ // Due ingressi possono avere coordinate diverse di pochi metri:
+ // le etichette Leaflet possono coprirsi senza che manchi alcun record.
+ // Confrontiamo i pixel ALLA SCALA ATTUALE, senza spostare i GPS reali.
+ function closeEnough(a,b){
+   if(!map)return false;
+   const p=map.latLngToContainerPoint([a.lat,a.lon]);
+   const q=map.latLngToContainerPoint([b.lat,b.lon]);
+   return Math.hypot(p.x-q.x,p.y-q.y)<40;
+ }
+ function nearbyFor(item){
+   if(!item||!map)return [];
+   return filtered().filter(r=>r.id===item.id||closeEnough(r,item))
+     .sort((a,b)=>a.via.localeCompare(b.via,'it')||String(a.civico).localeCompare(String(b.civico),'it'));
+ }
+ function drawNearby(item){
+   const close=nearbyFor(item);
+   nearbyPanel.hidden=close.length<2;
+   nearbyOptions.replaceChildren();
+   if(close.length<2)return;
+   nearbyTitle.textContent=close.length+' civici molto vicini: scegli quello corretto';
+   for(const record of close){
+     const button=document.createElement('button');
+     button.type='button';
+     button.className='overview-nearby-choice';
+     button.textContent=record.via+', '+record.civico;
+     button.setAttribute('aria-pressed',String(item.id===record.id));
+     if(item.id===record.id)button.classList.add('active');
+     button.addEventListener('click',()=>select(record));
+     nearbyOptions.append(button);
+   }
+ }
  function select(r){
    selectedId=r?.id||null;
    const item=selectedRecord();
    detail.hidden=!item;
    editPinButton.hidden=!item;
+   drawNearby(item);
    if(!item)return;
    editPinButton.setAttribute('aria-label','Modifica pin: '+item.via+', '+item.civico+', '+item.comune);
    title.textContent=item.via+', '+item.civico;
@@ -55,9 +89,13 @@ function create({getRecords,onVerify,notify}){
    const list=filtered();
    layer.clearLayers();
    if(!list.some(r=>r.id===selectedId))select(null);
-   summary.textContent=list.length+' civici sulla mappa';
+   // Il conteggio indica QUANTI punti sono pubblicati, non quante etichette
+   // rimangono visibili quando due numeri civici si coprono sulla cartografia.
+   const hasClosePair=list.some((r,i)=>list.slice(i+1).some(next=>closeEnough(r,next)));
+   summary.textContent=list.length+' civici sulla mappa'+
+     (hasClosePair?' · Punti molto vicini: tocca un numero per distinguerli.':'');
    empty.hidden=list.length!==0;
-   if(!list.length)return;
+   if(!list.length){nearbyPanel.hidden=true;nearbyOptions.replaceChildren();return;}
    const bounds=[];
    for(const r of list){
      const label=document.createElement('span');label.className='overview-pin-label';label.textContent=r.civico;
@@ -71,7 +109,15 @@ function create({getRecords,onVerify,notify}){
    if(selectedId)select(selectedRecord());
    if(refit){
      if(bounds.length===1)map.setView(bounds[0],19,{animate:false});
-     else map.fitBounds(L.latLngBounds(bounds).pad(.15),{maxZoom:17,padding:[28,28],animate:false});
+     else{
+       // Nelle prove con ingressi a circa 5 m, lo zoom 17 comprimeva
+       // due segnaposti "51" in un solo simbolo. Zoom fino a 20
+       // solo quando tutti i punti sono concentrati in un'area minima.
+       const compact=map.distance(bounds[0],bounds.reduce((far,p)=>
+         map.distance(bounds[0],p)>map.distance(bounds[0],far)?p:far,bounds[0]))<55;
+       map.fitBounds(L.latLngBounds(bounds).pad(.15),
+         {maxZoom:compact?20:17,padding:[28,28],animate:false});
+     }
    }
  }
  function showLocationMessage(message){
@@ -150,6 +196,7 @@ function create({getRecords,onVerify,notify}){
          bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21,rotate:typeof L.Map?.prototype?.setBearing==='function',
          touchRotate:true,rotateControl:false,preventPageGestures:true});
        layer=L.layerGroup().addTo(map);
+       map.on('zoomend',()=>{if(selectedId)select(selectedRecord());});
        locateButton.disabled=false;
        if(root.SCMapFeatures){
          cartography=root.SCMapFeatures.create({L,map,baseButton:$('overview-basemap'),compassButton:$('overview-compass'),
