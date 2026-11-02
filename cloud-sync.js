@@ -126,29 +126,42 @@ async function setCloud(records,updateTime){
  }
  return data.updateTime;
 }
+/* Lettura prudente per la mappa: aggiorna il dispositivo solo quando
+   l'archivio locale coincide con l'ultima base sincronizzata.
+   Nessuna scrittura cloud e nessuna cancellazione di modifiche locali. */
 async function pullIfSafe({quiet=false}={}){
- if(busy||!session?.uid||!navigator.onLine)return;
- if($('edit-dialog')?.open)return; // Non sovrapporre un aggiornamento a una modifica in corso.
+ if(busy)return{ok:false,reason:'busy'};
+ if(!session?.uid)return{ok:false,reason:'not-connected'};
+ if(!navigator.onLine)return{ok:false,reason:'offline'};
+ if($('edit-dialog')?.open)return{ok:false,reason:'editing'};
  const owner=read(OWNER,null);
- if(owner&&owner!==session.uid){if(!quiet)message('Questo dispositivo è associato a un altro account. Nessun dato importato.',true);return;}
+ if(owner&&owner!==session.uid){
+   if(!quiet)message('Questo dispositivo è associato a un altro account. Nessun dato importato.',true);
+   return{ok:false,reason:'account-mismatch'};
+ }
  busy=true;showState();
  try{
    const before=await engine.getRecords(),saved=read(baseKey(),null);
-   if(saved?.records&& !sameRecords(before,saved.records)){
-     if(!quiet)message('Hai civici locali da controllare: per inviarli, trascina verso il basso nell’Archivio.');return;
+   if(saved?.records&&!sameRecords(before,saved.records)){
+     if(!quiet)message('Hai civici locali da controllare: per inviarli, trascina verso il basso nell’Archivio.');
+     return{ok:false,reason:'local-changes'};
    }
    if(!saved&&before.length){
-     if(!quiet)message('Archivio locale non ancora collegato: controlla i civici prima della prima sincronizzazione.');return;
+     if(!quiet)message('Archivio locale non ancora collegato: controlla i civici prima della prima sincronizzazione.');
+     return{ok:false,reason:'first-sync'};
    }
    const cloud=await getCloud();
-   if(!sameRecords(before,await engine.getRecords()))return;
+   if(!sameRecords(before,await engine.getRecords()))return{ok:false,reason:'local-changed-during-read'};
    const changed=!sameRecords(before,cloud.records);
    if(changed)await engine.applySnapshot(cloud.records);
    if(!saved||!sameRecords(saved.records,cloud.records))saveBase(cloud.records);
    store(OWNER,session.uid);
    if(changed||!quiet)message('Archivio aggiornato dal cloud: '+cloud.records.length+' civici. Le nuove modifiche restano da confermare con Sincronizza.');
- }catch(e){if(!quiet)message('Lettura cloud non disponibile: '+errorMessage(e),true)}
- finally{busy=false;showState();}
+   return{ok:true,count:cloud.records.length,changed};
+ }catch(e){
+   if(!quiet)message('Lettura cloud non disponibile: '+errorMessage(e),true);
+   return{ok:false,reason:'error'};
+ }finally{busy=false;showState();}
 }
 function autoReceive(){
  // Nessuna trasmissione di modifiche: solo GET Firestore e applicazione protetta.
@@ -270,5 +283,5 @@ function init(options){
  message(session?'Cloud pronto. Apri l’Archivio e trascina verso il basso per sincronizzare.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false}),clearAll:clearAllAcquisitions};
+root.SCCloud={init,acceptGoogleAuth,notice:message,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullIfSafe({quiet:true}),clearAll:clearAllAcquisitions};
 })(window);
