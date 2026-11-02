@@ -134,12 +134,12 @@ async function createBackup(folderId,records){
  * File creati una volta per versione JSON, senza sovrascritture.
  */
 function sheetName(backupFile){
- const match=String(backupFile?.name||'').match(/^SalvaCivici_auto_(\\d{4}-\\d\\d-\\d\\dT\\d\\d-\\d\\d-\\d\\d-\\d+Z)_[a-z0-9-]+\\.json$/i);
+ const match=String(backupFile?.name||'').match(/^SalvaCivici_auto_(\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d+Z)_[a-z0-9-]+\.json$/i);
  if(!match)throw Error('Nome backup Drive non riconosciuto.');
  return SHEET_PREFIX+match[1].replace('T',' ');
 }
 function printable(x){
- const value=String(x??'').replace(/\\r/g,' ').replace(/\\n/g,' ');
+ const value=String(x??'').replace(/\r/g,' ').replace(/\n/g,' ');
  // Protezione dalle formule nei contenuti importati da CSV in un foglio.
  return /^[=+@-]/.test(value)?"'"+value:value;
 }
@@ -151,7 +151,7 @@ function csvForView(records){
    r.positionSource==='manual'?'Pin corretto':r.positionSource==='gps_confirmed'?'Verificato GPS':'Da verificare',
    r.accuracy??'',r.createdAt,r.id
  ]);
- return '\\uFEFF'+[header,...rows].map(row=>row.map(csvField).join(',')).join('\\r\\n')+'\\r\\n';
+ return '\uFEFF'+[header,...rows].map(row=>row.map(csvField).join(',')).join('\r\n')+'\r\n';
 }
 async function sheetForSnapshot(folderId,backupFile,records){
  const accountUid=current?.uid;
@@ -166,9 +166,9 @@ async function sheetForSnapshot(folderId,backupFile,records){
  const boundary='sc-sheet-'+crypto.randomUUID().replace(/-/g,'');
  const meta=JSON.stringify({name,parents:[folderId],mimeType:SHEET_MIME,
    description:'Copia di sola consultazione del backup SalvaCivici '+backupFile.name+'. Le modifiche manuali non vengono sincronizzate.'});
- const body='--'+boundary+'\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n'+meta+
-   '\\r\\n--'+boundary+'\\r\\nContent-Type: text/csv; charset=UTF-8\\r\\n\\r\\n'+csvForView(records)+
-   '\\r\\n--'+boundary+'--';
+ const body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+
+   '\r\n--'+boundary+'\r\nContent-Type: text/csv; charset=UTF-8\r\n\r\n'+csvForView(records)+
+   '\r\n--'+boundary+'--';
  const response=await fetchGoogle(UPLOAD,{method:'POST',
    headers:{'Content-Type':'multipart/related; boundary='+boundary},body});
  const saved=await response.json();
