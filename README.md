@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.31**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
+Beta **0.6.34**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
 
 ## GPS migliorato
 
@@ -377,3 +377,24 @@ Motivazione: l'utente ha mostrato in **Dati** «Sincronizzati 0 civici» e «Arc
 - **Non effettuato:** nessuna eliminazione del backup, nessuna importazione dei 122 civici dei fogli canonici, nessun aggiornamento My Maps, nessuna migrazione Drive↔Firebase completa, nessun trasferimento non autorizzato di coordinate. I civici nel Drive personale non sono stati cambiati dall'assistente.
 - **Verifiche richieste:** test unitario/mock per backup remoto 1 record e archivio locale vuoto, conferma/aggiunta, secondo tentativo senza duplicato; gestione UID e conflitti; test dal dispositivo iPhone dopo release. L'effettivo recupero nel tuo IndexedDB non può essere dichiarato completato senza la prova in app.
 
+
+
+## Beta 0.6.34 — Archivio di acquisizione e Mappa PERMANENTE separati (2 novembre 2026)
+
+**Decisione dell'utente:** SalvaCivici salva una nuova acquisizione SOLO in Archivio. Il comando di sincronizzazione esplicito nell'Archivio invia i civici e li aggiunge/aggiorna sulla Mappa; una successiva eliminazione (singola o totale) dall'Archivio NON deve eliminare alcun punto già pubblicato nella Mappa.
+
+### Implementazione tecnica
+
+- **Due store diversi nello stesso IndexedDB**: vecchio `civici` per la coda Archivio e nuovo `civici-mappa` per la Mappa permanente. Upgrade DB `salvacivici-mappa-recapito-v1` da schema 1 a 2, senza distruggere `civici`. Mappa e navigazione leggono *soltanto* `civici-mappa`; un salvataggio nell'Archivio non compare in Mappa fino alla sincronizzazione cloud confermata.
+- **Due dataset nello stesso documento Firebase, separati logicamente**: `payload` = acquisizioni, `mapPayload` = punti permanenti; `format=2`. L'unico accesso Google/UID resta invariato. Ogni sincronizzazione confronta entrambi e scrive con precondizione `updateTime` evitando di sovrascrivere modifiche concorrenti. Il catalogo Mappa conserva l'unione dei punti già pubblicati e i nuovi; le correzioni per ID già pubblicati sono accettate solo se coerenti con la base sincronizzata o con il punto già conservato localmente; conflitti e duplicati tra ID differenti bloccano la pubblicazione.
+- **Retrocompatibilità**: quando un vecchio documento Firebase non possiede `mapPayload`, i civici già presenti nella *precedente copia Firebase* vengono considerati già sincronizzati e inizializzano il catalogo Mappa. Le acquisizioni esistenti solo su iPhone/iPad NON sono trasferite in Mappa finché l'utente non sincronizza. Nessuna correzione viene persa intenzionalmente; conflitti bloccati.
+- **Indipendenza della cancellazione**: singola eliminazione dall'Archivio elimina solo dallo store `civici`, senza toccare `civici-mappa`. L'operazione «Elimina tutte le acquisizioni» svuota `payload` e il locale `civici` dopo due conferme, ma scrive `mapPayload` invariato/unito e conserva lo store Mappa. Se sul dispositivo l'Archivio è vuoto e il cloud ancora contiene vecchie acquisizioni, un successivo sync può svuotare lo staging solo quando i civici precedenti risultano già pubblicati nella Mappa. La ricezione di un Archivio cloud vuoto da un altro dispositivo non elimina punti locali non pubblicati.
+- **Altri dispositivi**: aprendo Mappa viene letto il catalogo pubblicato via Firebase e aggiunto nella copia locale permanente. Consultazione locale offline dopo il primo download. Nessun pulsante aggiuntivo, nessun passaggio obbligatorio tramite ChatGPT.
+- **Correzioni**: un punto sulla Mappa che è stato eliminato dall'Archivio rimane navigabile. Per correggerlo dal pin, dopo consenso viene rimesso in Archivio con lo stesso ID; la Mappa rimane sul punto già pubblicato fino alla successiva sincronizzazione.
+- **Google My Maps**: la funzione «Esporta CSV» legge **Mappa permanente** invece dell'Archivio, così non genera una mappa vuota dopo la pulizia delle acquisizioni. Nessun segnaposto di Google My Maps è modificato automaticamente dalla release.
+- **Google Drive**: i file JSON precedenti restano intatti. Il recupero opzionale da Drive non ripopola l'Archivio con civici già presenti in `civici-mappa`. Drive non è ancora l'archivio bidirezionale principale della Mappa; **Firebase rimane il backend di pubblicazione in questa versione**.
+- **Limitazioni**: correzioni cloud non testate su due dispositivi reali; nessun import dei 122 civici storici Google Sheets in questa release. La sincronizzazione va verificata sul dispositivo iPhone/iPad e la cancellazione totale non va testata sui civici reali prima di backup e confronto.
+
+### Test effettuati e mancanti
+
+Verifica V8 della sintassi JS. Simulazione integrata del Firestore REST (documento `users/<UID>/snapshots/main`): 1 civico in Archivio + Mappa vuota → Sincronizza → Archivio 1, Mappa 1; elimina staging → Sincronizza → Archivio 0, Mappa 1 anche nel cloud; scarica la Mappa su altro dispositivo → Mappa 1. Test unitario della fusione: aggiunta, correzione, conflitto e ID duplicati. **Non equivale a test OAuth/Firestore reale**: dopo pubblicazione verificare con account dell'utente, evitando di cancellare dati senza backup.
