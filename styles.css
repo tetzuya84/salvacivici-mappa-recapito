@@ -941,3 +941,20 @@
   font:inherit;font-size:12px;font-weight:730;line-height:1.3;cursor:pointer;touch-action:manipulation}
 .overview-nearby-choice.active{background:#147e75;border-color:#147e75;color:#fff}
 .overview-nearby-choice:focus-visible{outline:3px solid #147e75;outline-offset:2px}
+
+/* Beta 0.6.36 — ricerca e scelta rapida nella Mappa permanente. */
+.overview-civic-picker{display:grid;gap:7px;margin:0 0 13px}
+.overview-civic-picker label{font-size:12px;color:#365f69;font-weight:760}
+.overview-civic-picker input,.overview-civic-picker select{
+ width:100%;min-height:44px;box-sizing:border-box;border:1px solid #cfdde0;
+ border-radius:11px;background:#fff;color:#203d49;font:inherit;font-size:13px;padding:9px 11px}
+.overview-civic-picker input:focus-visible,.overview-civic-picker select:focus-visible{
+ outline:2px solid #0a8179;outline-offset:2px}
+.app-shell #page-map .overview-edit-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:11px 0 9px}
+.app-shell #page-map .overview-edit-actions .overview-edit-pin{margin:0;min-height:45px;font-size:13px;padding:9px 6px}
+.record-publication{display:inline-block;font-size:11px;font-weight:760;line-height:1.35;
+ color:#11655f;background:#e9f7f4;border-radius:8px;margin:5px 0 0;padding:5px 8px}
+@media(max-width:360px){
+ .app-shell #page-map .overview-edit-actions{gap:6px}
+ .app-shell #page-map .overview-edit-actions .overview-edit-pin{font-size:12px}
+}
