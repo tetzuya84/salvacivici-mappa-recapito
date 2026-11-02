@@ -247,7 +247,8 @@
           label.textContent='Non disponibile';
         }else if(result.ok){
           status.dataset.result='success';
-          status.textContent='Sincronizzazione completata · '+result.count+' civici.';
+          status.textContent='Sincronizzazione completata · Archivio: '+result.count+
+            ' · Mappa permanente: '+result.mapCount+' civici.';
           label.textContent='Sincronizzato';
         }else{
           status.dataset.result='error';
