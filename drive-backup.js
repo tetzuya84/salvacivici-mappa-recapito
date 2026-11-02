@@ -206,7 +206,13 @@ async function recoveryCandidate(){
    throw Error('Archivio locale non disponibile o non valido.');
  const byId=new Map(local.map(r=>[r.id,r]));
  if(byId.size!==local.length)throw Error('ID duplicati sul dispositivo.');
- const missing=snapshot.records.filter(r=>!byId.has(r.id));
+ // Il backup non deve riempire di nuovo l'Archivio se il civico
+ // e' gia' conservato nella Mappa permanente dopo la pulizia volontaria.
+ const published=await root.SCDrive?.getMapRecords?.()||[];
+ if(!Array.isArray(published)||published.some(r=>!root.SC.isRecord(r)))
+   throw Error('Archivio Mappa non disponibile: ripristino sospeso.');
+ const mapById=new Map(published.map(r=>[r.id,r]));
+ const missing=snapshot.records.filter(r=>!byId.has(r.id)&&!mapById.has(r.id));
  const conflicts=snapshot.records.filter(r=>byId.has(r.id)&&
    !root.SCCloudMerge.same(r,byId.get(r.id)));
  if(conflicts.length)throw Error('Sono presenti '+conflicts.length+' civici con lo stesso ID e dati differenti. Nessuna importazione automatica.');
@@ -332,8 +338,8 @@ async function manualBackup(){
  if(!records){status('Archivio locale non disponibile.',true);return;}
  await backup(records,{manual:true});
 }
-function init({getRecords,addRecoveredRecords,confirmAction}){
- Object.assign(root.SCDrive,{getRecords,addRecoveredRecords,confirmAction});
+function init({getRecords,getMapRecords,addRecoveredRecords,confirmAction}){
+ Object.assign(root.SCDrive,{getRecords,getMapRecords,addRecoveredRecords,confirmAction});
  $('drive-backup')?.addEventListener('click',()=>void manualBackup());
  $('drive-view')?.addEventListener('click',()=>void prepareReadableView());
  $('drive-recover')?.addEventListener('click',()=>void restoreMissing());
@@ -341,5 +347,5 @@ function init({getRecords,addRecoveredRecords,confirmAction}){
  showRecoveryButton(false);
  status('Drive si abilita con lo stesso accesso Google, senza un secondo login.');
 }
-root.SCDrive={init,authorize,isAuthorized,clear,checkRecovery,restoreMissing,backupAfterSync:records=>backup(records),getRecords:null,addRecoveredRecords:null,confirmAction:null};
+root.SCDrive={init,authorize,isAuthorized,clear,checkRecovery,restoreMissing,backupAfterSync:records=>backup(records),getRecords:null,getMapRecords:null,addRecoveredRecords:null,confirmAction:null};
 })(window);
