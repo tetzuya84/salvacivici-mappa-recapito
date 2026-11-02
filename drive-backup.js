@@ -15,6 +15,10 @@ const SHEET_PREFIX='Elenco civici - ';
 
 const $=id=>document.getElementById(id);
 let current=null,busy=false;
+function showRecoveryButton(show){
+ const button=$('drive-recover');
+ if(button)button.hidden=!show;
+}
 function showSheetLink(id){
  const link=$('drive-sheet-link');
  if(!link)return;
@@ -41,11 +45,13 @@ function authorize({uid,email,accessToken}){
  }
  current={uid,email,token:accessToken};
  showSheetLink(null);
- status('Drive collegato automaticamente con Google ('+email+'). Il backup si aggiorna dopo Sincronizza nell’Archivio.');
+ showRecoveryButton(false);
+ status('Drive collegato automaticamente con Google ('+email+'). Controllo i backup disponibili…');
  root.SCCloud?.refreshAuthUi?.();
+ void checkRecovery();
  return true;
 }
-function clear(){current=null;showSheetLink(null);status('Il Drive si abilita con lo stesso accesso Google.');root.SCCloud?.refreshAuthUi?.();}
+function clear(){current=null;showSheetLink(null);showRecoveryButton(false);status('Il Drive si abilita con lo stesso accesso Google.');root.SCCloud?.refreshAuthUi?.();}
 function isAuthorized(uid,email){
  return !!current?.token&&!!uid&&current.uid===uid&&
    String(current.email||'').toLowerCase()===String(email||'').toLowerCase();
@@ -182,6 +188,78 @@ async function sheetForSnapshot(folderId,backupFile,records){
  showSheetLink(saved.id);
  return checked;
 }
+/* Un backup remoto non modifica mai l'archivio finché l'utente non approva
+ * il recupero. I record preesistenti restano intatti, anche su UID conflittuali.
+ */
+async function recoveryCandidate(){
+ if(!current?.uid)throw Error('Effettua l’accesso Google.');
+ const uid=current.uid;
+ const parent=await folder(false);
+ if(!parent)return{count:0,missing:[],reason:'no-folder'};
+ const existing=await backups(parent);
+ if(!existing.length)return{count:0,missing:[],reason:'no-backup'};
+ const backupFile=existing[0];
+ const snapshot=await download(backupFile.id);
+ if(!current||current.uid!==uid)throw Error('Account Google cambiato: recupero bloccato.');
+ const local=await root.SCDrive?.getRecords?.();
+ if(!Array.isArray(local)||local.some(r=>!root.SC?.isRecord?.(r)))
+   throw Error('Archivio locale non disponibile o non valido.');
+ const byId=new Map(local.map(r=>[r.id,r]));
+ if(byId.size!==local.length)throw Error('ID duplicati sul dispositivo.');
+ const missing=snapshot.records.filter(r=>!byId.has(r.id));
+ const conflicts=snapshot.records.filter(r=>byId.has(r.id)&&
+   !root.SCCloudMerge.same(r,byId.get(r.id)));
+ if(conflicts.length)throw Error('Sono presenti '+conflicts.length+' civici con lo stesso ID e dati differenti. Nessuna importazione automatica.');
+ if(missing.some(r=>local.some(l=>root.SC.isSameCivic(l,r))))
+   throw Error('Uno o più civici già esistono con un ID differente. Verifica prima i duplicati.');
+ return{count:snapshot.records.length,missing,uid,local,backupFile};
+}
+let recoveryBusy=false;
+async function checkRecovery(){
+ if(!current||!navigator.onLine||recoveryBusy||busy)return;
+ recoveryBusy=true;
+ try{
+   const candidate=await recoveryCandidate();
+   if(!current||current.uid!==candidate.uid)return;
+   showRecoveryButton(candidate.missing.length>0);
+   if(candidate.missing.length){
+     status('Su Drive ci sono '+candidate.missing.length+' civici mancanti su questo dispositivo. Premi «Recupera civici dal Drive».',true);
+   }else if(candidate.count>0){
+     status('Backup Drive presente: '+candidate.count+' civici; nessun recupero locale necessario.');
+   }
+ }catch(e){
+   showRecoveryButton(false);
+   status('Controllo recupero Drive: '+String(e.message||e).slice(0,160)+'. Nessun civico modificato.',true);
+ }finally{recoveryBusy=false;}
+}
+async function restoreMissing(){
+ if(recoveryBusy||busy){status('Operazione già in corso. Riprova dopo il controllo.');return;}
+ if(!current){status('Accedi prima con Google per recuperare i civici.',true);return;}
+ recoveryBusy=true;showRecoveryButton(false);
+ const uid=current.uid;
+ try{
+   const candidate=await recoveryCandidate();
+   if(!current||uid!==current.uid)throw Error('Account modificato durante il controllo.');
+   if(!candidate.missing.length){status('Nessun civico mancante: archivio già aggiornato.');return;}
+   const confirmed=await root.SCDrive?.confirmAction?.(
+     'Recuperare i civici dal tuo Drive?',
+     'Nel backup personale ci sono '+candidate.missing.length+' civici mancanti su questo dispositivo. Li aggiungerò senza modificare quelli esistenti. Per inviarli al cloud dovrai poi sincronizzare nell’Archivio.',
+     'Recupera civici');
+   if(!confirmed){status('Ripristino annullato. Il backup e i civici rimangono invariati.');return;}
+   if(!current||uid!==current.uid)throw Error('Account cambiato, ripristino bloccato.');
+   const latest=await root.SCDrive.getRecords();
+   if(!root.SCCloudMerge.same([...latest].sort((a,b)=>a.id.localeCompare(b.id)),
+     [...candidate.local].sort((a,b)=>a.id.localeCompare(b.id))))
+     throw Error('Archivio modificato durante la conferma. Nessun civico ripristinato; riprova.');
+   if(!root.SCDrive?.addRecoveredRecords)throw Error('Ripristino locale non disponibile.');
+   await root.SCDrive.addRecoveredRecords(candidate.missing);
+   const final=await root.SCDrive.getRecords();
+   if(candidate.missing.some(r=>!final.some(x=>x.id===r.id&&root.SCCloudMerge.same(x,r))))
+     throw Error('Verifica ripristino non riuscita. Controlla l’Archivio prima di sincronizzare.');
+   status('Recuperati '+candidate.missing.length+' civici dal backup Drive. Ora sincronizza dall’Archivio.');
+ }catch(e){status('Recupero non completato: '+String(e.message||e).slice(0,165),true);showRecoveryButton(true);}
+ finally{recoveryBusy=false;}
+}
 async function prepareReadableView(){
  if(busy){status('Operazione Drive già in corso.');return;}
  if(!current?.token){status('Accedi con Google nella sezione Dati per leggere il backup.',true);return;}
@@ -254,12 +332,14 @@ async function manualBackup(){
  if(!records){status('Archivio locale non disponibile.',true);return;}
  await backup(records,{manual:true});
 }
-function init({getRecords}){
- root.SCDrive.getRecords=getRecords;
+function init({getRecords,addRecoveredRecords,confirmAction}){
+ Object.assign(root.SCDrive,{getRecords,addRecoveredRecords,confirmAction});
  $('drive-backup')?.addEventListener('click',()=>void manualBackup());
  $('drive-view')?.addEventListener('click',()=>void prepareReadableView());
+ $('drive-recover')?.addEventListener('click',()=>void restoreMissing());
  showSheetLink(null);
+ showRecoveryButton(false);
  status('Drive si abilita con lo stesso accesso Google, senza un secondo login.');
 }
-root.SCDrive={init,authorize,isAuthorized,clear,backupAfterSync:records=>backup(records),getRecords:null};
+root.SCDrive={init,authorize,isAuthorized,clear,checkRecovery,restoreMissing,backupAfterSync:records=>backup(records),getRecords:null,addRecoveredRecords:null,confirmAction:null};
 })(window);
