@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.29 — backup append-only nel Drive personale.
+/* SalvaCivici Beta 0.6.30 — Google Sign-In unico e backup append-only nel Drive personale.
  * NON sostituisce Firebase o IndexedDB. Drive.file limitato ai file dell'app.
  * Access token OAuth solo in memoria, ricevuto durante Google Sign-In.
  * Non pubblica civici in GitHub, non elimina né sovrascrive altri file Drive.
@@ -18,7 +18,7 @@ function status(text,isError=false){
 }
 function textError(e){
  const m=String(e?.message||e||'Errore Drive');
- if(/401|token non valido|expired/i.test(m))return 'Accesso Drive scaduto. Premi Collega Drive e ripeti l’accesso Google.';
+ if(/401|token non valido|expired/i.test(m))return 'Accesso Drive scaduto. Usa Accedi con Google nella sezione Dati per riattivarlo.';
  if(/403|insufficient|scope|permission/i.test(m))return 'Drive non autorizzato. Consenti a SalvaCivici di creare i propri file nel tuo Drive.';
  return 'Backup Drive non riuscito: '+m.slice(0,155)+'. Il cloud e l’archivio locale restano invariati.';
 }
@@ -26,19 +26,26 @@ function authorize({uid,email,accessToken}){
  const own=root.SCCloud?.getIdentity?.();
  if(!uid||!accessToken||!own?.uid||own.uid!==uid||String(own.email||'').toLowerCase()!==String(email||'').toLowerCase()){
    current=null;status('Account non corrispondente: nessun file Drive modificato.',true);
+   root.SCCloud?.refreshAuthUi?.();
    return false;
  }
  current={uid,email,token:accessToken};
- status('Drive autorizzato per '+email+'. Il backup si aggiorna dopo Sincronizza nell’Archivio.');
+ status('Drive collegato automaticamente con Google ('+email+'). Il backup si aggiorna dopo Sincronizza nell’Archivio.');
+ root.SCCloud?.refreshAuthUi?.();
  return true;
 }
-function clear(){current=null;status('Collega Google per salvare una copia nel tuo Drive.');}
+function clear(){current=null;status('Il Drive si abilita con lo stesso accesso Google.');root.SCCloud?.refreshAuthUi?.();}
+function isAuthorized(uid,email){
+ return !!current?.token&&!!uid&&current.uid===uid&&
+   String(current.email||'').toLowerCase()===String(email||'').toLowerCase();
+}
 async function fetchGoogle(url,options={}){
  if(!current?.token)throw Error('Accesso Drive non disponibile');
  const headers={Authorization:'Bearer '+current.token,...options.headers};
  const res=await fetch(url,{...options,headers,cache:'no-store'});
  if(!res.ok){
    const info=await res.json().catch(()=>({}));
+   if(res.status===401||res.status===403)clear();
    throw Error('HTTP '+res.status+' '+(info.error?.message||''));
  }
  return res;
@@ -112,7 +119,7 @@ async function createBackup(folderId,records){
 async function backup(records,{manual=false}={}){
  if(busy)return{ok:false,reason:'busy'};
  if(!current?.token){
-   if(manual)status('Collega Drive con il tuo account Google per eseguire il backup.',true);
+   if(manual)status('Per il backup personale, accedi con Google nella sezione Dati.',true);
    return{ok:false,reason:'not-authorized'};
  }
  if(!navigator.onLine){status('Offline: civici al sicuro sul dispositivo. Backup Drive da ripetere.',true);return{ok:false,reason:'offline'};}
@@ -149,16 +156,15 @@ async function backup(records,{manual=false}={}){
  }finally{busy=false;}
 }
 async function manualBackup(){
- if(!current){status('Premi prima Collega Drive.',true);return;}
+ if(!current){status('Accedi con Google nella sezione Dati: Drive si attiva insieme al cloud.',true);return;}
  const records=await root.SCDrive?.getRecords?.();
  if(!records){status('Archivio locale non disponibile.',true);return;}
  await backup(records,{manual:true});
 }
 function init({getRecords}){
  root.SCDrive.getRecords=getRecords;
- $('drive-connect')?.addEventListener('click',()=>root.SCGoogleAuth?.requestDrive?.());
  $('drive-backup')?.addEventListener('click',()=>void manualBackup());
- status('Google Drive personale: collegamento facoltativo, nessuna scrittura automatica senza consenso.');
+ status('Drive si abilita con lo stesso accesso Google, senza un secondo login.');
 }
-root.SCDrive={init,authorize,clear,backupAfterSync:records=>backup(records),getRecords:null};
+root.SCDrive={init,authorize,isAuthorized,clear,backupAfterSync:records=>backup(records),getRecords:null};
 })(window);
