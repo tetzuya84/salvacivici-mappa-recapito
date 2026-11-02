@@ -224,9 +224,15 @@ async function pullIfSafe({quiet=false}={}){
    // Sicurezza aggiuntiva: un cloud vuoto non deve svuotare in automatico
    // l'archivio locale che contiene civici. Per la cancellazione esiste
    // un flusso esplicito e verificato con due conferme.
+   // Un Archivio svuotato dall'altro dispositivo può essere recepito
+   // SOLO quando tutti i civici precedenti sono già conservati sulla Mappa.
    if(before.length>0&&cloud.records.length===0){
-     if(!quiet)message('Il cloud risulta vuoto ma su questo dispositivo ci sono '+before.length+' civici. Nessun dato eliminato. Verifica prima gli archivi e i backup Drive.',true);
-     return{ok:false,reason:'cloud-empty'};
+     const mappedIds=new Set(cloud.mapRecords.map(r=>r.id));
+     if(before.some(r=>!mappedIds.has(r.id))){
+       if(!quiet)message('Il cloud è vuoto ma alcuni civici locali non sono ancora sulla Mappa. Nessun dato eliminato.',true);
+       return{ok:false,reason:'cloud-empty'};
+     }
+     await engine.applyMapSnapshot(cloud.mapRecords);
    }
    const changed=!sameRecords(before,cloud.records);
    if(changed)await engine.applySnapshot(cloud.records);
@@ -266,8 +272,13 @@ async function synchronize({confirm=true}={}){
    const changedCloud=!sameRecords(result.records,cloud.records)||
      !sameRecords(mapped,cloud.mapRecords)||!cloud.hasMapPayload;
    if(!count&&(before.length||cloud.records.length||base.length)){
-     const description='La sincronizzazione risulterebbe con 0 civici, ma esistono dati precedenti. Nessun archivio svuotato: controlla il backup Drive e l’Archivio.';
-     message(description,true);return{ok:false,description};
+     const mappedIds=new Set(mapped.map(r=>r.id));
+     if([...before,...cloud.records,...base].some(r=>!mappedIds.has(r.id))){
+       const description='Alcuni civici non sono stati pubblicati nella Mappa. Non posso svuotare l’Archivio finché non sono al sicuro.';
+       message(description,true);return{ok:false,description};
+     }
+     // Acquisizioni pubblicate: il vuoto riguarda solo la coda Archivio.
+     // I punti sulla Mappa e i backup restano conservati.
    }
    // Lo swipe esplicito in Archivio è il consenso all'invio.
    // La conferma resta disponibile per eventuali comandi alternativi.
@@ -293,8 +304,8 @@ async function synchronize({confirm=true}={}){
      catch(_){/* Stato Drive mostrato nel suo riquadro, dati Firebase intatti. */}
    }
    message(count===0?
-     'Cloud vuoto: 0 civici sincronizzati. Se nel Drive personale è presente un backup, usa «Recupera civici dal Drive» nella sezione Dati.':
-     'Acquisizioni sincronizzate: '+count+'. Mappa permanente: '+mapped.length+' civici. Eliminare dall’Archivio non li rimuove dalla Mappa.',count===0);
+     'Archivio acquisizioni vuoto; Mappa permanente conservata: '+mapped.length+' civici.':
+     'Acquisizioni sincronizzate: '+count+'. Mappa permanente: '+mapped.length+' civici. Eliminare dall’Archivio non li rimuove dalla Mappa.');
    engine.toast('Sincronizzazione cloud completata.');
    return{ok:true,count,mapCount:mapped.length,changedCloud,changedLocal};
  }catch(e){
