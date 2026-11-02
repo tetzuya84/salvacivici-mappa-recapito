@@ -2,9 +2,10 @@
   'use strict';
   const $=id=>document.getElementById(id);
   const SC=window.SC;
-  const state={records:[],gps:null,editingId:null,db:null,toastTimeout:0};
+  const state={records:[],mapRecords:[],gps:null,editingId:null,db:null,toastTimeout:0};
   const DBNAME='salvacivici-mappa-recapito-v1';
   const STORE='civici';
+  const MAP_STORE='civici-mappa';
   let comuneManual=false;
 
   function toast(message){
@@ -14,10 +15,37 @@
   }
   function dbOpen(){return new Promise((resolve,reject)=>{
     if(!('indexedDB' in window))return reject(new Error('Archivio locale non disponibile in questo browser.'));
-    const request=indexedDB.open(DBNAME,1);
-    request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains(STORE))request.result.createObjectStore(STORE,{keyPath:'id'});};
+    // Upgrade conservativo: il vecchio Archivio resta intatto; la Mappa ha
+    // un suo store permanente, che NON viene svuotato eliminando acquisizioni.
+    const request=indexedDB.open(DBNAME,2);
+    request.onupgradeneeded=()=>{
+      if(!request.result.objectStoreNames.contains(STORE))request.result.createObjectStore(STORE,{keyPath:'id'});
+      if(!request.result.objectStoreNames.contains(MAP_STORE))request.result.createObjectStore(MAP_STORE,{keyPath:'id'});
+    };
     request.onsuccess=()=>resolve(request.result);
     request.onerror=()=>reject(request.error||new Error('Impossibile aprire archivio.'));
+  });}
+  function readMapAll(){return new Promise((resolve,reject)=>{
+    const request=state.db.transaction(MAP_STORE,'readonly').objectStore(MAP_STORE).getAll();
+    request.onsuccess=()=>resolve(request.result||[]);
+    request.onerror=()=>reject(request.error||new Error('Lettura della Mappa non riuscita.'));
+  });}
+  async function refreshPublishedMap(){
+    state.mapRecords=(await readMapAll()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+    window.dispatchEvent(new Event('salvacivici:mapchanged'));
+  }
+  // Solo aggiunte e correzioni già sincronizzate: nessun clear(), delete()
+  // o riferimento al negozio delle acquisizioni.
+  function applyMapSnapshot(records){return new Promise((resolve,reject)=>{
+    if(!Array.isArray(records)||records.some(r=>!SC.isRecord(r))||
+       new Set(records.map(r=>r.id)).size!==records.length){
+      reject(new Error('Mappa ricevuta non valida.'));return;
+    }
+    const tx=state.db.transaction(MAP_STORE,'readwrite'),store=tx.objectStore(MAP_STORE);
+    records.forEach(record=>store.put(record));
+    tx.oncomplete=()=>{refreshPublishedMap().then(resolve,reject);};
+    tx.onerror=()=>reject(tx.error||new Error('Mappa non aggiornata.'));
+    tx.onabort=()=>reject(tx.error||new Error('Aggiornamento Mappa annullato.'));
   });}
   function readAll(){return new Promise((resolve,reject)=>{
     const request=state.db.transaction(STORE,'readonly').objectStore(STORE).getAll();
@@ -65,8 +93,8 @@
   });}
   async function refresh(){state.records=(await readAll()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));renderRecords();updateNearWarning();window.dispatchEvent(new Event('salvacivici:datachanged'));}
 
-  // Solo lettura cloud, mai invio automatico: i civici non ancora sincronizzati
-  // rimangono sull'iPhone e la mappa resta consultabile anche offline.
+  // La Mappa pubblicata usa uno store diverso dall'Archivio delle acquisizioni.
+  // Aprirla controlla SOLO i punti sincronizzati: non la coda di lavoro.
   async function refreshMapFromCloud(){
     const status=$('overview-cloud-status');
     if(!status)return;
@@ -80,12 +108,12 @@
     catch(_){result={ok:false,reason:'error'};}
     if($('page-map').hidden)return;
     if(result?.ok){
-      status.textContent=(result.changed?'Mappa aggiornata dal cloud · ':'Cloud verificato · ')+result.count+' civici.';
+      status.textContent=(result.changed?'Mappa permanente aggiornata · ':'Mappa permanente verificata · ')+result.count+' civici.';
     }else{
       const messages={
         busy:'Controllo cloud già in corso. I civici locali sono disponibili.',
         offline:'Offline · mappa locale disponibile.',
-        'not-connected':'Mappa locale · collega il cloud in Dati.',
+        'not-connected':'Mappa permanente locale · accedi con Google in Dati.',
         editing:'Chiudi prima la modifica del civico.',
         'local-changes':'Hai civici da sincronizzare: vai in Archivio.',
         'first-sync':'Prima sincronizzazione da eseguire nell’Archivio.',
@@ -93,7 +121,7 @@
         'local-changed-during-read':'Archivio modificato: sincronizza dall’Archivio.',
         error:'Cloud non disponibile · mappa locale conservata.'
       };
-      status.textContent=messages[result?.reason]||'Mappa locale · sincronizza dall’Archivio.';
+      status.textContent=messages[result?.reason]||'Mappa permanente locale disponibile.';
     }
   }
 
@@ -340,11 +368,21 @@
     toast
   });
   const mapOverview=window.SCMapOverview.create({
-    getRecords:()=>state.records,
-    onVerify:record=>{
+    getRecords:()=>state.mapRecords,
+    onVerify:async record=>{
       const current=state.records.find(r=>r.id===record.id);
-      if(current)mapReview.openArchive(current);
-      else toast('Il civico non è più nell’archivio. Aggiorna la mappa.');
+      if(current){mapReview.openArchive(current);return;}
+      // Un punto resta sulla Mappa anche dopo la pulizia dell'Archivio.
+      // Per modificarlo, lo si riporta prima tra le acquisizioni, senza
+      // alterare il punto pubblicato fino alla successiva sincronizzazione.
+      const confirmed=await confirmAction('Correggere un civico già pubblicato?',
+        'Il punto rimane sulla Mappa. Per correggerlo lo riporterò nell’Archivio e la nuova posizione sarà pubblicata solo quando sincronizzi.',
+        'Prepara correzione');
+      if(!confirmed)return;
+      try{
+        await addRecoveredRecords([record]);
+        mapReview.openArchive(record);
+      }catch(_){toast('Non posso preparare la correzione: controlla l’Archivio.');}
     },
     notify:toast
   });
@@ -774,13 +812,13 @@
     });
   }
   (async()=>{
-    try{state.db=await dbOpen();await refresh();}catch(error){toast('Archivio locale non disponibile: impossibile salvare i civici.');$('save-button').disabled=true;}
+    try{state.db=await dbOpen();await refresh();await refreshPublishedMap();}catch(error){toast('Archivio locale non disponibile: impossibile salvare i civici.');$('save-button').disabled=true;}
     // Apertura sempre dalla schermata Salva: non toccare l'archivio persistente.
     $('indirizzo').value='';showComune('');
     showPage('capture');
     updateGpsUI();
     if(window.SCDrive)window.SCDrive.init({getRecords:readAll,addRecoveredRecords,confirmAction});
-    if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,confirmAction,toast});
+    if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,getMapRecords:readMapAll,applyMapSnapshot,confirmAction,toast});
     setupAppUpdates();
     startGpsAcquisition();
   })();
