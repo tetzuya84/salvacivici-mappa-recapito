@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.29 — accesso Google e consenso Drive.file limitato.
+/* SalvaCivici Beta 0.6.30 — un solo accesso Google per Firebase e Drive personale.
    Il Drive personale usa un access token OAuth solo in memoria.
    Email/password resta come alternativa Firebase senza accesso Drive. */
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -27,7 +27,7 @@ function notify(message,warning=false){
 }
 function readable(error){
   const code=error?.code||"";
-  if(!code&&/Account Google diverso|altro account|collegare gli account|sessione Google/.test(error?.message||""))return error.message;
+  if(!code&&/Account Google diverso|altro account|collegare gli account|sessione Google|Google non ha rilasciato/.test(error?.message||""))return error.message;
   if(code==="auth/operation-not-allowed")return "Attiva il provider Google nella console Firebase > Authentication > Metodo di accesso.";
   if(code==="auth/unauthorized-domain")return "Aggiungi tetzuya84.github.io tra i domini autorizzati in Firebase Authentication.";
   if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment")
@@ -48,14 +48,15 @@ async function onClick(){
     const previous=window.SCCloud?.getIdentity?.();
     if(previous?.uid&&previous.uid!==user.uid)
       throw Error("Account Google diverso dalla sessione dell’archivio. Nessun civico modificato.");
+    const driveToken=GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+    if(!driveToken)throw Error("Google non ha rilasciato l'autorizzazione a Drive. Nessun civico modificato.");
     const session={localId:user.uid,email:user.email||"",idToken:await user.getIdToken(),refreshToken:user.refreshToken,expiresIn:"3600"};
     if(!window.SCCloud?.acceptGoogleAuth)throw Error("Il modulo cloud non è stato caricato. Riapri l’app.");
     window.SCCloud.acceptGoogleAuth(session);
-    const googleToken=GoogleAuthProvider.credentialFromResult(result)?.accessToken;
-    const driveReady=!!(googleToken&&window.SCDrive?.authorize({uid:user.uid,email:user.email||"",accessToken:googleToken}));
+    const driveReady=!!window.SCDrive?.authorize({uid:user.uid,email:user.email||"",accessToken:driveToken});
     notify(driveReady?
-      "Google e Drive collegati. Sincronizza nell’Archivio per salvare anche il backup personale.":
-      "Google collegato. Drive non ancora autorizzato: riprova da Dati.");
+      "Un solo accesso Google completato: cloud e Drive personale attivi. Sincronizza nell’Archivio per salvare il backup.":
+      "Cloud Google collegato, ma Drive non attivo. Controlla l'account prima di sincronizzare.",!driveReady);
   }catch(error){
     notify(readable(error),true);
     // Non lasciare una sessione Google persistente diversa da quella dell'archivio locale.
@@ -63,4 +64,4 @@ async function onClick(){
   }finally{underway=false;button.disabled=false;}
 }
 if(button){button.addEventListener("click",onClick);button.disabled=false;}
-window.SCGoogleAuth={logout:()=>signOut(auth).catch(()=>{}),requestDrive:onClick};
+window.SCGoogleAuth={logout:()=>signOut(auth).catch(()=>{})};
