@@ -1,6 +1,6 @@
-/* SalvaCivici Beta 0.6.2 — Google login, optional SDK adapter.
-   Firebase Auth signInWithPopup uses Google OAuth, not the Google Drive scopes.
-   Fallback email/password remains available when the OS blocks a popup. */
+/* SalvaCivici Beta 0.6.29 — accesso Google e consenso Drive.file limitato.
+   Il Drive personale usa un access token OAuth solo in memoria.
+   Email/password resta come alternativa Firebase senza accesso Drive. */
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
@@ -12,6 +12,7 @@ const CONFIG={
 };
 const auth=getAuth(initializeApp(CONFIG));
 const provider=new GoogleAuthProvider();
+provider.addScope("https://www.googleapis.com/auth/drive.file");
 provider.setCustomParameters({prompt:"select_account"});
 const button=document.getElementById("cloud-google-login");
 let underway=false;
@@ -26,7 +27,7 @@ function notify(message,warning=false){
 }
 function readable(error){
   const code=error?.code||"";
-  if(!code&&/Account Google diverso|altro account|collegare gli account/.test(error?.message||""))return error.message;
+  if(!code&&/Account Google diverso|altro account|collegare gli account|sessione Google/.test(error?.message||""))return error.message;
   if(code==="auth/operation-not-allowed")return "Attiva il provider Google nella console Firebase > Authentication > Metodo di accesso.";
   if(code==="auth/unauthorized-domain")return "Aggiungi tetzuya84.github.io tra i domini autorizzati in Firebase Authentication.";
   if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment")
@@ -43,10 +44,18 @@ async function onClick(){
     const result=await signInWithPopup(auth,provider);
     const user=result.user;
     if(!user?.uid||!user?.refreshToken)throw Error("Firebase non ha confermato la sessione Google.");
+    // La sessione Drive e l'archivio Firebase devono riferirsi allo stesso UID.
+    const previous=window.SCCloud?.getIdentity?.();
+    if(previous?.uid&&previous.uid!==user.uid)
+      throw Error("Account Google diverso dalla sessione dell’archivio. Nessun civico modificato.");
     const session={localId:user.uid,email:user.email||"",idToken:await user.getIdToken(),refreshToken:user.refreshToken,expiresIn:"3600"};
     if(!window.SCCloud?.acceptGoogleAuth)throw Error("Il modulo cloud non è stato caricato. Riapri l’app.");
     window.SCCloud.acceptGoogleAuth(session);
-    notify("Google collegato. Controlla i civici in Archivio, poi premi Sincronizza.");
+    const googleToken=GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+    const driveReady=!!(googleToken&&window.SCDrive?.authorize({uid:user.uid,email:user.email||"",accessToken:googleToken}));
+    notify(driveReady?
+      "Google e Drive collegati. Sincronizza nell’Archivio per salvare anche il backup personale.":
+      "Google collegato. Drive non ancora autorizzato: riprova da Dati.");
   }catch(error){
     notify(readable(error),true);
     // Non lasciare una sessione Google persistente diversa da quella dell'archivio locale.
@@ -54,4 +63,4 @@ async function onClick(){
   }finally{underway=false;button.disabled=false;}
 }
 if(button){button.addEventListener("click",onClick);button.disabled=false;}
-window.SCGoogleAuth={logout:()=>signOut(auth).catch(()=>{})};
+window.SCGoogleAuth={logout:()=>signOut(auth).catch(()=>{}),requestDrive:onClick};
