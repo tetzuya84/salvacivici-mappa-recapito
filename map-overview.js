@@ -1,4 +1,4 @@
-/* Beta 0.6.35 — mappa permanente: distinzione dei civici a pochi metri. */
+/* Beta 0.6.36 — mappa permanente: ricerca civici e modifica dati non distruttiva. */
 (function(root){
 'use strict';
 function valid(r){
@@ -8,21 +8,44 @@ function valid(r){
 function statusOf(r){return r.positionSource==='manual'?'manual':r.positionSource==='gps_confirmed'?'verified':'unverified';}
 function appleDirections(r){return 'https://maps.apple.com/?daddr='+r.lat+','+r.lon+'&dirflg=d';}
 function googleDirections(r){return 'https://www.google.com/maps/dir/?api=1&destination='+r.lat+','+r.lon+'&travelmode=driving';}
-function create({getRecords,onVerify,notify}){
+function create({getRecords,onVerify,onEditData,notify}){
  const $=id=>document.getElementById(id);
  const town=$('overview-town'),filter=$('overview-status-filter'),
+   civicSearch=$('overview-civic-search'),civicSelect=$('overview-civic-select'),
    summary=$('overview-summary'),empty=$('overview-empty'),detail=$('overview-detail'),
    title=$('overview-selected-title'),sub=$('overview-selected-status'),
    coord=$('overview-selected-coordinates'),apple=$('overview-apple'),google=$('overview-google'),
    loading=$('overview-loading'),
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
-   editPinButton=$('overview-edit-pin'),
+   editPinButton=$('overview-edit-pin'),editDataButton=$('overview-edit-data'),
    nearbyPanel=$('overview-nearby'),nearbyTitle=$('overview-nearby-title'),
    nearbyOptions=$('overview-nearby-options');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
+ // Seleziona fra tutti i civici gia' pubblicati, senza alterare filtri
+ // e senza leggere la coda delle acquisizioni.
+ function rebuildCivicPicker(){
+   const selected=civicSelect.value||selectedId||'';
+   const term=(civicSearch.value||'').trim().toLocaleLowerCase('it-IT');
+   const all=records().filter(r=>!term||
+       (r.comune+' '+r.via+' '+r.civico).toLocaleLowerCase('it-IT').includes(term))
+     .sort((a,b)=>a.comune.localeCompare(b.comune,'it')||
+       a.via.localeCompare(b.via,'it')||String(a.civico).localeCompare(String(b.civico),'it'));
+   civicSelect.replaceChildren();
+   const placeholder=document.createElement('option');
+   placeholder.value='';
+   placeholder.textContent=term?'Risultati: '+all.length+' · scegli un civico':'Seleziona il civico dalla tendina…';
+   civicSelect.append(placeholder);
+   for(const record of all){
+     const option=document.createElement('option');
+     option.value=record.id;
+     option.textContent=record.via+', '+record.civico+' · '+record.comune;
+     civicSelect.append(option);
+   }
+   civicSelect.value=all.some(r=>r.id===selected)?selected:'';
+ }
  function options(){
    const current=town.value;
    const names=[...new Set(records().map(r=>r.comune.trim()).filter(Boolean))]
@@ -75,12 +98,14 @@ function create({getRecords,onVerify,notify}){
    const item=selectedRecord();
    detail.hidden=!item;
    editPinButton.hidden=!item;
+   editDataButton.hidden=!item;
    drawNearby(item);
    if(!item)return;
    editPinButton.setAttribute('aria-label','Modifica pin: '+item.via+', '+item.civico+', '+item.comune);
    title.textContent=item.via+', '+item.civico;
    sub.textContent=item.comune+' · '+(statusOf(item)==='manual'?'Pin corretto':statusOf(item)==='verified'?'Verificato':'Da verificare');
    coord.textContent=item.lat.toFixed(7)+', '+item.lon.toFixed(7);
+   if([...civicSelect.options].some(x=>x.value===item.id))civicSelect.value=item.id;
    apple.href=appleDirections(item);google.href=googleDirections(item);
  }
  function filtered(){
@@ -90,6 +115,7 @@ function create({getRecords,onVerify,notify}){
  function render(refit){
    if(!map||!layer)return;
    options();
+   rebuildCivicPicker();
    const list=filtered();
    layer.clearLayers();
    if(!list.some(r=>r.id===selectedId))select(null);
@@ -228,8 +254,21 @@ function create({getRecords,onVerify,notify}){
  }
  town.addEventListener('change',()=>render(true));
  filter.addEventListener('change',()=>render(true));
+ civicSearch.addEventListener('input',rebuildCivicPicker);
+ civicSelect.addEventListener('change',()=>{
+   const item=records().find(r=>r.id===civicSelect.value);
+   if(!item)return;
+   // Un civico trovato nella tendina deve essere visibile anche se
+   // prima erano attivi filtri sul comune o sullo stato.
+   town.value='';filter.value='';
+   render(false);
+   select(item);
+   if(map)map.setView([item.lat,item.lon],19,{animate:false});
+ });
  function editSelected(){const r=selectedRecord();if(r)onVerify(r);}
+ function editSelectedData(){const r=selectedRecord();if(r)onEditData?.(r);}
  editPinButton.addEventListener('click',editSelected);
+ editDataButton.addEventListener('click',editSelectedData);
  locateButton.addEventListener('click',locate);
  if(!initialized){
    root.addEventListener('salvacivici:mapchanged',update);
