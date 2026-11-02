@@ -721,6 +721,10 @@
       heading.append(elt('h3','',`${r.via}, ${r.civico}`),elt('p','',r.comune));
       const source=r.positionSource==='manual'?'Pin corretto':r.positionSource==='gps_confirmed'?'Verificato':'Da verificare';
       head.append(heading,elt('span','record-badge',source));
+      const mapped=state.mapRecords.find(p=>p.id===r.id);
+      const publication=!mapped?'Da pubblicare nella Mappa':
+        window.SCCloudMerge.same(mapped,r)?'Già pubblicato nella Mappa':'Modifiche da sincronizzare';
+      const publicationInfo=elt('p','record-publication',publication);
       const time=new Date(r.createdAt).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'});
       const rawAccuracy=r.gpsOriginal?.accuracy??r.accuracy;
       const accuracyText=Number.isFinite(rawAccuracy)&&rawAccuracy>0?'±'+Math.round(rawAccuracy)+' m':'precisione non disponibile';
@@ -737,11 +741,14 @@
       const map=elt('a','','Google Maps');map.href=`https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`;map.target='_blank';map.rel='noopener noreferrer';
       const edit=elt('button','','Modifica');edit.type='button';edit.addEventListener('click',()=>editRecord(r));
       const del=elt('button','delete','Elimina');del.type='button';del.addEventListener('click',()=>deleteRecord(r));
-      actions.append(map,edit,del);card.append(head,meta,findPin,actions);fragment.append(card);
+      actions.append(map,edit,del);card.append(head,publicationInfo,meta,findPin,actions);fragment.append(card);
     }
     list.append(fragment);
   }
   $('search').addEventListener('input',renderRecords);
+  window.addEventListener('salvacivici:mapchanged',()=>{
+    if(!$('page-records').hidden)renderRecords();
+  });
   function editRecord(record){
     state.editingId=record.id;$('edit-comune').value=record.comune;$('edit-via').value=record.via;$('edit-civico').value=record.civico;$('edit-dialog').showModal();
   }
