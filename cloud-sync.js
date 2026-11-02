@@ -38,8 +38,13 @@ function saveBase(records){store(baseKey(),{records,at:new Date().toISOString()}
 function sameRecords(a,b){return M.same([...a].sort((x,y)=>x.id.localeCompare(y.id)),[...b].sort((x,y)=>x.id.localeCompare(y.id)));}
 function showState(){
  const authenticated=!!session?.uid,connected=!!configOk(config);
+ const driveActive=authenticated&&!!root.SCDrive?.isAuthorized?.(session.uid,session.email);
  $('cloud-config').hidden=connected;
  $('cloud-login-panel').hidden=!connected||authenticated;
+ // Stesso pulsante Google per cloud e Drive: quando gia' autenticato,
+ // appare solo se il token Drive e' scaduto o non disponibile in memoria.
+ $('cloud-google-entry').hidden=!connected||driveActive;
+ $('cloud-google-label').textContent=authenticated?'Riattiva accesso Google e Drive':'Accedi con Google';
  $('cloud-account').hidden=!connected||!authenticated;
  $('cloud-identity').textContent=authenticated?'Account: '+session.email:'';
 }
@@ -290,5 +295,5 @@ function init(options){
  message(session?'Cloud pronto. Apri l’Archivio e trascina verso il basso per sincronizzare.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init,acceptGoogleAuth,notice:message,getIdentity:()=>session?{uid:session.uid,email:session.email}:null,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullIfSafe({quiet:true}),clearAll:clearAllAcquisitions};
+root.SCCloud={init,acceptGoogleAuth,notice:message,refreshAuthUi:showState,getIdentity:()=>session?{uid:session.uid,email:session.email}:null,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullIfSafe({quiet:true}),clearAll:clearAllAcquisitions};
 })(window);
