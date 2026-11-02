@@ -99,16 +99,16 @@
           <span class="archive-pull-spinner"></span>
           <span id="archive-pull-label">Trascina per sincronizzare</span>
         </div>
-        <div class="intro"><p class="eyebrow">ARCHIVIO PERSONALE</p><h1 id="records-title">Civici salvati</h1><p class="subtitle">Ricerca, controlla e correggi i punti.</p>
+        <div class="intro"><p class="eyebrow">ARCHIVIO DI LAVORO</p><h1 id="records-title">Acquisizioni del turno</h1><p class="subtitle">Controlla e correggi i civici prima di pubblicarli sulla Mappa. Dopo la sincronizzazione puoi svuotare l’Archivio senza eliminare i punti pubblicati.</p>
           <p class="archive-swipe-hint">↓ Trascina verso il basso per sincronizzare</p>
         </div>
         <p id="archive-pull-status" class="archive-pull-status" role="status" aria-live="polite" hidden></p>
         <button id="archive-sync-keyboard" class="sr-only" type="button">Sincronizza archivio cloud</button>
         <div class="stats-row"><div class="stat"><strong id="total-records">0</strong><span>Civici</span></div><div class="stat"><strong id="total-towns">0</strong><span>Comuni</span></div></div>
         <label class="sr-only" for="search">Cerca civici</label><input id="search" class="search" type="search" placeholder="Cerca via, civico o comune…">
-        <p class="archive-map-help">Verifica i pin sulla mappa prima di esportare i civici.</p>
+        <p class="archive-map-help">Sincronizza per pubblicare i punti nella Mappa permanente. Le acquisizioni restano qui finché non le elimini volontariamente.</p>
         <div id="record-list" class="records-list"></div>
-        <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>I punti salvati compariranno qui.</p></div>
+        <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>Le nuove acquisizioni appariranno qui. I civici pubblicati restano nella Mappa.</p></div>
       </section>
 
       <section id="page-map" class="page" hidden aria-labelledby="overview-title">
@@ -162,7 +162,7 @@
           </div>
           <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
         </div>
-        <p class="overview-privacy">La mappa legge solo i civici pubblicati nel proprio archivio permanente. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
+        <p class="overview-privacy">Puoi correggere dati o pin selezionando il civico: la modifica viene preparata nell’Archivio e pubblicata solo dopo la sincronizzazione. La mappa legge solo i civici pubblicati nel proprio archivio permanente. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
       </section>
 
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
