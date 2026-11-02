@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.30**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un solo accesso Google per cloud e backup personale.
+Beta **0.6.31**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
 
 ## GPS migliorato
 
@@ -345,3 +345,11 @@ Questa è la **prima fase non distruttiva** della migrazione all'account Google 
 - Per un account Firebase email/password già esistente, l'accesso Google è possibile solo se appartiene allo stesso UID Firebase; la protezione impedisce collegamenti o sovrascritture fra account diversi. Alternativa email/password per il cloud resta accessibile.
 - **Collaudo**: UI e JavaScript verificati senza login reale; prova su iPhone/iPad e conferma del popup `drive.file` e della creazione del primo backup Drive non eseguite in questa release. Non disinstallare la PWA per effettuare prove: il database IndexedDB potrebbe andare perso.
 - Nessun Google My Maps, foglio canonico, civico o backup privato modificato; nessun nuovo scope di accesso globale al Drive.
+
+## Beta 0.6.31 — Account Google: accesso e Drive nella stessa sezione (2 novembre 2026)
+
+- Dati: rimosse le due schede separate «Archivio cloud condiviso» e «Google Drive personale». Ora compare un **solo riquadro Account Google** con il login Google (e fallback email/password quando necessario), account attivo e disconnessione, due stati distinti «Sincronizzazione dispositivi» e «Backup su Google Drive» e pulsante facoltativo «Salva copia su Drive ora».
+- Il riquadro mantiene **gli stessi ID HTML** per la gestione JS dei token, dello stato cloud, del logout e dei backup. Non cambia il flusso di OAuth né richiede un nuovo account; solo disposizione e testi.
+- Cloud Firebase mantiene la sincronizzazione fra dispositivi e la mappa aggiornata all'apertura; Drive personale mantiene i backup privati append-only. Per trasferire modifiche dall'iPhone si continua a trascinare nell'Archivio; il backup Drive dopo sync riuscita dipende dal permesso Google attivo.
+- Nessuna migrazione/cancellazione degli archivi locali, nessun cambiamento alle coordinate, alla geolocalizzazione, ai file Google Drive preesistenti, ai fogli Google My Maps o alle mappe My Maps. Service worker cache incrementata a `salvacivici-v0.6.31`, senza cambio del database IndexedDB.
+- Test statici e verifica dell'HTML pubblicato non equivalgono alla prova visiva sull'iPhone: verificare che in Dati ci sia un riquadro solo, il proprio account e i due stati, e che la sincronizzazione continui a funzionare senza eseguire nuovamente il login inutilmente.
