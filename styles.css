@@ -927,3 +927,6 @@
 /* Beta 0.6.32 — il link al foglio non appare prima della preparazione. */
 #drive-sheet-link[hidden]{display:none!important}
 #drive-sheet-link{text-decoration:none;text-align:center;margin-top:9px}
+
+/* Beta 0.6.33 — ripristino visibile solo se il Drive contiene civici mancanti. */
+#drive-recover[hidden]{display:none!important}
