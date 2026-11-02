@@ -1,5 +1,12 @@
 # SalvaCivici — passaggio a un archivio unico iPhone / iPad
 
+> **IMPORTANTE — Beta 0.6.34 / 02-11-2026:** le istruzioni Beta 0.6.0 sotto sono storiche. Il backend aggiornato richiede due campi Firestore: `payload` (acquisizioni) e `mapPayload` (Mappa permanente), con `format=2`. Le vecchie regole in produzione che consentono solo `payload` + `format=1` producono **Missing or insufficient permissions**.
+>
+> **Correzione necessaria sul Firebase reale:** aprire https://console.firebase.google.com/project/salvacivici-mappa-recapito/firestore/rules , selezionare Firestore Database predefinito → **Regole** e pubblicare l'intero contenuto aggiornato di [firestore.rules](firestore.rules). Verificare prima che il progetto sia `salvacivici-mappa-recapito` e che le regole attive corrispondano effettivamente alla precedente versione. La pubblicazione delle regole su GitHub Pages NON aggiorna la console Firebase. Usare la console/CLI autenticata con permessi amministrativi, non mettere credenziali nel codice o in chat. Dopo la pubblicazione, riprovare la sincronizzazione solo su un archivio di test o dopo aver verificato il backup Drive; non cancellare i civici esistenti.
+>
+> Le regole nuove limitano ancora accesso e scrittura al solo documento `users/{uid}/snapshots/main` del proprietario autenticato. Consentono il nuovo schema con entrambi i payload, e negano le scritture legacy `format=1` che potrebbero sovrascrivere la Mappa permanente. **Nessuna modifica alle regole reali è stata confermata dall'assistente.**
+
+
 ## Perché non basta la stessa icona Home
 La PWA memorizza i civici nel database IndexedDB locale di ciascun dispositivo. La sincronizzazione tramite menu Condividi (Beta 0.5.9) salva una copia JSON, ma non mantiene automaticamente identici i due archivi.
 
