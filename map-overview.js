@@ -181,7 +181,7 @@ function create({getRecords,onVerify,notify}){
  editPinButton.addEventListener('click',editSelected);
  locateButton.addEventListener('click',locate);
  if(!initialized){
-   root.addEventListener('salvacivici:datachanged',update);
+   root.addEventListener('salvacivici:mapchanged',update);
    initialized=true;
  }
  return {open,refresh:update,select,pauseCompass:()=>{autoCompassPermission=null;cartography?.pause();},helpers:{valid,statusOf,appleDirections,googleDirections}};
