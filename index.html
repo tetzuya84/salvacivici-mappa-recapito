@@ -115,6 +115,13 @@
         <div class="intro"><p class="eyebrow">MAPPA RECAPITO</p><h1 id="overview-title">Tutti i civici</h1>
           
         </div>
+        <div class="overview-civic-picker" data-no-swipe>
+          <label for="overview-civic-search">Cerca un civico sulla Mappa</label>
+          <input id="overview-civic-search" type="search" placeholder="Scrivi via, numero o comune…" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="overview-civic-select">
+          <select id="overview-civic-select" aria-label="Seleziona un civico pubblicato">
+            <option value="">Seleziona il civico dalla tendina…</option>
+          </select>
+        </div>
         <div class="overview-filters">
           <div><label for="overview-town">Comune</label><select id="overview-town"><option value="">Tutti i comuni</option></select></div>
           <div><label for="overview-status-filter">Stato</label><select id="overview-status-filter">
@@ -139,7 +146,10 @@
           <p id="overview-nearby-title" class="overview-nearby-title">Civici vicini: seleziona il punto corretto</p>
           <div id="overview-nearby-options" class="overview-nearby-options"></div>
         </div>
-        <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
+        <div class="overview-edit-actions" data-no-swipe>
+          <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
+          <button id="overview-edit-data" type="button" class="overview-edit-pin" hidden aria-label="Modifica i dati del civico selezionato">✎ Modifica dati</button>
+        </div>
         <p id="overview-location-status" class="overview-location-status" role="status" aria-live="polite" hidden></p>
         <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
         <div id="overview-detail" class="overview-detail" hidden>
@@ -218,7 +228,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.35</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.36</p>
       </section>
     </main>
 
