@@ -157,6 +157,13 @@ async function pullIfSafe({quiet=false}={}){
    }
    const cloud=await getCloud();
    if(!sameRecords(before,await engine.getRecords()))return{ok:false,reason:'local-changed-during-read'};
+   // Sicurezza aggiuntiva: un cloud vuoto non deve svuotare in automatico
+   // l'archivio locale che contiene civici. Per la cancellazione esiste
+   // un flusso esplicito e verificato con due conferme.
+   if(before.length>0&&cloud.records.length===0){
+     if(!quiet)message('Il cloud risulta vuoto ma su questo dispositivo ci sono '+before.length+' civici. Nessun dato eliminato. Verifica prima gli archivi e i backup Drive.',true);
+     return{ok:false,reason:'cloud-empty'};
+   }
    const changed=!sameRecords(before,cloud.records);
    if(changed)await engine.applySnapshot(cloud.records);
    if(!saved||!sameRecords(saved.records,cloud.records))saveBase(cloud.records);
@@ -192,6 +199,10 @@ async function synchronize({confirm=true}={}){
    }
    const count=result.records.length,changedCloud=!sameRecords(result.records,cloud.records),
      changedLocal=!sameRecords(result.records,before);
+   if(!count&&(before.length||cloud.records.length||base.length)){
+     const description='La sincronizzazione risulterebbe con 0 civici, ma esistono dati precedenti. Nessun archivio svuotato: controlla il backup Drive e l’Archivio.';
+     message(description,true);return{ok:false,description};
+   }
    // Lo swipe esplicito in Archivio è il consenso all'invio.
    // La conferma resta disponibile per eventuali comandi alternativi.
    if(confirm){
@@ -214,7 +225,9 @@ async function synchronize({confirm=true}={}){
      try{await root.SCDrive.backupAfterSync(result.records);}
      catch(_){/* Stato Drive mostrato nel suo riquadro, dati Firebase intatti. */}
    }
-   message('Sincronizzati '+count+' civici. iPhone e iPad vedranno gli stessi dati dopo la sincronizzazione sul rispettivo dispositivo.');
+   message(count===0?
+     'Cloud vuoto: 0 civici sincronizzati. Se nel Drive personale è presente un backup, usa «Recupera civici dal Drive» nella sezione Dati.':
+     'Sincronizzati '+count+' civici. iPhone e iPad vedranno gli stessi dati dopo la sincronizzazione sul rispettivo dispositivo.',count===0);
    engine.toast('Sincronizzazione cloud completata.');
    return{ok:true,count,changedCloud,changedLocal};
  }catch(e){
