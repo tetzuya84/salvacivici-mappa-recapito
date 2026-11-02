@@ -930,3 +930,14 @@
 
 /* Beta 0.6.33 — ripristino visibile solo se il Drive contiene civici mancanti. */
 #drive-recover[hidden]{display:none!important}
+
+/* Beta 0.6.35 — scelta dei civici vicini, senza spostare i pin GPS. */
+.overview-nearby[hidden]{display:none!important}
+.overview-nearby{margin:10px 0 0;padding:10px 12px;background:#edf8f6;border:1px solid #bbdcda;border-radius:12px}
+.overview-nearby-title{font-size:12px;font-weight:760;color:#125d5a;margin:0 0 9px;text-align:center}
+.overview-nearby-options{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.overview-nearby-choice{flex:1 1 125px;max-width:100%;min-height:38px;padding:7px 10px;
+  border:1px solid #8abdb9;border-radius:9px;background:#fff;color:#176565;
+  font:inherit;font-size:12px;font-weight:730;line-height:1.3;cursor:pointer;touch-action:manipulation}
+.overview-nearby-choice.active{background:#147e75;border-color:#147e75;color:#fff}
+.overview-nearby-choice:focus-visible{outline:3px solid #147e75;outline-offset:2px}
