@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.30 — Google Sign-In unico e backup append-only nel Drive personale.
+/* SalvaCivici Beta 0.6.31 — backup JSON e elenco consultabile Google Sheets.
  * NON sostituisce Firebase o IndexedDB. Drive.file limitato ai file dell'app.
  * Access token OAuth solo in memoria, ricevuto durante Google Sign-In.
  * Non pubblica civici in GitHub, non elimina né sovrascrive altri file Drive.
@@ -10,8 +10,18 @@ const PREFIX='SalvaCivici_auto_';
 const BASE='https://www.googleapis.com/drive/v3/files';
 const UPLOAD='https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink';
 const MAX_BYTES=700*1024;
+const SHEET_MIME='application/vnd.google-apps.spreadsheet';
+const SHEET_PREFIX='Elenco civici - ';
+
 const $=id=>document.getElementById(id);
 let current=null,busy=false;
+function showSheetLink(id){
+ const link=$('drive-sheet-link');
+ if(!link)return;
+ link.hidden=!id;
+ if(id){link.href='https://docs.google.com/spreadsheets/d/'+encodeURIComponent(id)+'/edit';}
+ else link.removeAttribute('href');
+}
 function status(text,isError=false){
  const el=$('drive-status');
  if(el){el.textContent=text;el.classList.toggle('warning',!!isError);}
@@ -30,11 +40,12 @@ function authorize({uid,email,accessToken}){
    return false;
  }
  current={uid,email,token:accessToken};
+ showSheetLink(null);
  status('Drive collegato automaticamente con Google ('+email+'). Il backup si aggiorna dopo Sincronizza nell’Archivio.');
  root.SCCloud?.refreshAuthUi?.();
  return true;
 }
-function clear(){current=null;status('Il Drive si abilita con lo stesso accesso Google.');root.SCCloud?.refreshAuthUi?.();}
+function clear(){current=null;showSheetLink(null);status('Il Drive si abilita con lo stesso accesso Google.');root.SCCloud?.refreshAuthUi?.();}
 function isAuthorized(uid,email){
  return !!current?.token&&!!uid&&current.uid===uid&&
    String(current.email||'').toLowerCase()===String(email||'').toLowerCase();
@@ -116,6 +127,78 @@ async function createBackup(folderId,records){
  if(!same(records,actual.records))throw Error('Contenuto Drive non corrispondente al backup inviato.');
  return saved;
 }
+
+/* Un file JSON resta la copia di sicurezza autorevole.
+ * La conversione CSV -> Fogli Google crea un secondo documento consultabile,
+ * mai una nuova sorgente di verita' o un archivio da importare automaticamente.
+ * File creati una volta per versione JSON, senza sovrascritture.
+ */
+function sheetName(backupFile){
+ const match=String(backupFile?.name||'').match(/^SalvaCivici_auto_(\\d{4}-\\d\\d-\\d\\dT\\d\\d-\\d\\d-\\d\\d-\\d+Z)_[a-z0-9-]+\\.json$/i);
+ if(!match)throw Error('Nome backup Drive non riconosciuto.');
+ return SHEET_PREFIX+match[1].replace('T',' ');
+}
+function printable(x){
+ const value=String(x??'').replace(/\\r/g,' ').replace(/\\n/g,' ');
+ // Protezione dalle formule nei contenuti importati da CSV in un foglio.
+ return /^[=+@-]/.test(value)?"'"+value:value;
+}
+function csvField(x){return '"'+printable(x).replace(/"/g,'""')+'"';}
+function csvForView(records){
+ const header=['Civico','Via','Comune','Latitudine','Longitudine','Stato posizione','Precisione GPS (m)','Data salvataggio','ID'];
+ const rows=records.map(r=>[
+   r.civico,r.via,r.comune,r.lat,r.lon,
+   r.positionSource==='manual'?'Pin corretto':r.positionSource==='gps_confirmed'?'Verificato GPS':'Da verificare',
+   r.accuracy??'',r.createdAt,r.id
+ ]);
+ return '\\uFEFF'+[header,...rows].map(row=>row.map(csvField).join(',')).join('\\r\\n')+'\\r\\n';
+}
+async function sheetForSnapshot(folderId,backupFile,records){
+ const accountUid=current?.uid;
+ if(!accountUid)throw Error('Account Google non disponibile.');
+ const name=sheetName(backupFile);
+ const query="'"+escaped(folderId)+"' in parents and name = '"+escaped(name)+"' and trashed = false";
+ const existing=(await list(query,'id,name,mimeType,parents'))
+   .filter(x=>x.name===name&&x.mimeType===SHEET_MIME);
+ if(existing.length>1)throw Error('Trovati più elenchi per lo stesso backup. Nessuna nuova copia creata.');
+ if(existing.length){showSheetLink(existing[0].id);return existing[0];}
+ validate(records,accountUid);
+ const boundary='sc-sheet-'+crypto.randomUUID().replace(/-/g,'');
+ const meta=JSON.stringify({name,parents:[folderId],mimeType:SHEET_MIME,
+   description:'Copia di sola consultazione del backup SalvaCivici '+backupFile.name+'. Le modifiche manuali non vengono sincronizzate.'});
+ const body='--'+boundary+'\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n'+meta+
+   '\\r\\n--'+boundary+'\\r\\nContent-Type: text/csv; charset=UTF-8\\r\\n\\r\\n'+csvForView(records)+
+   '\\r\\n--'+boundary+'--';
+ const response=await fetchGoogle(UPLOAD,{method:'POST',
+   headers:{'Content-Type':'multipart/related; boundary='+boundary},body});
+ const saved=await response.json();
+ if(!saved.id)throw Error('Fogli Google non ha confermato la creazione dell’elenco.');
+ const checked=await (await fetchGoogle(BASE+'/'+encodeURIComponent(saved.id)+
+   '?fields=id,name,mimeType,parents')).json();
+ if(checked.id!==saved.id||checked.mimeType!==SHEET_MIME||
+   !Array.isArray(checked.parents)||!checked.parents.includes(folderId)){
+   throw Error('Elenco Google creato ma non verificato. Nessuna modifica al backup JSON.');
+ }
+ showSheetLink(saved.id);
+ return checked;
+}
+async function prepareReadableView(){
+ if(busy){status('Operazione Drive già in corso.');return;}
+ if(!current?.token){status('Accedi con Google nella sezione Dati per leggere il backup.',true);return;}
+ if(!navigator.onLine){status('La creazione dell’elenco richiede Internet.',true);return;}
+ busy=true;const uid=current.uid;status('Preparo l’elenco consultabile in Fogli Google…');
+ try{
+   const parent=await folder(false);
+   if(!parent)throw Error('Nessuna cartella di backup presente.');
+   const files=await backups(parent);
+   if(!files.length)throw Error('Non è ancora presente un backup JSON. Salva una copia su Drive.');
+   const data=await download(files[0].id);
+   if(!current||current.uid!==uid)throw Error('Account cambiato: nessun elenco creato.');
+   await sheetForSnapshot(parent,files[0],data.records);
+   status('Elenco pronto · '+data.records.length+' civici. Premi «Apri in Fogli Google».');
+ }catch(e){status('Elenco non disponibile: '+String(e.message||e).slice(0,170)+'. Il backup JSON è intatto.',true);}
+ finally{busy=false;}
+}
 async function backup(records,{manual=false}={}){
  if(busy)return{ok:false,reason:'busy'};
  if(!current?.token){
@@ -135,8 +218,11 @@ async function backup(records,{manual=false}={}){
      const latest=await download(older[0].id);
      if(!current||current.uid!==id)throw Error('Account cambiato durante il backup.');
      if(same(latest.records,records)){
-       status('Drive già aggiornato · '+records.length+' civici. Nessun duplicato creato.');
-       return{ok:true,unchanged:true,count:records.length};
+       try{await sheetForSnapshot(folderId,older[0],records);}
+       catch(error){status('Backup JSON confermato; elenco Google non disponibile: '+String(error.message||error).slice(0,110),true);
+         return{ok:true,unchanged:true,count:records.length,readable:false};}
+       status('Drive già aggiornato · '+records.length+' civici. Elenco consultabile disponibile.');
+       return{ok:true,unchanged:true,count:records.length,readable:true};
      }
      // Finché Drive è solo backup e NON l'archivio principale, impedisci
      // che una copia priva di record esistenti sembri la nuova versione.
@@ -148,8 +234,15 @@ async function backup(records,{manual=false}={}){
    }
    const parentId=folderId||await folder(true);
    const saved=await createBackup(parentId,records);
-   status('Backup Drive verificato · '+records.length+' civici. Le copie precedenti restano conservate.');
-   return{ok:true,count:records.length,fileId:saved.id};
+   const backupFile={id:saved.id,name:saved.name};
+   try{
+     await sheetForSnapshot(parentId,backupFile,records);
+     status('Backup Drive verificato · '+records.length+' civici. Elenco Fogli Google disponibile.');
+     return{ok:true,count:records.length,fileId:saved.id,readable:true};
+   }catch(error){
+     status('Backup JSON verificato · '+records.length+' civici. Elenco Google non creato: '+String(error.message||error).slice(0,110),true);
+     return{ok:true,count:records.length,fileId:saved.id,readable:false};
+   }
  }catch(e){
    status(textError(e),true);
    return{ok:false,reason:'error'};
@@ -164,6 +257,8 @@ async function manualBackup(){
 function init({getRecords}){
  root.SCDrive.getRecords=getRecords;
  $('drive-backup')?.addEventListener('click',()=>void manualBackup());
+ $('drive-view')?.addEventListener('click',()=>void prepareReadableView());
+ showSheetLink(null);
  status('Drive si abilita con lo stesso accesso Google, senza un secondo login.');
 }
 root.SCDrive={init,authorize,isAuthorized,clear,backupAfterSync:records=>backup(records),getRecords:null};
