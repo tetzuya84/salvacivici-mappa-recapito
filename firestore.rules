@@ -1,17 +1,28 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Ogni utente vede solo il proprio archivio. Vietate letture pubbliche.
+    // Ogni utente può leggere SOLO il proprio documento principale.
+    // I record GPS non sono pubblici e non sono accessibili ad altri UID.
     match /users/{uid}/snapshots/{snapshotId} {
       allow get: if request.auth != null
-        && request.auth.uid == uid && snapshotId == 'main';
+        && request.auth.uid == uid
+        && snapshotId == 'main';
+
+      // Beta 0.6.34: l'Archivio delle acquisizioni e la Mappa permanente
+      // sono due payload separati nello STESSO documento dello stesso utente.
+      // Solo il formato 2 può scrivere: i client legacy (format 1) non
+      // devono poter cancellare mapPayload pubblicato con un PATCH vecchio.
       allow create, update: if request.auth != null
-        && request.auth.uid == uid && snapshotId == 'main'
-        && request.resource.data.keys().hasOnly(['payload', 'format'])
-        && request.resource.data.keys().hasAll(['payload', 'format'])
-        && request.resource.data.format == 1
+        && request.auth.uid == uid
+        && snapshotId == 'main'
+        && request.resource.data.keys().hasOnly(['payload', 'mapPayload', 'format'])
+        && request.resource.data.keys().hasAll(['payload', 'mapPayload', 'format'])
+        && request.resource.data.format == 2
         && request.resource.data.payload is string
-        && request.resource.data.payload.size() < 750000;
+        && request.resource.data.mapPayload is string
+        && request.resource.data.payload.size() + request.resource.data.mapPayload.size() < 700000;
+
+      // Nessuna ricerca, cancellazione o lettura indiscriminata.
       allow list, delete: if false;
     }
     match /{document=**} {
