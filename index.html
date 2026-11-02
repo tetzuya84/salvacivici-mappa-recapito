@@ -153,13 +153,12 @@
 
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
         <div class="intro"><p class="eyebrow">I TUOI DATI</p><h1 id="data-title">Esporta e proteggi</h1><p class="subtitle">I civici restano disponibili sul dispositivo. Solo tu decidi quando sincronizzarli nel cloud.</p></div>
-        <div class="data-card cloud-card">
+        <div class="data-card cloud-card google-account-card">
           <div class="data-icon" aria-hidden="true">☁</div>
-          <h2>Archivio cloud condiviso</h2>
-          <p>Un solo archivio per tutti i tuoi dispositivi. Per inviare modifiche, trascina verso il basso nella sezione Archivio.</p>
-          <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Cloud da configurare.</p>
+          <h2>Account Google</h2>
+          <p class="account-intro">Un solo account per sincronizzare i civici tra dispositivi e conservare copie di sicurezza nel tuo Google Drive personale.</p>
           <div id="cloud-config" class="cloud-credentials" hidden>
-            <h3>Collega Firebase (una volta sola)</h3>
+            <h3>Configurazione archivio cloud</h3>
             <label for="cloud-project" class="field-label">ID progetto Firebase</label>
             <input id="cloud-project" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="salvacivici-mappa-recapito">
             <label for="cloud-api-key" class="field-label">Chiave API web Firebase (non è una password)</label>
@@ -167,8 +166,7 @@
             <button id="cloud-save-config" type="button" class="secondary full">Salva configurazione</button>
           </div>
           <div id="cloud-google-entry" class="cloud-credentials" hidden>
-            <h3>Un solo accesso Google</h3>
-            <p>Accedi con Google per collegare insieme l'archivio cloud e il backup sul tuo Drive personale. Google potrà chiederti di autorizzare i file creati dall'app.</p>
+            <p>Con un solo accesso Google autorizzi sia l'archivio cloud sia il backup nel tuo Drive. Google può chiederti il permesso di creare i file dell'app.</p>
             <button id="cloud-google-login" type="button" class="cloud-google-button full" disabled>
               <span class="google-g" aria-hidden="true">G</span> <span id="cloud-google-label">Accedi con Google</span>
             </button>
@@ -176,7 +174,7 @@
           <div id="cloud-login-panel" class="cloud-credentials" hidden>
             <details class="cloud-email-fallback">
               <summary>Accesso con email e password (alternativa)</summary>
-              <p>Disponibile se il browser del dispositivo non permette l'accesso Google.</p>
+              <p>Disponibile se il browser non permette l'accesso Google. In questo caso il backup Drive richiede l'autorizzazione Google.</p>
               <label for="cloud-email" class="field-label">Email</label>
               <input id="cloud-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off">
               <label for="cloud-password" class="field-label">Password Firebase</label>
@@ -187,18 +185,21 @@
           </div>
           <div id="cloud-account" hidden>
             <p id="cloud-identity" class="cloud-identity"></p>
-            <p class="cloud-help">Account Google e Drive sono collegati con lo stesso accesso quando hai autorizzato il backup. Per sincronizzare le modifiche usa lo swipe nell’Archivio.</p>
             <button id="cloud-logout" type="button" class="text-button">Disconnetti</button>
           </div>
-          <p class="cloud-help">GPS e archivio funzionano anche offline. Lo swipe volontario in Archivio avvia l'invio; eventuali conflitti vengono bloccati senza sovrascrivere i civici.</p>
-        </div>
-        <div class="data-card drive-card">
-          <div class="data-icon" aria-hidden="true">☁</div>
-          <h2>Google Drive personale · Beta</h2>
-          <p>Con il tuo account Google, dopo ogni sincronizzazione cloud riuscita SalvaCivici salva una copia privata e verificata dei civici nel tuo Drive. I backup precedenti non vengono sovrascritti.</p>
-          <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Drive si abilita con lo stesso accesso Google, senza un secondo login.</p>
-          <button id="drive-backup" type="button" class="secondary full">Salva copia su Drive ora</button>
-          <p class="cloud-help">La cartella «SalvaCivici - Backup app» viene creata sul tuo Drive. Questa prima versione conserva copie di sicurezza: Firebase resta necessario per sincronizzare fra dispositivi. Google My Maps non viene modificata.</p>
+          <div class="account-service-list">
+            <section class="account-service" aria-labelledby="cloud-service-title">
+              <h3 id="cloud-service-title">Sincronizzazione dispositivi</h3>
+              <p id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verifica archivio cloud…</p>
+              <p class="cloud-help">Invia le modifiche dall'Archivio trascinando verso il basso. I civici già salvati restano consultabili anche offline.</p>
+            </section>
+            <section class="account-service" aria-labelledby="drive-service-title">
+              <h3 id="drive-service-title">Backup su Google Drive</h3>
+              <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Drive si attiva con lo stesso accesso Google.</p>
+              <button id="drive-backup" type="button" class="secondary full">Salva copia su Drive ora</button>
+              <p class="cloud-help">Le copie precedenti restano nel tuo Drive. Per ora Firebase sincronizza i dispositivi; Google My Maps non viene modificata.</p>
+            </section>
+          </div>
         </div>
         <div class="data-card"><div class="data-icon">▣</div><h2>Salvataggi</h2><p>Scarica una copia di tutte le acquisizioni per conservarle al sicuro.</p><button id="export-json" type="button" class="secondary full">Scarica tutte le acquisizioni</button></div>
         <div class="data-card danger-zone">
@@ -208,7 +209,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.30</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.31</p>
       </section>
     </main>
 
