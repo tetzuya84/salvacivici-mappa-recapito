@@ -47,6 +47,16 @@
     transaction.onerror=()=>reject(transaction.error||new Error('Ripristino non riuscito.'));
     transaction.onabort=()=>reject(transaction.error||new Error('Ripristino annullato.'));
   });}
+  // Ripristino conservativo: la transazione abortisce completamente se un ID
+  // compare già, per non modificare MAI un civico registrato sul dispositivo.
+  function addRecoveredRecords(records){return new Promise((resolve,reject)=>{
+    const transaction=state.db.transaction(STORE,'readwrite');
+    const store=transaction.objectStore(STORE);
+    records.forEach(record=>store.add(record));
+    transaction.oncomplete=()=>{refresh().then(resolve,reject);};
+    transaction.onerror=()=>reject(transaction.error||new Error('Ripristino non riuscito.'));
+    transaction.onabort=()=>reject(transaction.error||new Error('Ripristino annullato: un civico esiste già.'));
+  });}
   function removeOne(id){return new Promise((resolve,reject)=>{
     const transaction=state.db.transaction(STORE,'readwrite');
     transaction.objectStore(STORE).delete(id);
@@ -88,6 +98,12 @@
   }
 
   function showPage(tab){
+    // iOS: abbandonando una schermata, togli il focus ai campi di testo
+    // nascosti per chiudere la tastiera e la barra «Inserisci info».
+    const focused=document.activeElement;
+    if(focused&&focused.matches?.('input,textarea,select,[contenteditable="true"]')&&!focused.closest?.('#page-'+tab)){
+      focused.blur();
+    }
     document.querySelector('.app-shell').classList.toggle('is-capture',tab==='capture');
     ['capture','records','map','data'].forEach(name=>{
       $('page-'+name).hidden=name!==tab;
@@ -763,7 +779,7 @@
     $('indirizzo').value='';showComune('');
     showPage('capture');
     updateGpsUI();
-    if(window.SCDrive)window.SCDrive.init({getRecords:readAll});
+    if(window.SCDrive)window.SCDrive.init({getRecords:readAll,addRecoveredRecords,confirmAction});
     if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,confirmAction,toast});
     setupAppUpdates();
     startGpsAcquisition();
