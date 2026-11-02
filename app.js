@@ -763,6 +763,7 @@
     $('indirizzo').value='';showComune('');
     showPage('capture');
     updateGpsUI();
+    if(window.SCDrive)window.SCDrive.init({getRecords:readAll});
     if(window.SCCloud)window.SCCloud.init({getRecords:readAll,applySnapshot,confirmAction,toast});
     setupAppUpdates();
     startGpsAcquisition();
