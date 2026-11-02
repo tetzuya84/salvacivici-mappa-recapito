@@ -220,6 +220,13 @@ async function pullIfSafe({quiet=false}={}){
      return{ok:false,reason:'first-sync'};
    }
    const cloud=await getCloud();
+   // La ricezione dell'Archivio puo' aggiornare anche la copia permanente
+   // della Mappa, ma MAI aggiungere acquisizioni locali non pubblicate.
+   const currentMap=await engine.getMapRecords();
+   const mapUnion=new Map(currentMap.map(record=>[record.id,record]));
+   for(const record of cloud.mapRecords)mapUnion.set(record.id,record);
+   const receivedMap=[...mapUnion.values()];
+   if(!sameRecords(currentMap,receivedMap))await engine.applyMapSnapshot(receivedMap);
    if(!sameRecords(before,await engine.getRecords()))return{ok:false,reason:'local-changed-during-read'};
    // Sicurezza aggiuntiva: un cloud vuoto non deve svuotare in automatico
    // l'archivio locale che contiene civici. Per la cancellazione esiste
