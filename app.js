@@ -55,6 +55,38 @@
   });}
   async function refresh(){state.records=(await readAll()).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));renderRecords();updateNearWarning();window.dispatchEvent(new Event('salvacivici:datachanged'));}
 
+  // Solo lettura cloud, mai invio automatico: i civici non ancora sincronizzati
+  // rimangono sull'iPhone e la mappa resta consultabile anche offline.
+  async function refreshMapFromCloud(){
+    const status=$('overview-cloud-status');
+    if(!status)return;
+    if(!navigator.onLine){
+      status.textContent='Offline · mappa locale disponibile.';
+      return;
+    }
+    status.textContent='Controllo civici sul cloud…';
+    let result;
+    try{result=await window.SCCloud?.refreshForMap?.();}
+    catch(_){result={ok:false,reason:'error'};}
+    if($('page-map').hidden)return;
+    if(result?.ok){
+      status.textContent=(result.changed?'Mappa aggiornata dal cloud · ':'Cloud verificato · ')+result.count+' civici.';
+    }else{
+      const messages={
+        busy:'Controllo cloud già in corso. I civici locali sono disponibili.',
+        offline:'Offline · mappa locale disponibile.',
+        'not-connected':'Mappa locale · collega il cloud in Dati.',
+        editing:'Chiudi prima la modifica del civico.',
+        'local-changes':'Hai civici da sincronizzare: vai in Archivio.',
+        'first-sync':'Prima sincronizzazione da eseguire nell’Archivio.',
+        'account-mismatch':'Account cloud differente: archivio locale conservato.',
+        'local-changed-during-read':'Archivio modificato: sincronizza dall’Archivio.',
+        error:'Cloud non disponibile · mappa locale conservata.'
+      };
+      status.textContent=messages[result?.reason]||'Mappa locale · sincronizza dall’Archivio.';
+    }
+  }
+
   function showPage(tab){
     document.querySelector('.app-shell').classList.toggle('is-capture',tab==='capture');
     ['capture','records','map','data'].forEach(name=>{
@@ -69,6 +101,7 @@
       // iOS: la richiesta di accesso alla bussola deve partire dal tocco sul tab.
       const compassPermission=window.SCMapFeatures?.primeAutoCompass?.();
       void mapOverview.open(compassPermission);
+      void refreshMapFromCloud();
     }
     if(tab==='capture'&&state.db&&!gpsBusy&&!SC.isFreshGps(state.gps,Date.now(),GPS_REENTER_REFRESH_MS))startGpsAcquisition();
     window.scrollTo({top:0,behavior:'auto'});
