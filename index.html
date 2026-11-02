@@ -166,12 +166,14 @@
             <input id="cloud-api-key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza...">
             <button id="cloud-save-config" type="button" class="secondary full">Salva configurazione</button>
           </div>
-          <div id="cloud-login-panel" class="cloud-credentials" hidden>
-            <h3>Accedi al tuo archivio</h3>
-            <p>Usa il tuo account Google su iPhone, iPad e altri dispositivi, senza una nuova password.</p>
+          <div id="cloud-google-entry" class="cloud-credentials" hidden>
+            <h3>Un solo accesso Google</h3>
+            <p>Accedi con Google per collegare insieme l'archivio cloud e il backup sul tuo Drive personale. Google potrà chiederti di autorizzare i file creati dall'app.</p>
             <button id="cloud-google-login" type="button" class="cloud-google-button full" disabled>
-              <span class="google-g" aria-hidden="true">G</span> Accedi con Google
+              <span class="google-g" aria-hidden="true">G</span> <span id="cloud-google-label">Accedi con Google</span>
             </button>
+          </div>
+          <div id="cloud-login-panel" class="cloud-credentials" hidden>
             <details class="cloud-email-fallback">
               <summary>Accesso con email e password (alternativa)</summary>
               <p>Disponibile se il browser del dispositivo non permette l'accesso Google.</p>
@@ -185,7 +187,7 @@
           </div>
           <div id="cloud-account" hidden>
             <p id="cloud-identity" class="cloud-identity"></p>
-            <p class="cloud-help">Gli aggiornamenti arrivano automaticamente quando l’app è aperta. Per pubblicare le modifiche, usa lo swipe nell'Archivio.</p>
+            <p class="cloud-help">Account Google e Drive sono collegati con lo stesso accesso quando hai autorizzato il backup. Per sincronizzare le modifiche usa lo swipe nell’Archivio.</p>
             <button id="cloud-logout" type="button" class="text-button">Disconnetti</button>
           </div>
           <p class="cloud-help">GPS e archivio funzionano anche offline. Lo swipe volontario in Archivio avvia l'invio; eventuali conflitti vengono bloccati senza sovrascrivere i civici.</p>
@@ -194,8 +196,7 @@
           <div class="data-icon" aria-hidden="true">☁</div>
           <h2>Google Drive personale · Beta</h2>
           <p>Con il tuo account Google, dopo ogni sincronizzazione cloud riuscita SalvaCivici salva una copia privata e verificata dei civici nel tuo Drive. I backup precedenti non vengono sovrascritti.</p>
-          <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Collega Drive per attivare il backup personale.</p>
-          <button id="drive-connect" type="button" class="secondary full">Collega Drive personale</button>
+          <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Drive si abilita con lo stesso accesso Google, senza un secondo login.</p>
           <button id="drive-backup" type="button" class="secondary full">Salva copia su Drive ora</button>
           <p class="cloud-help">La cartella «SalvaCivici - Backup app» viene creata sul tuo Drive. Questa prima versione conserva copie di sicurezza: Firebase resta necessario per sincronizzare fra dispositivi. Google My Maps non viene modificata.</p>
         </div>
@@ -207,7 +208,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.29</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.30</p>
       </section>
     </main>
 
