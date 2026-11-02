@@ -109,21 +109,38 @@ function cloudUrl(){
 async function getCloud(){
  const bearer=await freshToken();
  const res=await fetch(cloudUrl(),{headers:{Authorization:'Bearer '+bearer},cache:'no-store'});
- if(res.status===404)return{records:[],updateTime:null};
+ if(res.status===404)return{records:[],mapRecords:[],hasMapPayload:false,updateTime:null};
  const data=await res.json().catch(()=>({}));
  if(!res.ok)throw Error(data.error?.message||'Firestore HTTP '+res.status);
  const raw=data.fields?.payload?.stringValue;
  let records;
  try{records=JSON.parse(raw)}catch(e){throw Error('Archivio cloud non valido: nessun dato modificato.');}
  if(!Array.isArray(records)||!records.every(root.SC.isRecord))throw Error('Il cloud contiene record non validi.');
- return{records,updateTime:data.updateTime};
+ const hasMapPayload=typeof data.fields?.mapPayload?.stringValue==='string';
+ let mapRecords;
+ if(hasMapPayload){
+   try{mapRecords=JSON.parse(data.fields.mapPayload.stringValue);}
+   catch(_){throw Error('Mappa cloud non valida. Nessun punto modificato.');}
+ }else{
+   // Migrazione della versione precedente: solo i civici gia' su Firebase
+   // diventano pubblicati; i civici ancora solo sul telefono no.
+   mapRecords=records;
+ }
+ if(!Array.isArray(mapRecords)||mapRecords.some(r=>!root.SC.isRecord(r))||
+    new Set(mapRecords.map(r=>r.id)).size!==mapRecords.length)
+   throw Error('Mappa cloud non valida o contiene ID duplicati.');
+ return{records,mapRecords,hasMapPayload,updateTime:data.updateTime};
 }
-async function setCloud(records,updateTime){
- const payload=JSON.stringify(records);
- if(new TextEncoder().encode(payload).length>700*1024)throw Error('Archivio troppo grande per questa versione; nessun dato sovrascritto.');
+async function setCloud(records,updateTime,mapRecords){
+ if(!Array.isArray(mapRecords)||mapRecords.some(r=>!root.SC.isRecord(r))||
+    new Set(mapRecords.map(r=>r.id)).size!==mapRecords.length)
+   throw Error('Nessuna sincronizzazione: Mappa permanente non valida.');
+ const payload=JSON.stringify(records),mapPayload=JSON.stringify(mapRecords);
+ if(new TextEncoder().encode(payload).length+new TextEncoder().encode(mapPayload).length>700*1024)
+   throw Error('Archivi troppo grandi per questa versione; nessun dato sovrascritto.');
  const u=cloudUrl()+(updateTime?'?currentDocument.updateTime='+encodeURIComponent(updateTime):'?currentDocument.exists=false');
  const resp=await fetch(u,{method:'PATCH',headers:{'Authorization':'Bearer '+await freshToken(),'Content-Type':'application/json'},
-    body:JSON.stringify({fields:{payload:{stringValue:payload},format:{integerValue:'1'}}})});
+    body:JSON.stringify({fields:{payload:{stringValue:payload},mapPayload:{stringValue:mapPayload},format:{integerValue:'2'}}})});
  const data=await resp.json().catch(()=>({}));
  if(!resp.ok){
    if(resp.status===409||resp.status===412||/FAILED_PRECONDITION|ABORTED/.test(data.error?.message||''))throw Error('Un altro dispositivo ha aggiornato il cloud durante l’invio. Riprova: non è stato sovrascritto nulla.');
@@ -131,9 +148,56 @@ async function setCloud(records,updateTime){
  }
  return data.updateTime;
 }
-/* Lettura prudente per la mappa: aggiorna il dispositivo solo quando
-   l'archivio locale coincide con l'ultima base sincronizzata.
-   Nessuna scrittura cloud e nessuna cancellazione di modifiche locali. */
+
+/* La Mappa e' un registro PUBBLICATO, non la vista delle acquisizioni.
+ * Nuove acquisizioni diventano visibili solo dopo una sync riuscita.
+ * Il registro non elimina record per operazioni sull'Archivio.
+ */
+function mergedPublishedMap(localMap,remoteMap,newArchive,baseArchive){
+ const map=new Map();
+ for(const r of localMap){
+   if(map.has(r.id)&&!M.same(map.get(r.id),r))throw Error('Conflitto mappa locale.');
+   map.set(r.id,r);
+ }
+ // Il server prevale sulle copie gia' pubblicate dallo stesso account.
+ for(const r of remoteMap)map.set(r.id,r);
+ const baseline=new Map(baseArchive.map(r=>[r.id,r]));
+ const cached=new Map(localMap.map(r=>[r.id,r]));
+ for(const r of newArchive){
+   const prior=map.get(r.id);
+   if(prior&&!M.same(prior,r)){
+     const wasSynced=baseline.has(r.id)&&M.same(baseline.get(r.id),prior);
+     const fromMap= !baseline.has(r.id)&&cached.has(r.id)&&M.same(cached.get(r.id),prior);
+     if(!wasSynced&&!fromMap)throw Error('Mappa: il civico '+r.via+' '+r.civico+' ha modifiche non riconciliate. Nessun punto sovrascritto.');
+   }
+   if(!prior){
+     const sameCivic=[...map.values()].find(x=>x.id!==r.id&&root.SC.isSameCivic(x,r));
+     if(sameCivic)throw Error('Mappa: il civico '+r.via+' '+r.civico+' ha già un ID differente. Nessun doppione pubblicato.');
+   }
+   map.set(r.id,r);
+ }
+ return [...map.values()].sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
+async function pullPublishedMap({quiet=false}={}){
+ if(busy)return{ok:false,reason:'busy'};
+ if(!session?.uid)return{ok:false,reason:'not-connected'};
+ if(!navigator.onLine)return{ok:false,reason:'offline'};
+ const owner=read(OWNER,null);
+ if(owner&&owner!==session.uid)return{ok:false,reason:'account-mismatch'};
+ busy=true;showState();
+ try{
+   const local=await engine.getMapRecords(),cloud=await getCloud();
+   const merged=new Map(local.map(r=>[r.id,r]));
+   for(const r of cloud.mapRecords)merged.set(r.id,r);
+   const next=[...merged.values()],changed=!sameRecords(local,next);
+   if(changed)await engine.applyMapSnapshot(next);
+   return{ok:true,count:next.length,changed};
+ }catch(e){
+   if(!quiet)message('Mappa cloud non disponibile: '+errorMessage(e),true);
+   return{ok:false,reason:'error'};
+ }finally{busy=false;showState();}
+}
+/* Lettura cloud dell'Archivio, separata dalla Mappa pubblicata. */
 async function pullIfSafe({quiet=false}={}){
  if(busy)return{ok:false,reason:'busy'};
  if(!session?.uid)return{ok:false,reason:'not-connected'};
@@ -197,8 +261,10 @@ async function synchronize({confirm=true}={}){
      const description='Conflitto su '+result.conflicts.length+' civici modificati su entrambi i dispositivi. Nessun dato sovrascritto. Risolvi le differenze prima di sincronizzare.';
      message(description,true);return{ok:false,description};
    }
-   const count=result.records.length,changedCloud=!sameRecords(result.records,cloud.records),
-     changedLocal=!sameRecords(result.records,before);
+   const count=result.records.length,changedLocal=!sameRecords(result.records,before);
+   const mapped=mergedPublishedMap(await engine.getMapRecords(),cloud.mapRecords,result.records,base);
+   const changedCloud=!sameRecords(result.records,cloud.records)||
+     !sameRecords(mapped,cloud.mapRecords)||!cloud.hasMapPayload;
    if(!count&&(before.length||cloud.records.length||base.length)){
      const description='La sincronizzazione risulterebbe con 0 civici, ma esistono dati precedenti. Nessun archivio svuotato: controlla il backup Drive e l’Archivio.';
      message(description,true);return{ok:false,description};
@@ -214,9 +280,10 @@ async function synchronize({confirm=true}={}){
    }
    if(!navigator.onLine)throw Error('Connessione persa: dati locali conservati.');
    if(!sameRecords(before,await engine.getRecords()))throw Error('L’Archivio è stato modificato durante la verifica. Riprova.');
-   if(changedCloud){message('Invio le modifiche nel cloud…');await setCloud(result.records,cloud.updateTime);}
+   if(changedCloud){message('Pubblico le acquisizioni nella Mappa permanente…');await setCloud(result.records,cloud.updateTime,mapped);}
    if(!sameRecords(before,await engine.getRecords()))throw Error('L’Archivio è stato modificato durante la sincronizzazione. Il cloud è salvo; riprova prima di apportare altre correzioni.');
    if(changedLocal)await engine.applySnapshot(result.records);
+   await engine.applyMapSnapshot(mapped);
    saveBase(result.records);
    store(OWNER,session.uid);
    // Backup Google Drive per-account, append-only e con lettura di verifica.
@@ -227,9 +294,9 @@ async function synchronize({confirm=true}={}){
    }
    message(count===0?
      'Cloud vuoto: 0 civici sincronizzati. Se nel Drive personale è presente un backup, usa «Recupera civici dal Drive» nella sezione Dati.':
-     'Sincronizzati '+count+' civici. iPhone e iPad vedranno gli stessi dati dopo la sincronizzazione sul rispettivo dispositivo.',count===0);
+     'Acquisizioni sincronizzate: '+count+'. Mappa permanente: '+mapped.length+' civici. Eliminare dall’Archivio non li rimuove dalla Mappa.',count===0);
    engine.toast('Sincronizzazione cloud completata.');
-   return{ok:true,count,changedCloud,changedLocal};
+   return{ok:true,count,mapCount:mapped.length,changedCloud,changedLocal};
  }catch(e){
    const description='Sincronizzazione non completata: '+errorMessage(e);
    message(description,true);
@@ -261,12 +328,14 @@ async function clearAllAcquisitions({expectedCount}={}){
    if(!sameRecords(before,await engine.getRecords()))
      throw Error('I civici locali sono stati modificati durante il controllo: riprova.');
    // PATCH condizionale: non sovrascrivere nuove acquisizioni inviate da altri dispositivi.
-   await setCloud([],remote.updateTime);
+   const mapBefore=mergedPublishedMap(await engine.getMapRecords(),remote.mapRecords,[],[]);
+   await setCloud([],remote.updateTime,mapBefore);
    cloudCleared=true;
+   await engine.applyMapSnapshot(mapBefore);
    await engine.applySnapshot([]);
    saveBase([]);
    store(OWNER,session.uid);
-   message('Eliminate '+before.length+' acquisizioni dal cloud e da questo dispositivo. Gli altri dispositivi si aggiorneranno quando si connetteranno.');
+   message('Eliminate '+before.length+' acquisizioni dall’Archivio. Mappa permanente conservata: '+mapBefore.length+' civici.');
    engine.toast('Archivio svuotato su cloud e dispositivo.');
    return{ok:true,removed:before.length,count:0};
  }catch(e){
@@ -308,5 +377,5 @@ function init(options){
  message(session?'Cloud pronto. Apri l’Archivio e trascina verso il basso per sincronizzare.':
    'Nessun accesso cloud: tutti i civici restano locali finché non configuri e sincronizzi.');
 }
-root.SCCloud={init,acceptGoogleAuth,notice:message,refreshAuthUi:showState,getIdentity:()=>session?{uid:session.uid,email:session.email}:null,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullIfSafe({quiet:true}),clearAll:clearAllAcquisitions};
+root.SCCloud={init,acceptGoogleAuth,notice:message,refreshAuthUi:showState,getIdentity:()=>session?{uid:session.uid,email:session.email}:null,syncFromArchive:()=>synchronize({confirm:false}),refreshForMap:()=>pullPublishedMap({quiet:true}),clearAll:clearAllAcquisitions};
 })(window);
