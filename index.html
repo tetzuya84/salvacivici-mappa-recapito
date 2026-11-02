@@ -123,8 +123,8 @@
           </select></div>
         </div>
         <p class="overview-legend"><span class="overview-legend-dot unknown"></span> Da verificare <span class="overview-legend-dot checked"></span> Verificato <span class="overview-legend-dot moved"></span> Corretto</p>
-        <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Visualizzazione dell’archivio locale</p>
-        <p id="overview-cloud-status" class="cloud-help" role="status" aria-live="polite">I civici salvati sono disponibili anche senza rete.</p>
+        <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Registro permanente dei civici pubblicati. La pulizia dell’Archivio non elimina questi punti.</p>
+        <p id="overview-cloud-status" class="cloud-help" role="status" aria-live="polite">I civici pubblicati restano consultabili anche offline dopo la prima sincronizzazione.</p>
         <div class="map-style-controls" data-no-swipe>
           <button id="overview-basemap" type="button" class="map-style-toggle" aria-pressed="false">▧ Satellite</button>
           <button id="overview-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
@@ -148,7 +148,7 @@
           </div>
           <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
         </div>
-        <p class="overview-privacy">La mappa legge solo i civici locali. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
+        <p class="overview-privacy">La mappa legge solo i civici pubblicati nel proprio archivio permanente. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
       </section>
 
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
@@ -209,12 +209,12 @@
         <div class="data-card"><div class="data-icon">▣</div><h2>Salvataggi</h2><p>Scarica una copia di tutte le acquisizioni per conservarle al sicuro.</p><button id="export-json" type="button" class="secondary full">Scarica tutte le acquisizioni</button></div>
         <div class="data-card danger-zone">
           <h2>Elimina tutte le acquisizioni</h2>
-          <p>Usa questa funzione solo dopo aver controllato l'inserimento dei civici negli archivi e nelle mappe. Sono richieste <strong>due conferme</strong>. Per evitare che i dati ritornino sugli altri dispositivi, è necessario essere online, aver effettuato l'accesso Google e avere il cloud sincronizzato. I backup JSON e Google My Maps non vengono eliminati.</p>
+          <p>Questa operazione elimina le <strong>acquisizioni</strong> dall’Archivio e dal cloud condiviso, <strong>non i civici già pubblicati sulla Mappa permanente</strong>. I civici non ancora sincronizzati non compariranno nella Mappa. Richiede due conferme, accesso Google e verifica cloud. I backup precedenti e Google My Maps non vengono eliminati.</p>
           <button id="delete-all-records" type="button" class="danger-button full">Elimina tutte le acquisizioni</button>
         </div>
-        <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
+        <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.33</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.34</p>
       </section>
     </main>
 
