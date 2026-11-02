@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.31 — backup JSON e elenco consultabile Google Sheets.
+/* SalvaCivici Beta 0.6.32 — backup JSON e elenco consultabile Google Sheets.
  * NON sostituisce Firebase o IndexedDB. Drive.file limitato ai file dell'app.
  * Access token OAuth solo in memoria, ricevuto durante Google Sign-In.
  * Non pubblica civici in GitHub, non elimina né sovrascrive altri file Drive.
