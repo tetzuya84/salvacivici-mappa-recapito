@@ -40,6 +40,10 @@ function create({getRecords,onVerify,notify}){
  // Confrontiamo i pixel ALLA SCALA ATTUALE, senza spostare i GPS reali.
  function closeEnough(a,b){
    if(!map)return false;
+   // Leaflet non ha ancora un'origine pixel alla prima renderizzazione.
+   // Prima di fitBounds usiamo soltanto la distanza reale.
+   if(!Number.isFinite(map.getZoom?.()))
+     return map.distance([a.lat,a.lon],[b.lat,b.lon])<12;
    const p=map.latLngToContainerPoint([a.lat,a.lon]);
    const q=map.latLngToContainerPoint([b.lat,b.lon]);
    return Math.hypot(p.x-q.x,p.y-q.y)<40;
@@ -196,7 +200,7 @@ function create({getRecords,onVerify,notify}){
          bounceAtZoomLimits:false,zoomSnap:0.25,maxZoom:21,rotate:typeof L.Map?.prototype?.setBearing==='function',
          touchRotate:true,rotateControl:false,preventPageGestures:true});
        layer=L.layerGroup().addTo(map);
-       map.on('zoomend',()=>{if(selectedId)select(selectedRecord());});
+       map.on('zoomend',()=>render(false));
        locateButton.disabled=false;
        if(root.SCMapFeatures){
          cartography=root.SCMapFeatures.create({L,map,baseButton:$('overview-basemap'),compassButton:$('overview-compass'),
