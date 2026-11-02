@@ -190,6 +190,15 @@
           </div>
           <p class="cloud-help">GPS e archivio funzionano anche offline. Lo swipe volontario in Archivio avvia l'invio; eventuali conflitti vengono bloccati senza sovrascrivere i civici.</p>
         </div>
+        <div class="data-card drive-card">
+          <div class="data-icon" aria-hidden="true">☁</div>
+          <h2>Google Drive personale · Beta</h2>
+          <p>Con il tuo account Google, dopo ogni sincronizzazione cloud riuscita SalvaCivici salva una copia privata e verificata dei civici nel tuo Drive. I backup precedenti non vengono sovrascritti.</p>
+          <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Collega Drive per attivare il backup personale.</p>
+          <button id="drive-connect" type="button" class="secondary full">Collega Drive personale</button>
+          <button id="drive-backup" type="button" class="secondary full">Salva copia su Drive ora</button>
+          <p class="cloud-help">La cartella «SalvaCivici - Backup app» viene creata sul tuo Drive. Questa prima versione conserva copie di sicurezza: Firebase resta necessario per sincronizzare fra dispositivi. Google My Maps non viene modificata.</p>
+        </div>
         <div class="data-card"><div class="data-icon">▣</div><h2>Salvataggi</h2><p>Scarica una copia di tutte le acquisizioni per conservarle al sicuro.</p><button id="export-json" type="button" class="secondary full">Scarica tutte le acquisizioni</button></div>
         <div class="data-card danger-zone">
           <h2>Elimina tutte le acquisizioni</h2>
@@ -198,7 +207,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Include comune, via, civico, coordinate definitive e data. Se hai corretto il pin, comprende anche il GPS originale e la distanza dello spostamento.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.28</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.29</p>
       </section>
     </main>
 
@@ -247,6 +256,7 @@
   <script src="core.js" defer></script>
   <script src="cloud-merge.js" defer></script>
   <script src="cloud-sync.js" defer></script>
+  <script src="drive-backup.js" defer></script>
   <script src="map-review.js" defer></script>
   <script src="map-features.js" defer></script>
   <script src="map-overview.js" defer></script>
