@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.34**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
+Beta **0.6.35**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
 
 ## GPS migliorato
 
@@ -398,3 +398,16 @@ Motivazione: l'utente ha mostrato in **Dati** «Sincronizzati 0 civici» e «Arc
 ### Test effettuati e mancanti
 
 Verifica V8 della sintassi JS. Simulazione integrata del Firestore REST (documento `users/<UID>/snapshots/main`): 1 civico in Archivio + Mappa vuota → Sincronizza → Archivio 1, Mappa 1; elimina staging → Sincronizza → Archivio 0, Mappa 1 anche nel cloud; scarica la Mappa su altro dispositivo → Mappa 1. Test unitario della fusione: aggiunta, correzione, conflitto e ID duplicati. **Non equivale a test OAuth/Firestore reale**: dopo pubblicazione verificare con account dell'utente, evitando di cancellare dati senza backup.
+
+
+## Beta 0.6.35 — civici vicini in Mappa e contatori distinti (2 novembre 2026)
+
+**Caso reale:** l'utente ha salvato/sincronizzato `Kennedy Prova, 51` a pochi metri da `Kennedy, 51`, entrambi Acquanegra sul Chiese. Due screenshot mostrano Archivio con prima 1 acquisizione e poi 2 acquisizioni, ma non mostrano lo stato della Mappa dopo la seconda sincronizzazione. Le coordinate ricavate dagli screenshot sono circa 45.160331,10.437370 e 45.160346,10.437432: distanza 5,14 m. Quando la Mappa contiene almeno due punti, la precedente `fitBounds` con zoom massimo 17 sovrapponeva i pin identici `51` e uno poteva coprire l'altro **anche quando entrambi erano presenti**. Non confondere questa visualizzazione con una mancata pubblicazione non ancora verificata sul dispositivo.
+
+**Intervento senza cambiare coordinate o dati**:
+- Mappa: per un gruppo di civici concentrati entro 55 m dallo stesso primo punto, lo zoom iniziale può arrivare a 20 anziché fermarsi a 17, per distinguere ingressi ravvicinati. Per aree geografiche ampie resta massimo 17.
+- Se alla scala corrente le etichette dei pin si sovrappongono (entro 40 px), la Mappa lo segnala nel conteggio e, dopo tocco su uno dei segnaposti, propone **una scelta fra i civici vicini con via e numero completi**. Selezionare una voce aggiorna il dettaglio e la navigazione verso le sue coordinate GPS originali, senza spostare o unire marker.
+- Messaggio di sincronizzazione: mostra separatamente `Archivio: N` e `Mappa permanente: M civici`. Il numero in Archivio non indica quanti segnaposti siano pubblicati nella Mappa; il successo del comando espone entrambi i conteggi.
+- Test V8 con Leaflet/dom simulati: due indirizzi con numero 51 a 5,14 m, mappa iniziale con 2 marker e zoom 20, a zoom 17 messaggio di sovrapposizione e selezione funzionante fra le due voci; coordinate inalterate. I dati reali, il Firestore dell'utente, Drive e My Maps non sono stati modificati.
+
+**Verifica sul dispositivo da effettuare:** dopo aggiornamento PWA, completare sincronizzazione e leggere in Archivio entrambi i contatori; aprire Mappa con filtri `Tutti i comuni` e `Tutti i punti`, verificare il conteggio `2 civici sulla mappa`, cliccare `Kennedy` e `Kennedy Prova` e controllare i dettagli. Se il conteggio Mappa è 1 dopo una sync riuscita, il problema non è solo visivo: non cancellare acquisizioni, raccogliere esatto stato e correggere il backend. Non eliminare backup o civici di prova fino a test completo.
