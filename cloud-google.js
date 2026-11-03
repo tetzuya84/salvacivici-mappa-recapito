@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.30 — un solo accesso Google per Firebase e Drive personale.
+/* SalvaCivici Beta 0.6.39 — un solo accesso Google per Firebase e Drive personale.
    Il Drive personale usa un access token OAuth solo in memoria.
    Email/password resta come alternativa Firebase senza accesso Drive. */
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -13,7 +13,7 @@ const CONFIG={
 const auth=getAuth(initializeApp(CONFIG));
 const provider=new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/drive.file");
-provider.setCustomParameters({prompt:"select_account"});
+// Evita la scelta obbligatoria dell'account a ogni rinnovo; il controllo UID resta attivo.
 const button=document.getElementById("cloud-google-login");
 let underway=false;
 
@@ -39,9 +39,11 @@ function readable(error){
 }
 async function onClick(){
   if(underway)return;
-  underway=true;button.disabled=true;notify("Apro l'accesso Google…");
+  underway=true;button.disabled=true;notify("Verifico l’autorizzazione Google…");
+  let popupCompleted=false;
   try{
     const result=await signInWithPopup(auth,provider);
+    popupCompleted=true;
     const user=result.user;
     if(!user?.uid||!user?.refreshToken)throw Error("Firebase non ha confermato la sessione Google.");
     // La sessione Drive e l'archivio Firebase devono riferirsi allo stesso UID.
@@ -59,8 +61,11 @@ async function onClick(){
       "Cloud Google collegato, ma Drive non attivo. Controlla l'account prima di sincronizzare.",!driveReady);
   }catch(error){
     notify(readable(error),true);
-    // Non lasciare una sessione Google persistente diversa da quella dell'archivio locale.
-    if(auth.currentUser)await signOut(auth).catch(()=>{});
+    // Annullare/chiudere il popup non disconnette una sessione Firebase valida.
+    // Solo un popup completato con UID non autorizzato richiede signOut.
+    const identity=window.SCCloud?.getIdentity?.();
+    if(popupCompleted&&auth.currentUser&&(!identity?.uid||auth.currentUser.uid!==identity.uid))
+      await signOut(auth).catch(()=>{});
   }finally{underway=false;button.disabled=false;}
 }
 if(button){button.addEventListener("click",onClick);button.disabled=false;}
