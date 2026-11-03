@@ -1078,3 +1078,59 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
 @media(prefers-reduced-motion:reduce){
  #page-map .overview-sheet-chevron{transition:none}
 }
+
+/* Beta 0.6.40 — tre comandi Mappa con dimensioni e spaziatura uniformi.
+   Nessun cambiamento al funzionamento di Satellite/Bussola/GPS o alle altre schede. */
+#page-map.map-screen {
+ --overview-command-width:min(168px,44vw);
+ --overview-command-height:44px;
+ --overview-command-gap:8px;
+}
+#page-map .overview-map-style-controls {
+ top:81px;
+ right:12px;
+ width:var(--overview-command-width);
+ grid-template-columns:minmax(0,1fr);
+ gap:var(--overview-command-gap);
+}
+#page-map .overview-map-style-controls .map-style-toggle,
+.app-shell #page-map .overview-locate {
+ box-sizing:border-box;
+ width:var(--overview-command-width);
+ height:var(--overview-command-height);
+ min-height:var(--overview-command-height);
+ max-height:var(--overview-command-height);
+ max-width:none;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ margin:0;
+ padding:0 7px;
+ border-radius:12px;
+ font-family:inherit;
+ font-size:clamp(11px,3.25vw,12.5px);
+ font-weight:790;
+ line-height:1.15;
+ white-space:nowrap;
+ box-shadow:0 3px 11px #0a1a2524;
+}
+.app-shell #page-map .overview-locate {
+ top:calc(81px + 2 * var(--overview-command-height) + 2 * var(--overview-command-gap));
+ right:12px;
+}
+#page-map #overview-layer-status {
+ top:calc(81px + 3 * var(--overview-command-height) + 2 * var(--overview-command-gap) + 10px);
+}
+@media(max-height:630px) {
+ #page-map .overview-map-style-controls {top:71px}
+ .app-shell #page-map .overview-locate {
+  top:calc(71px + 2 * var(--overview-command-height) + 2 * var(--overview-command-gap));
+ }
+ #page-map #overview-layer-status {
+  top:calc(71px + 3 * var(--overview-command-height) + 2 * var(--overview-command-gap) + 10px);
+ }
+}
+@media(max-width:360px) {
+ #page-map .overview-map-style-controls,
+ .app-shell #page-map .overview-locate {right:8px}
+}
