@@ -111,58 +111,74 @@
         <div class="empty-state" id="records-empty" hidden><strong>Nessun risultato</strong><p>Le nuove acquisizioni appariranno qui. I civici pubblicati restano nella Mappa.</p></div>
       </section>
 
-      <section id="page-map" class="page" hidden aria-labelledby="overview-title">
-        <div class="intro"><p class="eyebrow">MAPPA RECAPITO</p><h1 id="overview-title">Tutti i civici</h1>
-          
+
+      <section id="page-map" class="page map-screen" hidden aria-labelledby="overview-title" data-no-swipe>
+        <h1 id="overview-title" class="sr-only">Mappa dei civici pubblicati</h1>
+        <div class="overview-map-wrap" data-no-swipe>
+          <div id="overview-canvas" class="overview-map" aria-label="Mappa interattiva dei civici pubblicati"></div>
+          <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
+          <button id="overview-locate" type="button" class="overview-locate" disabled aria-label="Torna alla mia posizione GPS" title="Torna alla mia posizione GPS">◎ La mia posizione</button>
         </div>
-        <div class="overview-civic-picker" data-no-swipe>
-          <label for="overview-civic-search">Cerca un civico sulla Mappa</label>
-          <input id="overview-civic-search" type="search" placeholder="Scrivi via, numero o comune…" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="overview-civic-select">
-          <select id="overview-civic-select" aria-label="Seleziona un civico pubblicato">
-            <option value="">Seleziona il civico dalla tendina…</option>
-          </select>
+        <div class="overview-map-search" data-no-swipe>
+          <div class="overview-civic-picker">
+            <label class="sr-only" for="overview-civic-search">Cerca una strada, un comune o un civico</label>
+            <input id="overview-civic-search" type="search" placeholder="Cerca via, comune o civico…" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="overview-civic-select">
+            <select id="overview-civic-select" aria-label="Seleziona un civico pubblicato tra i risultati" hidden>
+              <option value="">Risultati della ricerca…</option>
+            </select>
+          </div>
+          <button id="overview-filters-toggle" type="button" class="overview-filters-toggle" aria-controls="overview-filter-panel" aria-expanded="false">☷ Filtri</button>
         </div>
-        <div class="overview-filters">
-          <div><label for="overview-town">Comune</label><select id="overview-town"><option value="">Tutti i comuni</option></select></div>
-          <div><label for="overview-status-filter">Stato</label><select id="overview-status-filter">
-            <option value="">Tutti i punti</option><option value="unverified">Da verificare</option>
-            <option value="verified">Verificati</option><option value="manual">Pin corretti</option>
-          </select></div>
+        <div id="overview-filter-panel" class="overview-filter-panel" data-no-swipe hidden>
+          <div class="overview-filters">
+            <div><label for="overview-town">Comune</label><select id="overview-town"><option value="">Tutti i comuni</option></select></div>
+            <div><label for="overview-status-filter">Stato</label><select id="overview-status-filter">
+              <option value="">Tutti i punti</option><option value="unverified">Da verificare</option>
+              <option value="verified">Verificati</option><option value="manual">Pin corretti</option>
+            </select></div>
+          </div>
+          <p class="overview-legend"><span class="overview-legend-dot unknown"></span> Da verificare <span class="overview-legend-dot checked"></span> Verificato <span class="overview-legend-dot moved"></span> Corretto</p>
         </div>
-        <p class="overview-legend"><span class="overview-legend-dot unknown"></span> Da verificare <span class="overview-legend-dot checked"></span> Verificato <span class="overview-legend-dot moved"></span> Corretto</p>
-        <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Registro permanente dei civici pubblicati. La pulizia dell’Archivio non elimina questi punti.</p>
-        <p id="overview-cloud-status" class="cloud-help" role="status" aria-live="polite">I civici pubblicati restano consultabili anche offline dopo la prima sincronizzazione.</p>
-        <div class="map-style-controls" data-no-swipe>
+        <div class="map-style-controls overview-map-style-controls" data-no-swipe>
           <button id="overview-basemap" type="button" class="map-style-toggle" aria-pressed="false">▧ Satellite</button>
           <button id="overview-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
         </div>
         <p id="overview-layer-status" class="map-layer-status" role="status" aria-live="polite" hidden></p>
-        <div class="overview-map-wrap" data-no-swipe>
-          <div id="overview-canvas" class="overview-map" aria-label="Mappa di tutti i civici salvati"></div>
-          <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
-          <button id="overview-locate" type="button" class="overview-locate" disabled aria-label="Torna alla mia posizione GPS" title="Torna alla mia posizione GPS">◎ La mia posizione</button>
-        </div>
-        <div id="overview-nearby" class="overview-nearby" hidden>
-          <p id="overview-nearby-title" class="overview-nearby-title">Civici vicini: seleziona il punto corretto</p>
-          <div id="overview-nearby-options" class="overview-nearby-options"></div>
-        </div>
-        <div class="overview-edit-actions" data-no-swipe>
-          <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
-          <button id="overview-edit-data" type="button" class="overview-edit-pin" hidden aria-label="Modifica i dati del civico selezionato">✎ Modifica dati</button>
-        </div>
-        <p id="overview-location-status" class="overview-location-status" role="status" aria-live="polite" hidden></p>
-        <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
-        <div id="overview-detail" class="overview-detail" hidden>
-          <p class="eyebrow">CIVICO SELEZIONATO</p>
-          <h2 id="overview-selected-title"></h2>
-          <p id="overview-selected-status" class="overview-detail-status"></p>
-          <p id="overview-selected-coordinates" class="overview-detail-coordinates"></p>
-          <div class="overview-actions">
-            <a id="overview-apple" class="primary" target="_blank" rel="noopener noreferrer" aria-label="Naviga con Apple Mappe">Naviga</a>
+        <div id="overview-sheet" class="overview-sheet" data-no-swipe>
+          <button id="overview-sheet-toggle" type="button" class="overview-sheet-toggle" aria-controls="overview-sheet-body" aria-expanded="false">
+            <span class="overview-sheet-grab" aria-hidden="true"></span>
+            <span id="overview-sheet-caption" class="overview-sheet-caption">Mappa permanente</span>
+            <span class="overview-sheet-chevron" aria-hidden="true">⌃</span>
+          </button>
+          <div id="overview-sheet-body" class="overview-sheet-body" hidden>
+            <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Civici pubblicati nella Mappa permanente.</p>
+            <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
+            <div id="overview-nearby" class="overview-nearby" hidden>
+              <p id="overview-nearby-title" class="overview-nearby-title">Civici vicini: seleziona quello corretto</p>
+              <div id="overview-nearby-options" class="overview-nearby-options"></div>
+            </div>
+            <div id="overview-detail" class="overview-detail" hidden>
+              <p class="eyebrow">CIVICO SELEZIONATO</p>
+              <h2 id="overview-selected-title"></h2>
+              <p id="overview-selected-status" class="overview-detail-status"></p>
+              <p id="overview-selected-coordinates" class="overview-detail-coordinates"></p>
+              <div class="overview-actions">
+                <a id="overview-apple" class="primary" target="_blank" rel="noopener noreferrer" aria-label="Naviga con Apple Mappe">Naviga</a>
+              </div>
+              <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
+            </div>
+            <div class="overview-edit-actions" data-no-swipe>
+              <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
+              <button id="overview-edit-data" type="button" class="overview-edit-pin" hidden aria-label="Modifica i dati del civico selezionato">✎ Modifica dati</button>
+            </div>
+            <p id="overview-location-status" class="overview-location-status" role="status" aria-live="polite" hidden></p>
+            <p id="overview-cloud-status" class="cloud-help" role="status" aria-live="polite">I civici pubblicati restano consultabili anche offline dopo la prima sincronizzazione.</p>
+            <details class="overview-map-about">
+              <summary>Informazioni e privacy</summary>
+              <p class="overview-privacy">Puoi correggere dati o pin selezionando il civico: la modifica viene preparata nell’Archivio e pubblicata solo dopo la sincronizzazione. La mappa legge solo i civici pubblicati nel proprio archivio permanente. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
+            </details>
           </div>
-          <a id="overview-google" class="overview-alt-nav" target="_blank" rel="noopener noreferrer">Alternativa: Google Maps</a>
         </div>
-        <p class="overview-privacy">Puoi correggere dati o pin selezionando il civico: la modifica viene preparata nell’Archivio e pubblicata solo dopo la sincronizzazione. La mappa legge solo i civici pubblicati nel proprio archivio permanente. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
       </section>
 
       <section id="page-data" class="page" hidden aria-labelledby="data-title">
@@ -228,7 +244,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.37</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.38</p>
       </section>
     </main>
 
