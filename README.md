@@ -1,6 +1,6 @@
 # SalvaCivici – Mappa Recapito
 
-Beta **0.6.36**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
+Beta **0.6.37**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
 
 ## GPS migliorato
 
@@ -424,3 +424,8 @@ Verifica V8 della sintassi JS. Simulazione integrata del Firestore REST (documen
 **Implementazione:** `index.html` aggiunta ricerca e select native accessibili nel tab Mappa, nuovo pulsante Modifica dati e descrizioni Archivio/Mappa; `map-overview.js` ricerca dinamica, selezione, centratura, callback correzione dati; `app.js` riutilizzo del dialogo modifica dati con recupero conservativo dal catalogo Mappa all'Archivio quando necessario; badge di pubblicazione sulle acquisizioni, messaggio chiaro che una correzione diventa visibile sulla Mappa solo dopo nuova sync; `styles.css` stile selettore e pulsanti; `sw.js` cache 0.6.36. NON modificati codice di acquisizione, backend cloud-sync, modello dati IndexedDB, File Drive, 122 civici storici, My Maps, né permessi Firestore.
 
 **Test:** JS parsing eseguito sui file modificati. Simulazione controlli Mappa con 3 punti pubblicati: tendina include tutti; filtro «Prova» riduce la lista a uno; scelta seleziona Kennedy Prova 51, centra lat/lon originali con zoom19 e richiama callback Modifica dati. Mancano ancora il test effettivo sull'iPhone/iPad e l'esito di una correzione in Firebase reale. NON svuotare Archivio con acquisizioni di prova non ancora pubblicate. L'idea «Archivio per turno» è per ora implementata come elenco di lavoro svuotabile manualmente, SENZA data di scadenza e senza eliminazioni automatiche: non chiamare implementata una sessione giornaliera automatica.
+
+
+## Beta 0.6.37 — ricerca live direttamente sui pin della Mappa (3 novembre 2026)
+
+Corretto il difetto della Beta 0.6.36: prima il campo «Cerca un civico sulla Mappa» filtrava solo la tendina, mentre sulla cartografia rimanevano tutti i segnaposti. Ora la ricerca per via, comune, civico o combinazioni (anche senza accenti, senza vincoli sull'ordine delle parole) filtra **gli stessi dati** visualizzati dalla Mappa permanente, restringe immediatamente i pin e centra la cartografia sui risultati. Un risultato unico viene selezionato automaticamente, mantenendo disponibili navigazione e modifica; più risultati restano selezionabili nella tendina. Svuotando la ricerca ricompaiono tutti i punti pubblicati. La nuova ricerca ripristina i filtri Comune/Stato per non nascondere risultati di altri comuni. Zero corrispondenze mostra un messaggio dedicato. Non viene modificato alcun civico, archivio, IndexedDB o Firebase. Cache PWA `salvacivici-v0.6.37`, URL e manifest invariati.
