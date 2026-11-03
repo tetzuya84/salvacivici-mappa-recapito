@@ -1,5 +1,14 @@
 # SalvaCivici – Mappa Recapito
 
+> **Progetto proprietario — tutti i diritti riservati.**
+> La disponibilità pubblica di questo repository e della web app non concede
+> il permesso di copiarli, modificarli o ridistribuirli. Consulta [LICENSE](LICENSE).
+> Le librerie e i contenuti di terzi mantengono le proprie licenze.
+>
+> **Nota per gli utenti:** non inserire chiavi, token, dati personali o
+> esportazioni dei civici nel repository. I dati privati vanno mantenuti
+> negli archivi personali autorizzati.
+
 Beta **0.6.37**: applicazione PWA per raccolta locale di civici e coordinate GPS, con un'unica sezione Account Google per cloud e backup personale.
 
 ## GPS migliorato
