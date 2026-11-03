@@ -1,41 +1,74 @@
-/* Run with node tests/google-login.test.js; no network or Google credentials. */
-const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const code=fs.readFileSync('cloud-google.js','utf8').replace(/^import .*$/mg,'');
-async function attempt(behavior='success',ownerReject=false){
- const nodes=new Map(),notices=[];
- const $=id=>{if(!nodes.has(id))nodes.set(id,{id,disabled:true,textContent:'',classList:{toggle(){}},handlers:{},addEventListener(type,fn){this.handlers[type]=fn}});return nodes.get(id);};
- let signedOut=0,called=0,accepted=null;
- const auth={currentUser:null},user={uid:'uid-123',email:'example@test.invalid',refreshToken:'refresh-test',getIdToken:async()=> 'token-test'};
- const provider=class{setCustomParameters(){}};
- const window={SCCloud:{notice:(text,warning)=>notices.push({text,warning}),acceptGoogleAuth:value=>{
-   if(ownerReject)throw Error('Account Google diverso da quello dell’archivio già sincronizzato.');
-   accepted=value;
- }}};
- const context={window,document:{getElementById:$},initializeApp:()=>({}),getAuth:()=>auth,GoogleAuthProvider:provider,
-  signInWithPopup:async()=>{
-    called++;
-    if(behavior==='blocked')throw Object.assign(new Error('blocked'),{code:'auth/popup-blocked'});
-    if(behavior==='cancelled')throw Object.assign(new Error('cancel'),{code:'auth/popup-closed-by-user'});
-    if(behavior==='disabled')throw Object.assign(new Error('disabled'),{code:'auth/operation-not-allowed'});
-    auth.currentUser=user;return{user};
-  },
-  signOut:async()=>{signedOut++;auth.currentUser=null},
-  console};
- vm.runInNewContext(code,context);
- assert.equal($('cloud-google-login').disabled,false);
- await $('cloud-google-login').handlers.click();
- await Promise.resolve();await Promise.resolve();
- return{called,accepted,signedOut,notices,last:notices.at(-1),buttonDisabled:$('cloud-google-login').disabled};
+/* Beta 0.6.39 — run: node tests/google-login.test.js. No network or credentials. */
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm');
+const script=fs.readFileSync('cloud-google.js','utf8').replace(/^import .*$/mg,'');
+async function attempt(mode,existingUid=null,ownerReject=false){
+  const elements=new Map(),notices=[],scopes=[];
+  const node=id=>{
+    if(!elements.has(id))elements.set(id,{
+      disabled:true,textContent:'',handlers:{},classList:{toggle(){}},
+      addEventListener(type,fn){this.handlers[type]=fn}
+    });
+    return elements.get(id);
+  };
+  let signedOut=0,loginCalls=0,authorized=0,forcedPicker=false,accepted=null;
+  let acceptedUid=existingUid;
+  const auth={currentUser:existingUid?{uid:existingUid,email:'test@invalid.example'}:null};
+  class GoogleProvider{
+    addScope(scope){scopes.push(scope)}
+    setCustomParameters(options){if(options.prompt==='select_account')forcedPicker=true}
+  }
+  GoogleProvider.credentialFromResult=()=>({accessToken:'test-drive-token'});
+  const app={SCCloud:{
+    getIdentity:()=>acceptedUid?{uid:acceptedUid,email:'test@invalid.example'}:null,
+    notice:(message,warning)=>notices.push({message,warning}),
+    acceptGoogleAuth:credentials=>{
+      if(ownerReject)throw Error('Account Google diverso dalla sessione dell’archivio.');
+      accepted=credentials;acceptedUid=credentials.localId;
+    }
+  },SCDrive:{authorize:()=>{authorized++;return true}}};
+  const ctx={window:app,document:{getElementById:node},initializeApp:()=>({}),
+    getAuth:()=>auth,GoogleAuthProvider:GoogleProvider,
+    signInWithPopup:async()=>{
+      loginCalls++;
+      if(mode==='cancel')throw Object.assign(Error('cancelled'),{code:'auth/popup-closed-by-user'});
+      if(mode==='blocked')throw Object.assign(Error('blocked'),{code:'auth/popup-blocked'});
+      if(mode==='disabled')throw Object.assign(Error('disabled'),{code:'auth/operation-not-allowed'});
+      const user={uid:mode==='wrong'?'other-account':existingUid||'own-account',
+        email:'test@invalid.example',refreshToken:'mock-refresh',getIdToken:async()=> 'mock-id'};
+      auth.currentUser=user;return{user};
+    },
+    signOut:async()=>{signedOut++;auth.currentUser=null},console
+  };
+  vm.runInNewContext(script,ctx);
+  await node('cloud-google-login').handlers.click();
+  return {signedOut,loginCalls,authorized,forcedPicker,accepted,
+    currentUid:auth.currentUser?.uid,disabled:node('cloud-google-login').disabled,
+    notice:notices.at(-1),scopes};
 }
 (async()=>{
- const a=await attempt();
- assert.equal(a.called,1);assert.equal(a.accepted.localId,'uid-123');
- assert.equal(a.accepted.refreshToken,'refresh-test');assert.equal(a.buttonDisabled,false);
- const b=await attempt('blocked');assert.equal(b.accepted,null);
- assert.match(b.last.text,/popup Google/);
- const c=await attempt('disabled');assert.match(c.last.text,/Attiva il provider Google/);
- const d=await attempt('cancelled');assert.match(d.last.text,/annullato/);
- const e=await attempt('success',true);assert.equal(e.accepted,null);
- assert.equal(e.signedOut,1);assert.match(e.last.text,/Account Google diverso/);
- console.log('Google OAuth UI: 5 scenari verificati (mock)');
+  const success=await attempt('success');
+  assert.equal(success.loginCalls,1);
+  assert.equal(success.accepted.localId,'own-account');
+  assert.equal(success.accepted.refreshToken,'mock-refresh');
+  assert.equal(success.authorized,1);
+  assert.equal(success.forcedPicker,false);
+  assert.equal(success.signedOut,0);
+  assert.equal(success.disabled,false);
+  assert.ok(success.scopes.includes('https://www.googleapis.com/auth/drive.file'));
+  for(const mode of ['cancel','blocked','disabled']){
+    const failed=await attempt(mode,'own-account');
+    assert.equal(failed.signedOut,0,mode+' must not log out a previous session');
+    assert.equal(failed.currentUid,'own-account',mode+' must keep old UID');
+    assert.equal(failed.authorized,0);
+  }
+  const renewal=await attempt('success','own-account');
+  assert.equal(renewal.signedOut,0);
+  assert.equal(renewal.authorized,1);
+  const wrong=await attempt('wrong','own-account',true);
+  assert.equal(wrong.signedOut,1,'unexpected account must be signed out');
+  assert.equal(wrong.authorized,0);
+  assert.equal(wrong.accepted,null);
+  console.log('PASS Beta 0.6.39: 6 Google login/Drive scenarios.');
 })().catch(e=>{console.error(e);process.exitCode=1});
