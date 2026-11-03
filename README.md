@@ -4,7 +4,7 @@
 
 SalvaCivici è una web app progressiva (PWA) per la gestione personale di riferimenti civici e punti geografici verificati durante il recapito.
 
-**Versione pubblicata:** Beta 0.6.38.
+**Versione pubblicata:** Beta 0.6.39.
 
 ## Diritti e utilizzo
 
