@@ -226,13 +226,15 @@
             <section class="account-service" aria-labelledby="drive-service-title">
               <h3 id="drive-service-title">Backup su Google Drive</h3>
               <p id="drive-status" class="cloud-status" role="status" aria-live="polite">Drive si attiva con lo stesso accesso Google.</p>
-              <button id="drive-recover" type="button" class="secondary full" hidden>Recupera civici dal Drive</button>
-              <button id="drive-backup" type="button" class="secondary full">Salva copia su Drive ora</button>
-              <button id="drive-view" type="button" class="secondary full">Prepara elenco leggibile in Fogli Google</button>
-              <a id="drive-sheet-link" class="secondary full" target="_blank" rel="noopener noreferrer" hidden>Apri elenco in Fogli Google</a>
-              <p class="cloud-help">Se l’Archivio mostra 0 civici ma Drive conserva un backup, puoi recuperare i punti mancanti senza sostituire gli altri. Il recupero richiede conferma; poi sincronizza dall’Archivio.</p>
-              <p class="cloud-help">Il file JSON rimane il backup tecnico. L’elenco Google è una copia di consultazione dell’ultimo backup, non modifica la mappa dell’app.</p>
-              <p class="cloud-help">Le copie precedenti restano nel tuo Drive. Per ora Firebase sincronizza i dispositivi; Google My Maps non viene modificata.</p>
+              <p class="cloud-help">Il backup tecnico comprende i civici dell’Archivio e della Mappa permanente. Dopo la sincronizzazione l’app verifica una copia nel tuo Drive, quando l’autorizzazione Google è attiva.</p>
+              <details class="cloud-email-fallback" id="drive-safety-options">
+                <summary>Opzioni di sicurezza</summary>
+                <button id="drive-recover" type="button" class="secondary full" hidden>Recupera civici mancanti</button>
+                <button id="drive-backup" type="button" class="secondary full">Verifica e salva una copia ora</button>
+                <p class="cloud-help">Il recupero richiede conferma, aggiunge solo i civici mancanti e non modifica quelli esistenti.</p>
+              </details>
+              <p class="cloud-help">Non creiamo più elenchi Google Sheets consultabili dall’app. Le copie precedenti restano intatte; il proprietario conserva comunque il controllo dei file nel proprio Google Drive.</p>
+              <p class="cloud-help">Firebase sincronizza i dispositivi; Google My Maps non viene modificata dal backup.</p>
             </section>
           </div>
         </div>
@@ -244,7 +246,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.40</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.41</p>
       </section>
     </main>
 
