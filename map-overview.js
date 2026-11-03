@@ -1,4 +1,4 @@
-/* Beta 0.6.37 — ricerca dinamica che filtra e centra i segnaposti pubblicati. */
+/* Beta 0.6.38 — mappa a tutta altezza con ricerca e scheda dettaglio richiudibile. */
 (function(root){
 'use strict';
 function valid(r){
@@ -19,11 +19,27 @@ function create({getRecords,onVerify,onEditData,notify}){
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
    editPinButton=$('overview-edit-pin'),editDataButton=$('overview-edit-data'),
    nearbyPanel=$('overview-nearby'),nearbyTitle=$('overview-nearby-title'),
-   nearbyOptions=$('overview-nearby-options');
+   nearbyOptions=$('overview-nearby-options'),
+   sheetToggle=$('overview-sheet-toggle'),sheetBody=$('overview-sheet-body'),
+   sheetCaption=$('overview-sheet-caption'),filterToggle=$('overview-filters-toggle'),
+   filterPanel=$('overview-filter-panel');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
+ function setSheetExpanded(expanded){
+   sheetBody.hidden=!expanded;
+   sheetToggle.setAttribute('aria-expanded',String(expanded));
+ }
+ function setFiltersExpanded(expanded){
+   filterPanel.hidden=!expanded;
+   filterToggle.setAttribute('aria-expanded',String(expanded));
+ }
+ function updateSheetCaption(list){
+   const item=selectedRecord();
+   sheetCaption.textContent=item?item.via+', '+item.civico+' · '+item.comune:
+     list.length+' '+(list.length===1?'civico':'civici')+' sulla mappa';
+ }
  function normalizedSearch(value){
    return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
      .toLocaleLowerCase('it-IT').replace(/[^a-z0-9]+/g,' ').trim();
@@ -53,6 +69,7 @@ function create({getRecords,onVerify,onEditData,notify}){
      civicSelect.append(option);
    }
    civicSelect.value=all.some(r=>r.id===selected)?selected:'';
+   civicSelect.hidden=!term;
  }
  function options(){
    const current=town.value;
@@ -102,8 +119,12 @@ function create({getRecords,onVerify,onEditData,notify}){
    }
  }
  function select(r){
+   const previousId=selectedId;
    selectedId=r?.id||null;
    const item=selectedRecord();
+   if(item&&item.id!==previousId){setSheetExpanded(true);setFiltersExpanded(false);}
+   if(!item&&previousId)setSheetExpanded(false);
+   updateSheetCaption(filtered());
    detail.hidden=!item;
    editPinButton.hidden=!item;
    editDataButton.hidden=!item;
@@ -136,6 +157,8 @@ function create({getRecords,onVerify,onEditData,notify}){
      ' sulla mappa per «'+civicSearch.value.trim()+'»':list.length+' civici sulla mappa')+
      (hasClosePair?' · Punti molto vicini: tocca un numero per distinguerli.':'');
    empty.hidden=list.length!==0;
+   updateSheetCaption(list);
+   if(term&&!list.length)setSheetExpanded(true);
    empty.textContent=term?'Nessun civico pubblicato corrisponde alla ricerca.':
      'Nessun civico corrisponde ai filtri selezionati.';
    if(!list.length){nearbyPanel.hidden=true;nearbyOptions.replaceChildren();return;}
@@ -271,6 +294,7 @@ function create({getRecords,onVerify,onEditData,notify}){
  civicSearch.addEventListener('input',()=>{
    // La ricerca prevale sui filtri precedenti; aggiorna subito anche i pin e la vista.
    town.value='';filter.value='';
+   setFiltersExpanded(false);
    render(true);
  });
  civicSelect.addEventListener('change',()=>{
@@ -282,9 +306,12 @@ function create({getRecords,onVerify,onEditData,notify}){
    render(false);
    select(item);
    if(map)map.setView([item.lat,item.lon],19,{animate:false});
+   civicSearch.blur?.();
  });
  function editSelected(){const r=selectedRecord();if(r)onVerify(r);}
  function editSelectedData(){const r=selectedRecord();if(r)onEditData?.(r);}
+ sheetToggle.addEventListener('click',()=>setSheetExpanded(sheetBody.hidden));
+ filterToggle.addEventListener('click',()=>setFiltersExpanded(filterPanel.hidden));
  editPinButton.addEventListener('click',editSelected);
  editDataButton.addEventListener('click',editSelectedData);
  locateButton.addEventListener('click',locate);
