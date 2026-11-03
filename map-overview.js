@@ -1,4 +1,4 @@
-/* Beta 0.6.36 — mappa permanente: ricerca civici e modifica dati non distruttiva. */
+/* Beta 0.6.37 — ricerca dinamica che filtra e centra i segnaposti pubblicati. */
 (function(root){
 'use strict';
 function valid(r){
@@ -24,14 +24,22 @@ function create({getRecords,onVerify,onEditData,notify}){
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
+ function normalizedSearch(value){
+   return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+     .toLocaleLowerCase('it-IT').replace(/[^a-z0-9]+/g,' ').trim();
+ }
+ const searchTerm=()=>normalizedSearch(civicSearch.value);
+ function matchesSearch(record,term){
+   if(!term)return true;
+   const searchable=normalizedSearch([record.comune,record.via,record.civico].join(' '));
+   return term.split(/\s+/).every(part=>searchable.includes(part));
+ }
  // Seleziona fra tutti i civici gia' pubblicati, senza alterare filtri
  // e senza leggere la coda delle acquisizioni.
  function rebuildCivicPicker(){
    const selected=civicSelect.value||selectedId||'';
-   const term=(civicSearch.value||'').trim().toLocaleLowerCase('it-IT');
-   const all=records().filter(r=>!term||
-       (r.comune+' '+r.via+' '+r.civico).toLocaleLowerCase('it-IT').includes(term))
-     .sort((a,b)=>a.comune.localeCompare(b.comune,'it')||
+   const term=searchTerm();
+   const all=filtered().sort((a,b)=>a.comune.localeCompare(b.comune,'it')||
        a.via.localeCompare(b.via,'it')||String(a.civico).localeCompare(String(b.civico),'it'));
    civicSelect.replaceChildren();
    const placeholder=document.createElement('option');
@@ -109,22 +117,27 @@ function create({getRecords,onVerify,onEditData,notify}){
    apple.href=appleDirections(item);google.href=googleDirections(item);
  }
  function filtered(){
+   const term=searchTerm();
    return records().filter(r=>(!town.value||r.comune===town.value)&&
-     (!filter.value||statusOf(r)===filter.value));
+     (!filter.value||statusOf(r)===filter.value)&&matchesSearch(r,term));
  }
  function render(refit){
    if(!map||!layer)return;
    options();
    rebuildCivicPicker();
    const list=filtered();
+   const term=searchTerm();
    layer.clearLayers();
    if(!list.some(r=>r.id===selectedId))select(null);
    // Il conteggio indica QUANTI punti sono pubblicati, non quante etichette
    // rimangono visibili quando due numeri civici si coprono sulla cartografia.
    const hasClosePair=list.some((r,i)=>list.slice(i+1).some(next=>closeEnough(r,next)));
-   summary.textContent=list.length+' civici sulla mappa'+
+   summary.textContent=(term?list.length+' '+(list.length===1?'risultato':'risultati')+
+     ' sulla mappa per «'+civicSearch.value.trim()+'»':list.length+' civici sulla mappa')+
      (hasClosePair?' · Punti molto vicini: tocca un numero per distinguerli.':'');
    empty.hidden=list.length!==0;
+   empty.textContent=term?'Nessun civico pubblicato corrisponde alla ricerca.':
+     'Nessun civico corrisponde ai filtri selezionati.';
    if(!list.length){nearbyPanel.hidden=true;nearbyOptions.replaceChildren();return;}
    const bounds=[];
    for(const r of list){
@@ -136,7 +149,8 @@ function create({getRecords,onVerify,onEditData,notify}){
      marker.on('click',()=>select(r));
      bounds.push([r.lat,r.lon]);
    }
-   if(selectedId)select(selectedRecord());
+   if(term&&list.length===1)select(list[0]);
+   else if(selectedId)select(selectedRecord());
    if(refit){
      if(bounds.length===1)map.setView(bounds[0],19,{animate:false});
      else{
@@ -254,7 +268,11 @@ function create({getRecords,onVerify,onEditData,notify}){
  }
  town.addEventListener('change',()=>render(true));
  filter.addEventListener('change',()=>render(true));
- civicSearch.addEventListener('input',rebuildCivicPicker);
+ civicSearch.addEventListener('input',()=>{
+   // La ricerca prevale sui filtri precedenti; aggiorna subito anche i pin e la vista.
+   town.value='';filter.value='';
+   render(true);
+ });
  civicSelect.addEventListener('change',()=>{
    const item=records().find(r=>r.id===civicSelect.value);
    if(!item)return;
