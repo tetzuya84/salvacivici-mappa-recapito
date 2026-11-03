@@ -1,4 +1,4 @@
-/* Test Beta 0.6.22 — un solo comando di correzione sotto la mappa. */
+/* Test Beta 0.6.37 — mappa permanente, filtri, ricerca live e correzione. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -9,7 +9,7 @@ async function run(){
   const node=id=>{
     if(!nodes.has(id)){
       const n={value:'',textContent:'',hidden:id==='overview-detail'||id==='overview-empty'||id==='page-map'||id==='overview-edit-pin',href:'',children:[],events:{},attrs:{},
-        append(c){this.children.push(c);},replaceChildren(){this.children=[];},
+        append(c){this.children.push(c);this.options=this.children;},replaceChildren(){this.children=[];this.options=this.children;this.value='';},
         addEventListener(k,fn){this.events[k]=fn;},
         setAttribute(k,v){this.attrs[k]=v;}};
       nodes.set(id,n);
@@ -20,7 +20,7 @@ async function run(){
   const events={},mapCalls=[],pins=[];
   let tiles=null,overlay=null,libLoads=0,verified=null,filteredMarkers=0;
   const L={
-    map(_el,opts){const map={opts,setView(pos,z){mapCalls.push({kind:'setView',pos,z});},
+    map(_el,opts){const map={opts,on(){return this;},distance(){return 1000;},getZoom(){return NaN;},setView(pos,z){mapCalls.push({kind:'setView',pos,z});},
       fitBounds(b,o){mapCalls.push({kind:'fit',b,o});},invalidateSize(){}};return map;},
     layerGroup(){overlay={layers:[],addTo(){return this;},clearLayers(){this.layers=[];}};return overlay;},
     tileLayer(){tiles={events:{},on(k,fn){this.events[k]=fn;return this;},addTo(){return this;}};return tiles;},
@@ -72,10 +72,30 @@ async function run(){
   assert.equal(overlay.layers.length,0);assert.equal(node('overview-empty').hidden,false);
   node('overview-status-filter').value='';node('overview-status-filter').events.change();
   records[0]={...records[0],lat:45.17,positionSource:'manual'};
-  events['salvacivici:datachanged']();
+  events['salvacivici:mapchanged']();
   assert.equal(overlay.layers.length,2);
   await o.open();assert.equal(libLoads,1,'Leaflet condiviso: niente caricamenti doppi');
   assert.equal(o.helpers.valid({lat:91,lon:10}),false);
-  console.log('PASS Beta 0.6.22: mappa, unico edit, filtri e dati invariati.');
+  // Ricerca da campo: mostra solo i pin corrispondenti, non la sola tendina.
+  node('overview-civic-search').value='castello';node('overview-civic-search').events.input();
+  assert.equal(overlay.layers.length,2);
+  assert.equal(node('overview-civic-select').options.length,3,'2 opzioni + placeholder');
+  assert.match(node('overview-summary').textContent,/2 risultati sulla mappa/);
+  assert.equal(node('overview-town').value,'','La ricerca resetta i filtri precedenti');
+  assert.equal(mapCalls.at(-1).kind,'fit','Due risultati richiedono fitBounds');
+  node('overview-civic-search').value='42';node('overview-civic-search').events.input();
+  assert.equal(overlay.layers.length,1,'Ricerca per numero civico');
+  assert.equal(node('overview-selected-title').textContent,'Piazza Castello, 42');
+  assert.equal(mapCalls.at(-1).kind,'setView','Risultato unico centrato automaticamente');
+  node('overview-civic-search').value='mAriana CORTE 1';node('overview-civic-search').events.input();
+  assert.equal(overlay.layers.length,1,'Ricerca multi-parola comune + via + civico');
+  assert.equal(node('overview-selected-title').textContent,'Corte Maestà, 1');
+  node('overview-civic-search').value='non-esistente';node('overview-civic-search').events.input();
+  assert.equal(overlay.layers.length,0);
+  assert.equal(node('overview-empty').hidden,false,'Zero risultati espliciti');
+  node('overview-civic-search').value='';node('overview-civic-search').events.input();
+  assert.equal(overlay.layers.length,3,'Svuotare la ricerca ripristina i pin permanenti');
+  assert.equal(JSON.stringify(records),JSON.stringify([base[0]&&{...base[0],lat:45.17,positionSource:'manual'},base[1],base[2]]),'Nessuna scrittura nei dati con la ricerca');
+  console.log('PASS Beta 0.6.37: ricerca live dei pin, filtri, selezione, dati invariati.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
