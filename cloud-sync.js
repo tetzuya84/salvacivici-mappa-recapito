@@ -44,7 +44,12 @@ function showState(){
  // Stesso pulsante Google per cloud e Drive: quando gia' autenticato,
  // appare solo se il token Drive e' scaduto o non disponibile in memoria.
  $('cloud-google-entry').hidden=!connected||driveActive;
- $('cloud-google-label').textContent=authenticated?'Riattiva accesso Google e Drive':'Accedi con Google';
+ $('cloud-google-label').textContent=authenticated?'Autorizza backup Google Drive':'Accedi con Google';
+ const googleHelp=$('cloud-google-help');
+ if(googleHelp)googleHelp.textContent=authenticated?
+   'Archivio cloud già collegato: puoi continuare a sincronizzare. Per creare o leggere backup su Drive, Google può richiedere una nuova autorizzazione temporanea.':
+   'Un accesso Google collega l’archivio cloud e autorizza i backup sul tuo Drive personale.';
+ if(authenticated&&!driveActive)root.SCDrive?.showPendingAuthorization?.();
  $('cloud-account').hidden=!connected||!authenticated;
  $('cloud-identity').textContent=authenticated?'Account: '+session.email:'';
 }
@@ -306,13 +311,16 @@ async function synchronize({confirm=true}={}){
    store(OWNER,session.uid);
    // Backup Google Drive per-account, append-only e con lettura di verifica.
    // Un errore Drive non annulla la sincronizzazione Firebase già riuscita.
+   let driveResult=null;
    if(root.SCDrive?.backupAfterSync){
-     try{await root.SCDrive.backupAfterSync(result.records);}
+     try{driveResult=await root.SCDrive.backupAfterSync(result.records);}
      catch(_){/* Stato Drive mostrato nel suo riquadro, dati Firebase intatti. */}
    }
-   message(count===0?
+   const drivePending=driveResult?.reason==='not-authorized';
+   message((count===0?
      'Archivio acquisizioni vuoto; Mappa permanente conservata: '+mapped.length+' civici.':
-     'Acquisizioni sincronizzate: '+count+'. Mappa permanente: '+mapped.length+' civici. Eliminare dall’Archivio non li rimuove dalla Mappa.');
+     'Acquisizioni sincronizzate: '+count+'. Mappa permanente: '+mapped.length+' civici. Eliminare dall’Archivio non li rimuove dalla Mappa.')+
+     (drivePending?' Backup Drive in attesa: autorizzalo nella sezione Dati.':''));
    engine.toast('Sincronizzazione cloud completata.');
    return{ok:true,count,mapCount:mapped.length,changedCloud,changedLocal};
  }catch(e){
