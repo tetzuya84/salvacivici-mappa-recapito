@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.33 — backup JSON e elenco consultabile Google Sheets.
+/* SalvaCivici Beta 0.6.39 — backup JSON e elenco consultabile Google Sheets.
  * NON sostituisce Firebase o IndexedDB. Drive.file limitato ai file dell'app.
  * Access token OAuth solo in memoria, ricevuto durante Google Sign-In.
  * Non pubblica civici in GitHub, non elimina né sovrascrive altri file Drive.
@@ -55,6 +55,10 @@ function clear(){current=null;showSheetLink(null);showRecoveryButton(false);stat
 function isAuthorized(uid,email){
  return !!current?.token&&!!uid&&current.uid===uid&&
    String(current.email||'').toLowerCase()===String(email||'').toLowerCase();
+}
+function showPendingAuthorization(){
+ if(current?.token)return;
+ status('Cloud collegato. Il backup Drive richiede una nuova autorizzazione Google; i civici restano sincronizzabili.');
 }
 async function fetchGoogle(url,options={}){
  if(!current?.token)throw Error('Accesso Drive non disponibile');
@@ -286,7 +290,7 @@ async function prepareReadableView(){
 async function backup(records,{manual=false}={}){
  if(busy)return{ok:false,reason:'busy'};
  if(!current?.token){
-   if(manual)status('Per il backup personale, accedi con Google nella sezione Dati.',true);
+   if(manual)status('Cloud collegato: per salvare su Drive autorizza Google nella sezione Dati.',true);
    return{ok:false,reason:'not-authorized'};
  }
  if(!navigator.onLine){status('Offline: civici al sicuro sul dispositivo. Backup Drive da ripetere.',true);return{ok:false,reason:'offline'};}
@@ -347,5 +351,5 @@ function init({getRecords,getMapRecords,addRecoveredRecords,confirmAction}){
  showRecoveryButton(false);
  status('Drive si abilita con lo stesso accesso Google, senza un secondo login.');
 }
-root.SCDrive={init,authorize,isAuthorized,clear,checkRecovery,restoreMissing,backupAfterSync:records=>backup(records),getRecords:null,getMapRecords:null,addRecoveredRecords:null,confirmAction:null};
+root.SCDrive={init,authorize,isAuthorized,showPendingAuthorization,clear,checkRecovery,restoreMissing,backupAfterSync:records=>backup(records),getRecords:null,getMapRecords:null,addRecoveredRecords:null,confirmAction:null};
 })(window);
