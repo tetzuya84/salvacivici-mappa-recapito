@@ -1,4 +1,4 @@
-/* Beta 0.6.44 — Mappa civici autonoma; il Giro dispone di una sezione distinta. */
+/* Beta 0.6.47 — Mappa libera da pannello fisso; dettagli solo sui pin selezionati. */
 (function(root){
 'use strict';
 function valid(r){
@@ -22,25 +22,20 @@ function create({getRecords,onVerify,onEditData,notify}){
    editPinButton=$('overview-edit-pin'),editDataButton=$('overview-edit-data'),
    nearbyPanel=$('overview-nearby'),nearbyTitle=$('overview-nearby-title'),
    nearbyOptions=$('overview-nearby-options'),
-   sheetToggle=$('overview-sheet-toggle'),sheetBody=$('overview-sheet-body'),
-   sheetCaption=$('overview-sheet-caption'),filterToggle=$('overview-filters-toggle'),
+   sheet=$('overview-sheet'),sheetClose=$('overview-sheet-close'),
+   filterToggle=$('overview-filters-toggle'),
    filterPanel=$('overview-filter-panel');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
  function setSheetExpanded(expanded){
-   sheetBody.hidden=!expanded;
-   sheetToggle.setAttribute('aria-expanded',String(expanded));
+   sheet.hidden=!expanded;
  }
  function setFiltersExpanded(expanded){
    filterPanel.hidden=!expanded;
    filterToggle.setAttribute('aria-expanded',String(expanded));
- }
- function updateSheetCaption(list){
-   const item=selectedRecord();
-   sheetCaption.textContent=item?item.via+', '+item.civico+' · '+item.comune:
-     list.length+' '+(list.length===1?'civico':'civici')+' sulla mappa';
+   if(expanded)select(null);
  }
  function normalizedSearch(value){
    return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -124,14 +119,13 @@ function create({getRecords,onVerify,onEditData,notify}){
    const previousId=selectedId;
    selectedId=r?.id||null;
    const item=selectedRecord();
-   if(item&&item.id!==previousId){setSheetExpanded(true);setFiltersExpanded(false);}
-   if(!item&&previousId)setSheetExpanded(false);
-   updateSheetCaption(filtered());
+   if(item&&item.id!==previousId)setFiltersExpanded(false);
+   setSheetExpanded(!!item);
    detail.hidden=!item;
    editPinButton.hidden=!item;
    editDataButton.hidden=!item;
    drawNearby(item);
-   if(!item)return;
+   if(!item){civicSelect.value='';return;}
    editPinButton.setAttribute('aria-label','Modifica pin: '+item.via+', '+item.civico+', '+item.comune);
    title.textContent=item.via+', '+item.civico;
    sub.textContent=item.comune+' · '+(statusOf(item)==='manual'?'Pin corretto':statusOf(item)==='verified'?'Verificato':'Da verificare');
@@ -159,8 +153,6 @@ function create({getRecords,onVerify,onEditData,notify}){
      ' sulla mappa per «'+civicSearch.value.trim()+'»':list.length+' civici sulla mappa')+
      (hasClosePair?' · Punti molto vicini: tocca un numero per distinguerli.':'');
    empty.hidden=list.length!==0;
-   updateSheetCaption(list);
-   if(term&&!list.length)setSheetExpanded(true);
    empty.textContent=term?'Nessun civico pubblicato corrisponde alla ricerca.':
      'Nessun civico corrisponde ai filtri selezionati.';
    if(!list.length){nearbyPanel.hidden=true;nearbyOptions.replaceChildren();return;}
@@ -323,7 +315,7 @@ function create({getRecords,onVerify,onEditData,notify}){
  });
  function editSelected(){const r=selectedRecord();if(r)onVerify(r);}
  function editSelectedData(){const r=selectedRecord();if(r)onEditData?.(r);}
- sheetToggle.addEventListener('click',()=>setSheetExpanded(sheetBody.hidden));
+ sheetClose.addEventListener('click',()=>select(null));
  filterToggle.addEventListener('click',()=>setFiltersExpanded(filterPanel.hidden));
  editPinButton.addEventListener('click',editSelected);
  editDataButton.addEventListener('click',editSelectedData);
