@@ -153,15 +153,14 @@
           <button id="overview-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
         </div>
         <p id="overview-layer-status" class="map-layer-status" role="status" aria-live="polite" hidden></p>
-        <div id="overview-sheet" class="overview-sheet" data-no-swipe>
-          <button id="overview-sheet-toggle" type="button" class="overview-sheet-toggle" aria-controls="overview-sheet-body" aria-expanded="false">
-            <span class="overview-sheet-grab" aria-hidden="true"></span>
-            <span id="overview-sheet-caption" class="overview-sheet-caption">Mappa permanente</span>
-            <span class="overview-sheet-chevron" aria-hidden="true">⌃</span>
-          </button>
-          <div id="overview-sheet-body" class="overview-sheet-body" hidden>
-            <p id="overview-summary" class="overview-summary" role="status" aria-live="polite">Civici pubblicati nella Mappa permanente.</p>
-            <p id="overview-empty" class="overview-empty" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
+        <div id="overview-sheet" class="overview-sheet overview-selection-card" data-no-swipe role="region" aria-label="Dettagli del civico selezionato" hidden>
+          <div class="overview-selection-head">
+            <span>Dettagli civico</span>
+            <button id="overview-sheet-close" type="button" aria-label="Chiudi dettagli civico">×</button>
+          </div>
+          <div id="overview-sheet-body" class="overview-sheet-body">
+            <p id="overview-summary" class="sr-only" role="status" aria-live="polite">Civici pubblicati nella Mappa permanente.</p>
+            <p id="overview-empty" class="sr-only" hidden>Nessun civico corrisponde ai filtri selezionati.</p>
             <div id="overview-nearby" class="overview-nearby" hidden>
               <p id="overview-nearby-title" class="overview-nearby-title">Civici vicini: seleziona quello corretto</p>
               <div id="overview-nearby-options" class="overview-nearby-options"></div>
@@ -180,12 +179,7 @@
               <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
               <button id="overview-edit-data" type="button" class="overview-edit-pin" hidden aria-label="Modifica i dati del civico selezionato">✎ Modifica dati</button>
             </div>
-            <p id="overview-location-status" class="overview-location-status" role="status" aria-live="polite" hidden></p>
-            <p id="overview-cloud-status" class="cloud-help" role="status" aria-live="polite">I civici pubblicati restano consultabili anche offline dopo la prima sincronizzazione.</p>
-            <details class="overview-map-about">
-              <summary>Informazioni e privacy</summary>
-              <p class="overview-privacy">Puoi correggere dati o pin selezionando il civico: la modifica viene preparata nell’Archivio e pubblicata solo dopo la sincronizzazione. La mappa legge solo i civici pubblicati nel proprio archivio permanente. OpenStreetMap o Esri ricevono richieste per la sola area visualizzata, non l’archivio dei civici. Per la vista Satellite valgono le condizioni del fornitore; verificare la licenza per uso professionale.</p>
-            </details>
+            <p id="overview-location-status" class="sr-only" role="status" aria-live="polite" hidden></p>
           </div>
         </div>
       </section>
@@ -311,7 +305,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.46</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.47</p>
       </section>
     </main>
 
