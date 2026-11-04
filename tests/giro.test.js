@@ -1,4 +1,4 @@
-/* Beta 0.6.42 — test senza rete o GPS reale del pianificatore Giro. */
+/* Beta 0.6.44 — test senza rete o GPS reale del pianificatore Giro. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync('giro.js','utf8');
@@ -76,9 +76,9 @@ async function testGraphhopper(){
 }
 async function testUI(){
  const instance=win.SCGiro.create({getRecords:()=>samples,drawRoute:plan=>drawn.push(plan),notify(){}});
- node('giro-open').events.click();
- assert.equal(node('giro-panel').hidden,false);
- assert.equal(node('giro-open').hidden,true);
+ node('page-giro').hidden=false;
+ instance.open();
+ assert.equal(node('page-giro').hidden,false);
  assert.equal(node('giro-stops').children.length,3);
  assert.equal(node('giro-order').disabled,true);
  const rows=node('giro-stops').children;
@@ -103,13 +103,11 @@ async function testUI(){
  assert.equal(node('giro-itinerary').children.length,2);
  assert.equal(JSON.parse(store['salvacivici-giro-v1']).done.length,1);
  assert.equal(drawn.at(-1)?.stops?.length,1);
- node('giro-close').events.click();
- assert.equal(node('giro-panel').hidden,true);
- assert.equal(node('giro-open').hidden,false);
  instance.close();
+ assert.equal(node('page-giro').hidden,false,'La barra di navigazione gestisce la pagina');
  assert.equal(JSON.stringify(samples),original,'Giro never changes permanent civics');
 }
 (async()=>{
  await testGraphhopper();await testUI();
- console.log('PASS Beta 0.6.42: optimization mock, GPS, selection, navigation, progress, no data mutation.');
+ console.log('PASS Beta 0.6.44: optimization mock, GPS, selection, navigation, progress, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
