@@ -1,4 +1,4 @@
-/* Beta 0.6.44 — test senza rete o GPS reale del pianificatore Giro. */
+/* Beta 0.6.50 — routing completo dei waypoint e singola prossima fermata, senza rete. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync('giro.js','utf8');
@@ -48,6 +48,41 @@ const ordered=helpers.heuristic(start,samples);
 assert.equal(ordered.length,3);
 assert.equal(new Set(ordered.map(x=>x.id)).size,3);
 assert.ok(helpers.routeDistance(start,ordered) <= helpers.routeDistance(start,samples)+0.001);
+function testNavigationUrls(){
+ const stops=[samples[0],samples[1],samples[2]];
+ const apple=new URL(helpers.appleRoute(stops));
+ assert.equal(apple.origin,'https://maps.apple.com');
+ assert.equal(apple.pathname,'/directions');
+ assert.equal(apple.searchParams.get('destination'),stops[2].lat+','+stops[2].lon);
+ assert.deepEqual(apple.searchParams.getAll('waypoint'),[
+  stops[0].lat+','+stops[0].lon,
+  stops[1].lat+','+stops[1].lon
+ ]);
+ assert.equal(apple.searchParams.get('mode'),'driving');
+ assert.equal(apple.searchParams.has('source'),false,'Usa posizione corrente del navigatore');
+ const google=new URL(helpers.googleRoute(stops));
+ assert.equal(google.origin,'https://www.google.com');
+ assert.equal(google.pathname,'/maps/dir/');
+ assert.equal(google.searchParams.get('api'),'1');
+ assert.equal(google.searchParams.get('destination'),stops[2].lat+','+stops[2].lon);
+ assert.equal(google.searchParams.get('waypoints'),
+  stops.slice(0,2).map(p=>p.lat+','+p.lon).join('|'));
+ assert.equal(google.searchParams.has('origin'),false);
+ assert.equal(google.searchParams.get('travelmode'),'driving');
+ assert.ok(!google.href.includes('Casalromano'));
+ assert.ok(!google.href.includes(samples[0].id+'%'));
+ assert.ok(!apple.href.includes('Kennedy'));
+ const pair=new URL(helpers.appleRoute(stops.slice(0,2)));
+ assert.equal(pair.searchParams.getAll('waypoint').length,1);
+ assert.equal(pair.searchParams.get('destination'),stops[1].lat+','+stops[1].lon);
+ assert.equal(new URL(helpers.googleRoute(stops.slice(0,1))).searchParams.has('waypoints'),false);
+ const many=Array.from({length:20},(_,i)=>({lat:45.1+i*.002,lon:10.1+i*.003}));
+ assert.equal(new URL(helpers.appleRoute(many.slice(0,14))).searchParams.getAll('waypoint').length,13);
+ assert.equal(new URL(helpers.googleRoute(many.slice(0,4))).searchParams.get('waypoints').split('|').length,3);
+ assert.throws(()=>helpers.appleRoute(many),/14/);
+ assert.throws(()=>helpers.googleRoute(many),/4/);
+ assert.throws(()=>helpers.googleRoute([]),/1 a 4/);
+}
 async function testGraphhopper(){
  let payload;
  const reversed=await helpers.graphhopper(start,samples,'temporary-key',async(url,opts)=>{
@@ -96,18 +131,32 @@ async function testUI(){
  assert.equal(node('giro-itinerary').children.length,2);
  assert.match(node('giro-status').textContent,/NON è il percorso stradale più veloce/);
  assert.equal(drawn.at(-1)?.stops?.length,2);
- assert.match(node('giro-apple').href,/maps\.apple\.com/);
+ assert.match(node('giro-apple').href,/maps\.apple\.com\/directions/);
+ assert.match(node('giro-google').href,/waypoints=/);
+ assert.match(node('giro-apple').textContent,/Giro completo/);
+ assert.match(node('giro-google').textContent,/Giro completo/);
+ assert.match(node('giro-route-coverage').textContent,/2 fermate incluse/);
+ assert.equal(node('giro-single-links').hidden,false);
+ assert.match(node('giro-single-apple').href,/daddr=/);
+ assert.ok(!node('giro-single-google').href.includes('waypoints='));
+ const fullApple=new URL(node('giro-apple').href);
+ const fullGoogle=new URL(node('giro-google').href);
+ assert.equal(fullApple.searchParams.getAll('waypoint').length,1);
+ assert.equal(fullGoogle.searchParams.get('waypoints').split('|').length,1);
  const persisted=JSON.parse(store['salvacivici-giro-v1']);
  assert.equal(persisted.selected.length,2);
  node('giro-complete').events.click();
  assert.equal(node('giro-itinerary').children.length,2);
  assert.equal(JSON.parse(store['salvacivici-giro-v1']).done.length,1);
  assert.equal(drawn.at(-1)?.stops?.length,1);
+ assert.equal(node('giro-single-links').hidden,true,'Un civico residuo: solo un navigatore diretto');
+ assert.ok(!node('giro-google').href.includes('waypoints='));
+ assert.match(node('giro-apple').textContent,/Naviga Apple/);
  instance.close();
  assert.equal(node('page-giro').hidden,false,'La barra di navigazione gestisce la pagina');
  assert.equal(JSON.stringify(samples),original,'Giro never changes permanent civics');
 }
 (async()=>{
- await testGraphhopper();await testUI();
- console.log('PASS Beta 0.6.44: optimization mock, GPS, selection, navigation, progress, no data mutation.');
+ testNavigationUrls();await testGraphhopper();await testUI();
+ console.log('PASS Beta 0.6.50: optimization mock, GPS, selection, navigation, progress, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
