@@ -1455,3 +1455,59 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
     max-height:min(65dvh,400px);bottom:8px;
   }
 }
+
+
+/* Beta 0.6.48 — blocco scorrimento iOS/PWA nelle sezioni Salva e Archivio.
+   L'area esterna non puo' essere trascinata: logo e 5 tasti restano fermi.
+   Il contenuto interno continua a scorrere se lo schermo e' troppo piccolo,
+   evitando che campi, Salva civico o azioni dell'Archivio diventino irraggiungibili.
+   Non cambiare l'overflow dei dialog e della Mappa Leaflet. */
+html:has(#page-capture:not([hidden])),
+html:has(#page-records:not([hidden])),
+body:has(#page-capture:not([hidden])),
+body:has(#page-records:not([hidden])){
+ height:100%;
+ overflow:hidden;
+ overscroll-behavior:none;
+}
+body:has(#page-capture:not([hidden])),
+body:has(#page-records:not([hidden])){height:100dvh}
+.app-shell:has(#page-capture:not([hidden])),
+.app-shell:has(#page-records:not([hidden])){
+ position:fixed;
+ inset:0;
+ width:100%;
+ max-width:560px;
+ height:100dvh;
+ min-height:0;
+ margin-inline:auto;
+ padding-bottom:0;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ overscroll-behavior:none;
+}
+.app-shell:has(#page-capture:not([hidden])) > .topbar,
+.app-shell:has(#page-records:not([hidden])) > .topbar,
+.app-shell:has(#page-capture:not([hidden])) > .update-banner,
+.app-shell:has(#page-records:not([hidden])) > .update-banner{
+ flex:none;
+}
+.app-shell:has(#page-capture:not([hidden])) > main,
+.app-shell:has(#page-records:not([hidden])) > main{
+ flex:1 1 auto;
+ min-height:0;
+ margin:0 0 calc(82px + env(safe-area-inset-bottom));
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior-y:none;
+ overscroll-behavior-x:none;
+ -webkit-overflow-scrolling:touch;
+ touch-action:pan-y;
+}
+#page-capture .capture-swipe-hint,
+#page-records .archive-swipe-hint{
+ touch-action:none;
+ user-select:none;
+ -webkit-user-select:none;
+}
