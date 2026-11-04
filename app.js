@@ -406,6 +406,7 @@
   // Il Giro legge soltanto i civici pubblicati, mai l'Archivio delle acquisizioni.
   const giro=window.SCGiro.create({
     getRecords:()=>state.mapRecords,
+    areRecordsReady:()=>!!state.db,
     drawRoute:route=>mapOverview.drawGiro(route),
     notify:toast
   });
