@@ -8,7 +8,7 @@ async function run(){
   const nodes=new Map();
   const node=id=>{
     if(!nodes.has(id)){
-      const n={value:'',textContent:'',hidden:id==='overview-detail'||id==='overview-empty'||id==='page-map'||id==='overview-edit-pin',href:'',children:[],events:{},attrs:{},
+      const n={value:'',textContent:'',hidden:id==='overview-detail'||id==='overview-sheet'||id==='overview-empty'||id==='page-map'||id==='overview-edit-pin',href:'',children:[],events:{},attrs:{},
         append(c){this.children.push(c);this.options=this.children;},replaceChildren(){this.children=[];this.options=this.children;this.value='';},
         addEventListener(k,fn){this.events[k]=fn;},
         setAttribute(k,v){this.attrs[k]=v;}};
@@ -43,6 +43,7 @@ async function run(){
   const o=win.SCMapOverview.create({getRecords:()=>records,onVerify:r=>verified=r,notify(){}});
   await o.open();
   assert.equal(libLoads,1);assert.equal(overlay.layers.length,3);
+  assert.equal(node('overview-sheet').hidden,true,'Nessuna tendina con nessun pin selezionato');
   assert.match(node('overview-summary').textContent,/3 civici/);
   assert.equal(overlay.layers[0].opts.icon.html.textContent,'42');
   assert.equal(overlay.layers[0].opts.icon.className,'overview-pin overview-pin-unverified');
@@ -52,6 +53,7 @@ async function run(){
   assert.equal(node('overview-edit-pin').hidden,true,'Il comando non deve comparire senza selezione');
   overlay.layers[0].events.click();
   assert.equal(node('overview-detail').hidden,false);
+  assert.equal(node('overview-sheet').hidden,false,'Il dettaglio appare soltanto sul pin selezionato');
   assert.equal(node('overview-edit-pin').hidden,false,'Il comando deve comparire sul civico selezionato');
   assert.match(node('overview-edit-pin').attrs['aria-label'],/Piazza Castello, 42/);
   node('overview-edit-pin').events.click();
@@ -63,6 +65,7 @@ async function run(){
   node('overview-town').value='Mariana Mantovana';node('overview-town').events.change();
   assert.equal(overlay.layers.length,1);
   assert.equal(node('overview-detail').hidden,true);
+  assert.equal(node('overview-sheet').hidden,true,'Il cambio filtro richiude la scheda');
   assert.equal(node('overview-edit-pin').hidden,true,'Cambiare comune nasconde il comando del civico non presente');
   assert.equal(node('overview-summary').textContent,'1 civici sulla mappa');
   node('overview-town').value='Redondesco';node('overview-town').events.change();
@@ -95,6 +98,15 @@ async function run(){
   assert.equal(node('overview-empty').hidden,false,'Zero risultati espliciti');
   node('overview-civic-search').value='';node('overview-civic-search').events.input();
   assert.equal(overlay.layers.length,3,'Svuotare la ricerca ripristina i pin permanenti');
+  overlay.layers[0].events.click();
+  assert.equal(node('overview-sheet').hidden,false);
+  node('overview-sheet-close').events.click();
+  assert.equal(node('overview-sheet').hidden,true,'La X chiude la scheda');
+  assert.equal(node('overview-detail').hidden,true);
+  overlay.layers[0].events.click();
+  node('overview-filters-toggle').events.click();
+  assert.equal(node('overview-sheet').hidden,true,'Apertura Filtri chiude dettaglio');
+  node('overview-filters-toggle').events.click();
   assert.equal(JSON.stringify(records),JSON.stringify([base[0]&&{...base[0],lat:45.17,positionSource:'manual'},base[1],base[2]]),'Nessuna scrittura nei dati con la ricerca');
   console.log('PASS Beta 0.6.37: ricerca live dei pin, filtri, selezione, dati invariati.');
 }
