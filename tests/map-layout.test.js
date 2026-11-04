@@ -1,4 +1,4 @@
-/* Beta 0.6.49 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
+/* Beta 0.6.50 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,8 +8,8 @@ const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app.js','utf8');
 const map=html.split('<section id="page-map"')[1]?.split('<section id="page-giro"')[0]||'';
 const giro=html.split('<section id="page-giro"')[1]?.split('<section id="page-data"')[0]||'';
-assert.match(html,/BETA 0\.6\.49/);
-assert.match(sw,/salvacivici-v0\.6\.49/);
+assert.match(html,/BETA 0\.6\.50/);
+assert.match(sw,/salvacivici-v0\.6\.50/);
 assert.match(sw,/\.\/giro-preview\.js/);
 assert.match(sw,/\.\/giro\.js/);
 assert.match(css,/\.app-shell \.topbar,[\s\S]*?z-index:2000;/);
@@ -37,6 +37,12 @@ assert.ok(giro.includes('id="giro-road"'));
 assert.ok(giro.includes('id="giro-gps-help"'));
 assert.ok(giro.includes('id="giro-gps-help-retry"'));
 assert.ok(giro.includes('id="giro-next"'));
+assert.ok(giro.includes('id="giro-route-coverage"'));
+assert.ok(giro.includes('id="giro-single-links"'));
+assert.ok(giro.includes('id="giro-single-apple"'));
+assert.ok(giro.includes('id="giro-single-google"'));
+assert.ok(giro.includes('Giro completo · Apple'));
+assert.ok(giro.includes('Giro completo · Google'));
 assert.ok(giro.includes('id="giro-canvas"'));
 assert.ok(giro.includes('id="giro-preview"'));
 assert.equal((html.match(/data-tab="(capture|records|map|giro|data)"/g)||[]).length,5);
@@ -60,4 +66,4 @@ const approved=css.split('/* Beta 0.6.40 — tre comandi Mappa')[1]||'';
 assert.ok(approved.includes('--overview-command-width:min(168px,44vw)'));
 assert.ok(approved.includes('--overview-command-height:44px'));
 assert.ok(approved.includes('--overview-command-gap:8px'));
-console.log('PASS Beta 0.6.49: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
+console.log('PASS Beta 0.6.50: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
