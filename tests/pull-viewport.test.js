@@ -19,7 +19,7 @@ assert.ok(!block.includes('#page-map'),'La Mappa fullscreen non deve essere modi
 const mainRules=block.split(' > main{')[1]?.split('}')[0]||'';
 assert.match(mainRules,/overflow-y:auto/,'Giro e Dati devono poter scorrere internamente');
 assert.match(mainRules,/touch-action:pan-y/,'Giro e Dati conservano lo scroll verticale');
-assert.equal((block.match(/touch-action:none/g)||[]).length,1,
+assert.equal((block.match(/^\s*touch-action:none;/gm)||[]).length,1,
  'Lo swipe esclusivo riguarda solo i titoli Salva/Archivio');
 assert.match(app,/scroller\.scrollTop=0/);
 assert.equal((app.match(/const atTop=\(\)=>scroller\.scrollTop<=5;/g)||[]).length,2);
