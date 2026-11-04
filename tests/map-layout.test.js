@@ -1,4 +1,4 @@
-/* Beta 0.6.40 — controlli statici sul layout della Mappa e protezione navigazione. */
+/* Beta 0.6.42 — controlli statici sul layout della Mappa e protezione navigazione. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -6,8 +6,8 @@ const css=fs.readFileSync('styles.css','utf8');
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const map=html.split('<section id="page-map"')[1]?.split('<section id="page-data"')[0]||'';
-assert.match(html,/BETA 0\.6\.40/);
-assert.match(sw,/salvacivici-v0\.6\.40/);
+assert.match(html,/BETA 0\.6\.42/);
+assert.match(sw,/salvacivici-v0\.6\.42/);
 assert.match(css,/\.app-shell \.topbar,[\s\S]*?z-index:2000;/);
 assert.match(css,/\.app-shell \.tabbar,[\s\S]*?z-index:2000;/);
 assert.ok(map.includes('id="overview-canvas"'));
@@ -25,4 +25,11 @@ assert.ok(approved.includes('--overview-command-gap:8px'));
 assert.ok(approved.includes('#page-map .overview-map-style-controls .map-style-toggle,'));
 assert.ok(approved.includes('.app-shell #page-map .overview-locate {'));
 assert.ok(approved.includes('3 * var(--overview-command-height)'));
-console.log('PASS Beta 0.6.40: mappa fullscreen, pulsanti 3x uniformi, navbar invariata.');
+assert.ok(map.includes('id="giro-open"'));
+assert.ok(map.includes('id="giro-panel"'));
+assert.ok(map.includes('id="giro-order"'));
+assert.ok(map.includes('id="giro-road"'));
+assert.match(sw,/\.\/giro\.js/);
+assert.match(css,/\#page-map \.giro-panel/);
+assert.equal((html.match(/data-tab="(capture|records|map|data)"/g)||[]).length,4,'Quattro tab originali');
+console.log('PASS Beta 0.6.42: Mappa originale, nuova modalità Giro e 4 tab inalterate.');
