@@ -1,4 +1,4 @@
-/* Beta 0.6.44 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
+/* Beta 0.6.45 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,8 +8,8 @@ const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app.js','utf8');
 const map=html.split('<section id="page-map"')[1]?.split('<section id="page-giro"')[0]||'';
 const giro=html.split('<section id="page-giro"')[1]?.split('<section id="page-data"')[0]||'';
-assert.match(html,/BETA 0\.6\.44/);
-assert.match(sw,/salvacivici-v0\.6\.44/);
+assert.match(html,/BETA 0\.6\.45/);
+assert.match(sw,/salvacivici-v0\.6\.45/);
 assert.match(sw,/\.\/giro-preview\.js/);
 assert.match(sw,/\.\/giro\.js/);
 assert.match(css,/\.app-shell \.topbar,[\s\S]*?z-index:2000;/);
@@ -34,6 +34,11 @@ assert.equal((html.match(/data-tab="(capture|records|map|giro|data)"/g)||[]).len
 assert.ok(html.indexOf('data-tab="map"')<html.indexOf('data-tab="giro"'));
 assert.ok(html.indexOf('data-tab="giro"')<html.indexOf('data-tab="data"'));
 assert.ok(css.includes('grid-template-columns:repeat(5,minmax(0,1fr))'));
+const footerFix=css.split('/* Beta 0.6.45 — barra inferiore UNICA')[1]?.split('/* Beta 0.6.44 —')[0]||'';
+assert.ok(footerFix.includes('.app-shell.is-capture .tabbar {'), 'Stile della quinta colonna applicato anche a Salva');
+assert.ok(footerFix.includes('grid-template-columns:repeat(5,minmax(0,1fr))'), 'Cinque colonne esplicite su Salva');
+assert.ok(footerFix.includes('.app-shell.is-capture .tabbar .tab {'), 'Icone uniformi anche su Salva');
+assert.ok(footerFix.includes('grid-template-rows:1fr'), 'Barra su una sola fila');
 assert.ok(css.includes('#page-giro.giro-page:not([hidden])'));
 assert.ok(css.includes('#page-giro .giro-gps-help'));
 assert.ok(!css.includes('#page-map .giro-panel'));
@@ -46,4 +51,4 @@ const approved=css.split('/* Beta 0.6.40 — tre comandi Mappa')[1]||'';
 assert.ok(approved.includes('--overview-command-width:min(168px,44vw)'));
 assert.ok(approved.includes('--overview-command-height:44px'));
 assert.ok(approved.includes('--overview-command-gap:8px'));
-console.log('PASS Beta 0.6.44: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
+console.log('PASS Beta 0.6.45: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
