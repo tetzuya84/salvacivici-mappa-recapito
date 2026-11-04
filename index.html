@@ -119,6 +119,15 @@
           <p id="overview-loading" class="overview-loading" role="status">Caricamento cartografia…</p>
           <button id="overview-locate" type="button" class="overview-locate" disabled aria-label="Torna alla mia posizione GPS" title="Torna alla mia posizione GPS">◎ La mia posizione</button>
         </div>
+        <aside id="overview-gps-help" class="gps-guide overview-gps-help" data-no-swipe role="alert" hidden aria-label="Come abilitare il GPS">
+          <div class="gps-guide-heading">
+            <strong>Posizione bloccata dall’iPhone</strong>
+            <button id="overview-gps-help-close" type="button" aria-label="Chiudi istruzioni GPS">×</button>
+          </div>
+          <p>Apri <b>Impostazioni → Privacy e sicurezza → Localizzazione</b>: attivala, quindi scegli <b>SalvaCivici</b>, se presente, oppure <b>Siti Web di Safari</b>. Consenti l'accesso durante l'uso e attiva <b>Posizione precisa</b>.</p>
+          <p>Se il sito è bloccato in Safari, apri SalvaCivici in Safari e controlla <b>Menu pagina → Impostazioni sito web → Posizione</b>: scegli <b>Chiedi</b> o <b>Consenti</b>.</p>
+          <button id="overview-gps-help-retry" class="gps-guide-retry" type="button">⌖ Riprova posizione</button>
+        </aside>
         <div class="overview-map-search" data-no-swipe>
           <div class="overview-civic-picker">
             <label class="sr-only" for="overview-civic-search">Cerca una strada, un comune o un civico</label>
@@ -152,6 +161,11 @@
           </div>
           <div class="giro-scroll">
             <p id="giro-status" class="giro-status" role="status" aria-live="polite">Seleziona i civici da raggiungere.</p>
+            <div id="giro-gps-help" class="gps-guide giro-gps-help" role="alert" hidden>
+              <strong>Il GPS non è autorizzato</strong>
+              <p>Su iPhone apri <b>Impostazioni → Privacy e sicurezza → Localizzazione</b>, abilita la localizzazione e concedila a <b>SalvaCivici</b> (se presente) o a <b>Siti Web di Safari</b>, con <b>Posizione precisa</b> attiva. Se serve, controlla anche il permesso del sito in Safari.</p>
+              <button id="giro-gps-help-retry" class="gps-guide-retry" type="button">⌖ Riprova GPS</button>
+            </div>
             <div class="giro-origin-row">
               <span id="giro-origin">Partenza: GPS da rilevare</span>
               <button id="giro-locate" type="button" class="secondary">⌖ GPS</button>
@@ -292,7 +306,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.42</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.43</p>
       </section>
     </main>
 
