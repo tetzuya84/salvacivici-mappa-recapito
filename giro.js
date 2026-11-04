@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.42 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.43 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * rete stradale serve una chiave GraphHopper personale e un piano adatto all'uso.
@@ -91,7 +91,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   count=$('giro-count'),status=$('giro-status'),steps=$('giro-itinerary'),
   next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
   googleLink=$('giro-google'),keyInput=$('giro-api-key'),road=$('giro-road'),
-  originLabel=$('giro-origin');
+  originLabel=$('giro-origin'),gpsHelp=$('giro-gps-help');
  let selected=new Set(),done=new Set(),order=[],origin=null,mode='indicativo',busy=false;
  let fingerprint='',lastRoad=null;
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
@@ -188,13 +188,27 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   message(labelText);
  }
  async function gps(){
-  if(!navigator.geolocation?.getCurrentPosition)throw Error('GPS non disponibile su questo dispositivo.');
-  const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{
-   enableHighAccuracy:true,maximumAge:10000,timeout:15000
-  }));
+  if(!navigator.geolocation?.getCurrentPosition){
+   gpsHelp.hidden=false;
+   throw Error('GPS non disponibile. Verifica la Localizzazione nelle impostazioni dell’iPhone.');
+  }
+  let pos;
+  try{
+   pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{
+    enableHighAccuracy:true,maximumAge:10000,timeout:15000
+   }));
+  }catch(error){
+   if(error?.code===1){
+    gpsHelp.hidden=false;
+    throw Error('GPS non autorizzato. Segui le istruzioni qui sotto e premi «Riprova GPS».');
+   }
+   if(error?.code===3)throw Error('GPS lento: riprova all’aperto o in un punto con segnale migliore.');
+   throw Error('Posizione GPS non disponibile. Riprova.');
+  }
   const p={lat:pos.coords.latitude,lon:pos.coords.longitude,accuracy:pos.coords.accuracy};
   if(!safe(p))throw Error('GPS non valido, riprova all’aperto.');
   origin=p;
+  gpsHelp.hidden=true;
   originLabel.textContent='Partenza GPS: '+p.lat.toFixed(5)+', '+p.lon.toFixed(5)+
    (Number.isFinite(p.accuracy)?' (±'+Math.round(p.accuracy)+' m)':'');
   if(p.accuracy>100)message('Partenza GPS imprecisa (±'+Math.round(p.accuracy)+' m): riprova prima di guidare.',true);
@@ -239,6 +253,9 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  $('giro-order').addEventListener('click',()=>void estimate(false));
  $('giro-recalc').addEventListener('click',()=>void estimate(true));
  $('giro-locate').addEventListener('click',()=>void withBusy(async()=>{await gps();clearPath();message('Posizione GPS rilevata. Calcola il giro.');}));
+ $('giro-gps-help-retry').addEventListener('click',()=>void withBusy(async()=>{
+   await gps();clearPath();message('GPS autorizzato. Posizione aggiornata: puoi calcolare il giro.');
+ }));
  $('giro-road').addEventListener('click',()=>void optimizeRoad());
  $('giro-api-key').addEventListener('input',updateButtons);
  $('giro-search').addEventListener('input',renderList);
