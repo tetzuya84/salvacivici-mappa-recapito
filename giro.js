@@ -83,7 +83,7 @@ async function graphhopper(start,stops,key,fetcher){
   durationSeconds:Number.isFinite(solution.transport_time)?solution.transport_time:null
  };
 }
-function create({getRecords,drawRoute,notify}){
+function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  const panel=$('giro-panel'),search=$('giro-search'),list=$('giro-stops'),
   count=$('giro-count'),status=$('giro-status'),steps=$('giro-itinerary'),
   next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
@@ -123,10 +123,14 @@ function create({getRecords,drawRoute,notify}){
   return JSON.stringify(current().map(r=>[r.id,r.lat,r.lon]).sort((a,b)=>a[0].localeCompare(b[0])));
  }
  function syncRecords(){
-  const ids=new Set(records().map(r=>r.id));
   const was=selected.size;
-  selected=new Set([...selected].filter(id=>ids.has(id)));
-  done=new Set([...done].filter(id=>selected.has(id)));
+  // All'avvio IndexedDB non e' ancora stato aperto: non cancellare le fermate
+  // salvate nella sessione precedente solo perche' il catalogo e' in caricamento.
+  if(areRecordsReady()){
+   const ids=new Set(records().map(r=>r.id));
+   selected=new Set([...selected].filter(id=>ids.has(id)));
+   done=new Set([...done].filter(id=>selected.has(id)));
+  }
   if(order.length&&fingerprint!==snapshot()){
    clearPath();
    message('I civici della Mappa sono cambiati: ricalcola il giro.',true);
@@ -164,7 +168,7 @@ function create({getRecords,drawRoute,notify}){
   for(let i=0;i<order.length;i++){
    const r=order[i],item=document.createElement('li');
    if(done.has(r.id))item.className='giro-done';
-   item.textContent=(i+1)+'. '+label(r)+(done.has(r.id)?' ✓':'');
+   item.textContent=label(r)+(done.has(r.id)?' ✓':'');
    steps.append(item);
   }
   const target=order.find(r=>!done.has(r.id));
