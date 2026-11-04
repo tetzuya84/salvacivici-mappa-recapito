@@ -179,9 +179,9 @@
               <button id="overview-edit-pin" type="button" class="overview-edit-pin" hidden aria-label="Modifica il pin selezionato">✎ Modifica pin</button>
               <button id="overview-edit-data" type="button" class="overview-edit-pin" hidden aria-label="Modifica i dati del civico selezionato">✎ Modifica dati</button>
             </div>
-            <p id="overview-location-status" class="sr-only" role="status" aria-live="polite" hidden></p>
           </div>
         </div>
+        <p id="overview-location-status" class="sr-only" role="status" aria-live="polite" hidden></p>
       </section>
 
       <section id="page-giro" class="page giro-page" hidden aria-labelledby="giro-title">
@@ -304,7 +304,7 @@
           <button id="delete-all-records" type="button" class="danger-button full">Elimina tutte le acquisizioni</button>
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
-        <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
+        <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati. Con la vista Satellite, anche Esri riceve le richieste per l’area visualizzata; si applicano le condizioni del fornitore, da verificare per uso professionale.</p></div>
         <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.47</p>
       </section>
     </main>
