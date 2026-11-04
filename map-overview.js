@@ -1,4 +1,4 @@
-/* Beta 0.6.42 — Mappa permanente con overlay itinerario Giro non distruttivo. */
+/* Beta 0.6.43 — Mappa con recupero GPS iPhone e overlay Giro non distruttivo. */
 (function(root){
 'use strict';
 function valid(r){
@@ -17,6 +17,8 @@ function create({getRecords,onVerify,onEditData,notify}){
    coord=$('overview-selected-coordinates'),apple=$('overview-apple'),google=$('overview-google'),
    loading=$('overview-loading'),
    locateButton=$('overview-locate'),locationStatus=$('overview-location-status'),
+   gpsHelp=$('overview-gps-help'),gpsHelpRetry=$('overview-gps-help-retry'),
+   gpsHelpClose=$('overview-gps-help-close'),
    editPinButton=$('overview-edit-pin'),editDataButton=$('overview-edit-data'),
    nearbyPanel=$('overview-nearby'),nearbyTitle=$('overview-nearby-title'),
    nearbyOptions=$('overview-nearby-options'),
@@ -205,6 +207,11 @@ function create({getRecords,onVerify,onEditData,notify}){
    locationStatus.hidden=false;
    locationStatus.textContent=message;
  }
+ function hideGpsGuide(){gpsHelp.hidden=true;}
+ function showGpsGuide(){
+   gpsHelp.hidden=false;
+   showLocationMessage('GPS non autorizzato dall’iPhone. Segui le istruzioni nella Mappa e riprova.');
+ }
  function finishLocate(){locating=false;locateButton.disabled=!map;locateButton.textContent='◎ La mia posizione';}
  // Richiesta GPS volontaria, senza tracciare, sincronizzare o registrare dati civici.
  function locate(){
@@ -215,6 +222,7 @@ function create({getRecords,onVerify,onEditData,notify}){
      return;
    }
    locating=true;locateButton.disabled=true;locateButton.textContent='Ricerca GPS…';
+   hideGpsGuide();
    showLocationMessage('Ricerca della posizione attuale…');
    try{
      navigator.geolocation.getCurrentPosition(position=>{
@@ -241,14 +249,19 @@ function create({getRecords,onVerify,onEditData,notify}){
          }).addTo(map);
        }else if(locationAccuracy){locationAccuracy.remove();locationAccuracy=null;}
        map.setView(point,18,{animate:false});
+       hideGpsGuide();
        showLocationMessage('Posizione attuale individuata'+(gpsAccuracy===null?'':' · GPS ±'+gpsAccuracy+' m')+'.');
        finishLocate();
      },error=>{
-       const reason=error?.code===1?'Consenti la posizione nelle impostazioni del browser o dell’app.':
-         error?.code===3?'Tempo GPS scaduto. Riprova in un punto con segnale migliore.':
+       finishLocate();
+       if(error?.code===1){
+         // Il blocco di iOS richiede intervento nelle impostazioni, non toast ripetuti.
+         showGpsGuide();
+         return;
+       }
+       const reason=error?.code===3?'Tempo GPS scaduto. Riprova all’aperto.':
          'Posizione GPS non disponibile. Riprova.';
        showLocationMessage(reason);
-       finishLocate();
        notify?.(reason);
      },{enableHighAccuracy:true,maximumAge:0,timeout:14000});
    }catch(_){
@@ -330,6 +343,8 @@ function create({getRecords,onVerify,onEditData,notify}){
  editPinButton.addEventListener('click',editSelected);
  editDataButton.addEventListener('click',editSelectedData);
  locateButton.addEventListener('click',locate);
+ gpsHelpRetry.addEventListener('click',locate);
+ gpsHelpClose.addEventListener('click',hideGpsGuide);
  if(!initialized){
    root.addEventListener('salvacivici:mapchanged',update);
    initialized=true;
