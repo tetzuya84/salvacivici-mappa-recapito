@@ -133,14 +133,18 @@
       focused.blur();
     }
     document.querySelector('.app-shell').classList.toggle('is-capture',tab==='capture');
-    ['capture','records','map','data'].forEach(name=>{
+    ['capture','records','map','giro','data'].forEach(name=>{
       $('page-'+name).hidden=name!==tab;
       const button=document.querySelector(`[data-tab="${name}"]`);
       button.classList.toggle('active',name===tab);
       if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
     });
     if(tab==='records')renderRecords();
-    if(tab!=='map'){mapOverview.pauseCompass();giro.close();}
+    if(tab!=='map')mapOverview.pauseCompass();
+    if(tab==='giro'){
+      giro.open();
+      giroPreview.activate();
+    }else giro.close();
     if(tab==='map'){
       // iOS: la richiesta di accesso alla bussola deve partire dal tocco sul tab.
       const compassPermission=window.SCMapFeatures?.primeAutoCompass?.();
@@ -155,7 +159,7 @@
   // Beta 0.6.9 — swipe orizzontale fra Salva, Archivio e Dati.
   // I gesti verticali mantengono GPS refresh / cloud sync; non intercettiamo i controlli.
   function setupHorizontalTabSwipe(){
-    const pages=['capture','records','map','data'];
+    const pages=['capture','records','map','giro','data'];
     const main=document.querySelector('main');
     const MIN_X=78,MAX_Y=85,MAX_DURATION=1000,EDGE=25;
     let start=null,locked=false;
@@ -404,10 +408,11 @@
     notify:toast
   });
   // Il Giro legge soltanto i civici pubblicati, mai l'Archivio delle acquisizioni.
+  const giroPreview=window.SCGiroPreview.create();
   const giro=window.SCGiro.create({
     getRecords:()=>state.mapRecords,
     areRecordsReady:()=>!!state.db,
-    drawRoute:route=>mapOverview.drawGiro(route),
+    drawRoute:route=>giroPreview.draw(route),
     notify:toast
   });
   $('map-open').addEventListener('click',()=>mapReview.openCapture());
