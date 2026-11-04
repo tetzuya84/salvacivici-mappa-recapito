@@ -1506,3 +1506,27 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
  user-select:none;
  -webkit-user-select:none;
 }
+
+
+/* Beta 0.6.50 — collegamenti giro completi distinti dal singolo civico. */
+#page-giro .giro-nav-heading {
+ font-size:10px;font-weight:800;letter-spacing:.08em;color:#277870;
+ margin:16px 0 0;
+}
+#page-giro .giro-nav-actions a {
+ display:flex;align-items:center;justify-content:center;
+ overflow-wrap:anywhere;
+}
+#page-giro .giro-route-coverage {
+ margin:5px 1px 12px;color:#416b74;
+ font-size:12px;line-height:1.45;
+}
+#page-giro .giro-single-links {
+ margin:6px 0 14px;font-size:12px;
+ line-height:1.55;color:#4c747d;
+}
+#page-giro .giro-single-links a {
+ color:#08756f;font-weight:780;
+ text-decoration:underline;text-underline-offset:3px;
+}
+#page-giro .giro-single-links[hidden]{display:none!important}
