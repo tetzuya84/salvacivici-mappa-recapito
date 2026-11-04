@@ -331,7 +331,7 @@
     if(location.protocol==='file:')return 'Per usare il GPS, apri l’app da un sito HTTPS, non direttamente dal file.';
     if(!window.isSecureContext)return 'Il GPS richiede una connessione sicura (HTTPS).';
     if(!error)return 'Errore GPS sconosciuto.';
-    if(error.code===1)return 'Permesso GPS negato. Abilita la posizione nelle impostazioni di Safari.';
+    if(error.code===1)return 'GPS negato da iOS. In Impostazioni → Privacy e sicurezza → Localizzazione, consenti la posizione a SalvaCivici o Siti Web di Safari e attiva Posizione precisa. Poi premi Riprova GPS.';
     if(error.code===2)return 'Posizione non disponibile. Riprova all’aperto.';
     if(error.code===3)return 'Tempo scaduto. Riprova quando il segnale migliora.';
     return 'Impossibile ottenere la posizione GPS.';
