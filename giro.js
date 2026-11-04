@@ -69,9 +69,12 @@ async function graphhopper(start,stops,key,fetcher){
   throw Error('Servizio stradale non disponibile (HTTP '+res.status+').');
  }
  const response=await res.json();
- if(response.unassigned?.length||response.solution?.unassigned?.length)
-  throw Error('Non tutte le fermate sono raggiungibili sulle strade.');
  const solution=response.solution||response;
+ const unassigned=solution.unassigned||response.unassigned;
+ if(Array.isArray(unassigned)&&unassigned.length||
+    unassigned?.services?.length||unassigned?.shipments?.length||
+    (Number.isFinite(solution.no_unassigned)&&solution.no_unassigned>0))
+  throw Error('Non tutte le fermate sono raggiungibili sulle strade.');
  const routes=solution.routes||[];
  if(routes.length!==1||!Array.isArray(routes[0]?.activities))throw Error('Risposta stradale non valida.');
  const indices=routes[0].activities.filter(a=>a.type==='service').map(a=>ids.indexOf(String(a.id||a.service_id||'')));
