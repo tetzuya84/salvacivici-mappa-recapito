@@ -1,4 +1,4 @@
-/* Beta 0.6.43 — regressione permessi GPS negati su Mappa e Giro. */
+/* Beta 0.6.44 — regressione permessi GPS negati su Mappa e Giro. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const mapSrc=fs.readFileSync('map-overview.js','utf8'),giroSrc=fs.readFileSync('giro.js','utf8');
@@ -72,8 +72,9 @@ async function testGiro(){
   fetch:()=>{throw Error('network not used')}});
  const points=[{id:'a',via:'Via Roma',civico:'50',comune:'Casalromano',lat:45.19,lon:10.37}];
  const unchanged=JSON.stringify(points);
- root.SCGiro.create({getRecords:()=>points,drawRoute:r=>routes.push(r),notify(){}});
- node('giro-open').events.click();
+ const giro=root.SCGiro.create({getRecords:()=>points,drawRoute:r=>routes.push(r),notify(){}});
+ node('page-giro').hidden=false;
+ giro.open();
  const check=node('giro-stops').children[0].children[0];check.checked=true;check.events.change();
  node('giro-order').events.click();
  await new Promise(resolve=>setTimeout(resolve,0));
@@ -91,5 +92,5 @@ async function testGiro(){
 }
 (async()=>{
  const results=[await testMap(),await testGiro()];
- console.log('PASS Beta 0.6.43: '+results.join('; '));
+ console.log('PASS Beta 0.6.44: '+results.join('; '));
 })().catch(e=>{console.error(e);process.exitCode=1});
