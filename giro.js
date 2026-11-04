@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.43 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.44 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * rete stradale serve una chiave GraphHopper personale e un piano adatto all'uso.
@@ -87,7 +87,7 @@ async function graphhopper(start,stops,key,fetcher){
  };
 }
 function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
- const panel=$('giro-panel'),search=$('giro-search'),list=$('giro-stops'),
+ const page=$('page-giro'),search=$('giro-search'),list=$('giro-stops'),
   count=$('giro-count'),status=$('giro-status'),steps=$('giro-itinerary'),
   next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
   googleLink=$('giro-google'),keyInput=$('giro-api-key'),road=$('giro-road'),
@@ -245,11 +245,11 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
     '. Le linee sulla mappa sono schematiche; per le svolte usa Naviga.');
   });
  }
- $('giro-open').addEventListener('click',()=>{
-  panel.hidden=false;syncRecords();$('giro-open').hidden=true;
-  message('Seleziona i civici e calcola il giro. Nessuna acquisizione viene modificata.');
- });
- $('giro-close').addEventListener('click',()=>{panel.hidden=true;$('giro-open').hidden=false;});
+ // La nuova scheda Giro e' gestita dalla barra di navigazione principale.
+ // Il passaggio Mappa/Giro non azzera selezione, sequenza o fermate completate.
+ function open(){syncRecords();}
+ function close(){/* Stato del Giro mantenuto sul dispositivo. */}
+
  $('giro-order').addEventListener('click',()=>void estimate(false));
  $('giro-recalc').addEventListener('click',()=>void estimate(true));
  $('giro-locate').addEventListener('click',()=>void withBusy(async()=>{await gps();clearPath();message('Posizione GPS rilevata. Calcola il giro.');}));
@@ -275,7 +275,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  });
  root.addEventListener('salvacivici:mapchanged',syncRecords);
  restore();syncRecords();renderItinerary();
- return {refresh:syncRecords,close:()=>{panel.hidden=true;$('giro-open').hidden=false;},
+ return {refresh:syncRecords,open,close,
   helpers:{heuristic,graphhopper,distance,routeDistance}};
 }
 root.SCGiro={create,helpers:{heuristic,graphhopper,distance,routeDistance}};
