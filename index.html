@@ -213,7 +213,7 @@
               <button id="giro-select-all" type="button">Seleziona trovati</button>
               <button id="giro-clear" type="button">Azzera</button>
             </div>
-            <div id="giro-stops" class="giro-stops" role="group" aria-label="Civici disponibili da selezionare"></div>
+            <div id="giro-stops" class="giro-stops" data-no-swipe role="group" aria-label="Civici disponibili da selezionare"></div>
             <div class="giro-main-actions">
               <button id="giro-order" type="button" class="primary">Crea ordine indicativo</button>
               <button id="giro-recalc" type="button" class="secondary">Ricalcola dal GPS</button>
@@ -238,7 +238,7 @@
             </section>
             <section id="giro-preview" class="giro-preview" aria-labelledby="giro-preview-title" hidden>
               <h2 id="giro-preview-title">Anteprima del giro</h2>
-              <div id="giro-canvas" class="giro-canvas" role="img" aria-label="Anteprima schematica delle fermate del giro"></div>
+              <div id="giro-canvas" class="giro-canvas" data-no-swipe role="img" aria-label="Anteprima schematica delle fermate del giro"></div>
               <p id="giro-preview-status" class="giro-hint">Tratto schematico: non rappresenta le strade. Per guidare usa Apple Mappe o Google Maps.</p>
             </section>
             <ol id="giro-itinerary" class="giro-itinerary" aria-label="Ordine delle fermate"></ol>
@@ -365,6 +365,7 @@
   <script src="map-review.js" defer></script>
   <script src="map-features.js" defer></script>
   <script src="map-overview.js" defer></script>
+  <script src="giro-preview.js" defer></script>
   <script src="giro.js" defer></script>
   <script src="updates.js" defer></script>
   <script src="app.js" defer></script>
