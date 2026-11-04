@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.44 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.50 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * rete stradale serve una chiave GraphHopper personale e un piano adatto all'uso.
@@ -44,8 +44,29 @@ function heuristic(start,stops){
  }
  return ordered;
 }
-function apple(r){return 'https://maps.apple.com/?daddr='+r.lat+','+r.lon+'&dirflg=d';}
-function google(r){return 'https://www.google.com/maps/dir/?api=1&destination='+r.lat+','+r.lon+'&travelmode=driving';}
+// Un link di navigazione trasferisce un ordine, non ottimizza il tragitto.
+// Limiti prudenti: Apple 14 fermate, Google 3 waypoint + destinazione
+// su browser mobile. Oltre tali limiti si crea una tranche esplicita.
+const APPLE_STOPS=14,GOOGLE_STOPS=4;
+const coord=r=>r.lat+','+r.lon;
+function apple(r){return 'https://maps.apple.com/?daddr='+coord(r)+'&dirflg=d';}
+function google(r){return 'https://www.google.com/maps/dir/?api=1&destination='+coord(r)+'&travelmode=driving';}
+function appleRoute(stops){
+ if(!Array.isArray(stops)||!stops.length||stops.length>APPLE_STOPS||stops.some(r=>!safe(r)))
+  throw Error('Apple Mappe: da 1 a '+APPLE_STOPS+' fermate valide.');
+ if(stops.length===1)return apple(stops[0]);
+ const dest=stops.at(-1),via=stops.slice(0,-1);
+ return 'https://maps.apple.com/directions?destination='+encodeURIComponent(coord(dest))+
+  via.map(r=>'&waypoint='+encodeURIComponent(coord(r))).join('')+'&mode=driving';
+}
+function googleRoute(stops){
+ if(!Array.isArray(stops)||!stops.length||stops.length>GOOGLE_STOPS||stops.some(r=>!safe(r)))
+  throw Error('Google Maps: da 1 a '+GOOGLE_STOPS+' fermate valide su browser mobile.');
+ if(stops.length===1)return google(stops[0]);
+ const dest=stops.at(-1),via=stops.slice(0,-1);
+ return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(coord(dest))+
+  '&travelmode=driving&waypoints='+encodeURIComponent(via.map(coord).join('|'));
+}
 async function graphhopper(start,stops,key,fetcher){
  if(!safe(start)||!Array.isArray(stops)||!stops.length||stops.length>LIMIT||stops.some(r=>!safe(r)))
   throw Error('Punti non validi per il routing stradale.');
@@ -90,7 +111,9 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  const page=$('page-giro'),search=$('giro-search'),list=$('giro-stops'),
   count=$('giro-count'),status=$('giro-status'),steps=$('giro-itinerary'),
   next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
-  googleLink=$('giro-google'),keyInput=$('giro-api-key'),road=$('giro-road'),
+  googleLink=$('giro-google'),routeCoverage=$('giro-route-coverage'),
+  singleLinks=$('giro-single-links'),singleApple=$('giro-single-apple'),
+  singleGoogle=$('giro-single-google'),keyInput=$('giro-api-key'),road=$('giro-road'),
   originLabel=$('giro-origin'),gpsHelp=$('giro-gps-help');
  let selected=new Set(),done=new Set(),order=[],origin=null,mode='indicativo',busy=false;
  let fingerprint='',lastRoad=null;
@@ -174,11 +197,31 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    item.textContent=label(r)+(done.has(r.id)?' ✓':'');
    steps.append(item);
   }
-  const target=order.find(r=>!done.has(r.id));
+  const remaining=order.filter(r=>!done.has(r.id));
+  const target=remaining[0];
   next.hidden=!target;
   if(target){
    $('giro-next-label').textContent=label(target);
-   appleLink.href=apple(target);googleLink.href=google(target);complete.disabled=busy;
+   const appleCount=Math.min(remaining.length,APPLE_STOPS);
+   const googleCount=Math.min(remaining.length,GOOGLE_STOPS);
+   appleLink.href=appleRoute(remaining.slice(0,appleCount));
+   googleLink.href=googleRoute(remaining.slice(0,googleCount));
+   appleLink.textContent=appleCount===remaining.length?
+    (remaining.length===1?'Naviga Apple':'Giro completo · Apple'):
+    'Prime '+appleCount+' · Apple';
+   googleLink.textContent=googleCount===remaining.length?
+    (remaining.length===1?'Google Maps':'Giro completo · Google'):
+    'Prime '+googleCount+' · Google';
+   const allCovered=appleCount===remaining.length&&googleCount===remaining.length;
+   routeCoverage.textContent=remaining.length===1?
+    'Una fermata: navigazione diretta dalla tua posizione attuale.':
+    allCovered?
+     remaining.length+' fermate incluse in entrambi i navigatori, nell’ordine scelto.':
+     'Fermate rimanenti: '+remaining.length+'. Apple ne apre '+appleCount+
+      ', Google '+googleCount+' per volta (limiti dei collegamenti mobili). Le successive si aprono dopo le fermate completate.';
+   singleLinks.hidden=remaining.length===1;
+   singleApple.href=apple(target);singleGoogle.href=google(target);
+   complete.disabled=busy;
   }else if(order.length)message('Giro completato. Nessun civico è stato modificato.');
  }
  function applyOrder(result,labelText){
@@ -276,7 +319,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  root.addEventListener('salvacivici:mapchanged',syncRecords);
  restore();syncRecords();renderItinerary();
  return {refresh:syncRecords,open,close,
-  helpers:{heuristic,graphhopper,distance,routeDistance}};
+  helpers:{heuristic,graphhopper,distance,routeDistance,appleRoute,googleRoute}};
 }
-root.SCGiro={create,helpers:{heuristic,graphhopper,distance,routeDistance}};
+root.SCGiro={create,helpers:{heuristic,graphhopper,distance,routeDistance,appleRoute,googleRoute}};
 })(window);
