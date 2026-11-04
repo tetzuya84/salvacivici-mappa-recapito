@@ -1379,3 +1379,42 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
 @media(max-height:640px) {
  #page-map .overview-gps-help {max-height:60svh;bottom:70px}
 }
+
+
+/* Beta 0.6.46 — Mappa senza sovrapposizioni fra ricerca, strumenti e zoom.
+ * Tutti i comandi rimangono accessibili: la tendina risultati puo' comparire
+ * senza coprire Satellite/Bussola/GPS o i pulsanti zoom Leaflet.
+ * Con Filtri aperti il pannello ha priorita' e le altre azioni riappaiono
+ * automaticamente quando viene chiuso.
+ */
+#page-map.map-screen {
+  --map-tool-stack-top:81px;
+}
+#page-map.map-screen:has(#overview-civic-select:not([hidden])){
+  --map-tool-stack-top:125px;
+}
+#page-map .overview-map-style-controls{
+  top:var(--map-tool-stack-top);
+}
+.app-shell #page-map .overview-locate{
+  top:calc(var(--map-tool-stack-top) + 2 * var(--overview-command-height) + 2 * var(--overview-command-gap));
+}
+#page-map #overview-layer-status{
+  top:calc(var(--map-tool-stack-top) + 3 * var(--overview-command-height) + 2 * var(--overview-command-gap) + 10px);
+}
+#page-map .leaflet-top.leaflet-left{
+  top:calc(var(--map-tool-stack-top) - 3px);
+}
+#page-map:has(#overview-filter-panel:not([hidden])) .overview-map-style-controls,
+#page-map:has(#overview-filter-panel:not([hidden])) .overview-locate,
+#page-map:has(#overview-filter-panel:not([hidden])) #overview-layer-status,
+#page-map:has(#overview-filter-panel:not([hidden])) .leaflet-control-zoom,
+#page-map:has(#overview-filter-panel:not([hidden])) #overview-civic-select{
+  display:none!important;
+}
+@media(max-height:630px){
+  #page-map.map-screen{--map-tool-stack-top:71px}
+  #page-map.map-screen:has(#overview-civic-select:not([hidden])){
+    --map-tool-stack-top:123px;
+  }
+}
