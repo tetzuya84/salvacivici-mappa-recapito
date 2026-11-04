@@ -1,13 +1,26 @@
-/* Beta 0.6.48 — iOS: viewport fisso e pull GPS/sync controllato senza bounce. */
+/* Beta 0.6.49 — iOS: quattro schede con viewport fisso e pull GPS/sync protetto. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const app=fs.readFileSync('app.js','utf8'),css=fs.readFileSync('styles.css','utf8');
-const block=css.split('/* Beta 0.6.48 — blocco scorrimento iOS/PWA')[1]||'';
-for(const fragment of ['body:has(#page-capture:not([hidden]))','body:has(#page-records:not([hidden]))',
- 'height:100dvh','position:fixed','overflow:hidden','overflow-y:auto','overscroll-behavior-y:none',
- 'touch-action:none','#page-capture .intro','#page-records .intro',
- 'margin:0 0 calc(82px + env(safe-area-inset-bottom))'])
- assert.ok(block.includes(fragment),'missing responsive rule: '+fragment);
+
+const block=css.split('/* Beta 0.6.49 — blocco coerente dello scorrimento iOS/PWA')[1]||'';
+const all=['#page-capture','#page-records','#page-giro','#page-data'];
+for(const fragment of [
+ 'html:has(.app-shell > main > :is(','body:has(.app-shell > main > :is(',
+ '.app-shell:has(> main > :is(', 'height:100dvh','position:fixed',
+ 'overflow:hidden','overflow-y:auto','overscroll-behavior-y:none',
+ 'touch-action:pan-y','touch-action:none','#page-capture .intro',
+ '#page-records .intro','margin:0 0 calc(82px + env(safe-area-inset-bottom))'])
+ assert.ok(block.includes(fragment),'missing viewport rule: '+fragment);
+const shared=all.join(',');
+assert.ok(block.includes(':is('+shared+'):not([hidden])'),
+ 'Il blocco del viewport deve valere nelle quattro schede operative');
+assert.ok(!block.includes('#page-map'),'La Mappa fullscreen non deve essere modificata');
+const mainRules=block.split(' > main{')[1]?.split('}')[0]||'';
+assert.match(mainRules,/overflow-y:auto/,'Giro e Dati devono poter scorrere internamente');
+assert.match(mainRules,/touch-action:pan-y/,'Giro e Dati conservano lo scroll verticale');
+assert.equal((block.match(/touch-action:none/g)||[]).length,1,
+ 'Lo swipe esclusivo riguarda solo i titoli Salva/Archivio');
 assert.match(app,/scroller\.scrollTop=0/);
 assert.equal((app.match(/const atTop=\(\)=>scroller\.scrollTop<=5;/g)||[]).length,2);
 function slice(name){
@@ -67,5 +80,5 @@ async function check(which){
 }
 (async()=>{
  const checked=[await check('capture'),await check('archive')];
- console.log('PASS Beta 0.6.48: '+checked.join(' · ')+', viewport fermo e contenuto scrollabile.');
+ console.log('PASS Beta 0.6.49: '+checked.join(' · ')+', viewport fermo e contenuto scrollabile.');
 })().catch(e=>{console.error(e);process.exitCode=1});
