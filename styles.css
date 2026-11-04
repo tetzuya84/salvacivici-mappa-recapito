@@ -1134,3 +1134,116 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
  #page-map .overview-map-style-controls,
  .app-shell #page-map .overview-locate {right:8px}
 }
+
+
+/* Beta 0.6.42 — Giro di recapito: pannello sopra la Mappa, senza nuove tab.
+   La cartografia e i comandi precedenti restano invariati quando il Giro è chiuso. */
+#page-map .giro-open{
+ position:absolute;z-index:1210;left:12px;bottom:83px;
+ min-height:45px;padding:9px 16px;border-radius:14px;
+ background:#0b8079;color:#fff;border:1px solid #06645e;
+ box-shadow:0 4px 15px #09232940;font-weight:790;font-size:14px;
+ touch-action:manipulation;
+}
+#page-map .giro-panel{
+ position:absolute;z-index:1410;left:0;right:0;bottom:0;
+ max-height:calc(100% - 75px);
+ display:flex;flex-direction:column;min-height:0;
+ border-radius:22px 22px 0 0;background:#fff;
+ box-shadow:0 -7px 30px #071b2a4a;border:1px solid #dce9e8;
+ overflow:hidden;touch-action:pan-y;
+}
+#page-map .giro-panel[hidden],#page-map .giro-open[hidden]{display:none!important}
+#page-map .giro-head{
+ flex:none;display:flex;align-items:center;justify-content:space-between;
+ gap:12px;padding:13px 16px 11px;border-bottom:1px solid #e2eaea;
+}
+#page-map .giro-head h2{font-size:20px;color:#0f3039;margin:0}
+#page-map .giro-head .eyebrow{font-size:9px;margin:0 0 3px}
+#page-map .giro-close{
+ display:grid;place-items:center;flex:none;width:42px;height:42px;
+ border:0;border-radius:12px;background:#e9f1f2;color:#345b64;
+ font-size:28px;line-height:1;
+}
+#page-map .giro-scroll{
+ flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+ touch-action:pan-y;padding:14px 16px 30px;
+}
+#page-map .giro-status{
+ margin:0 0 11px;border-radius:12px;padding:10px 12px;
+ background:#e9f6f3;color:#165e58;font-size:12px;line-height:1.45;
+}
+#page-map .giro-status.warning{background:#fff2df;color:#965823}
+#page-map .giro-origin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 13px}
+#page-map .giro-origin-row span{font-size:12px;color:#4f6c73;overflow-wrap:anywhere;flex:1}
+#page-map .giro-origin-row button{flex:none;min-height:42px;padding:9px 12px;font-size:12px}
+#page-map .giro-label{display:block;font-size:13px;font-weight:750;color:#264d58;margin-bottom:5px}
+#page-map #giro-search,#page-map #giro-api-key{
+ width:100%;min-height:45px;padding:9px 12px;border:1px solid #cbdde0;
+ border-radius:11px;font-size:16px;box-sizing:border-box;
+}
+#page-map .giro-selection-actions{
+ display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:9px 0 7px;
+}
+#page-map #giro-count{font-size:11px;font-weight:750;color:#416e73;margin-right:auto}
+#page-map .giro-selection-actions button{
+ padding:7px 8px;border:0;border-radius:8px;background:#ecf5f4;
+ color:#0c625d;font-weight:710;font-size:11px;
+}
+#page-map .giro-stops{
+ display:grid;gap:0;max-height:min(28svh,230px);overflow-y:auto;overscroll-behavior:contain;
+ border:1px solid #dbe7e9;border-radius:12px;background:#fff;
+}
+#page-map .giro-stop-row{
+ display:flex;align-items:center;gap:10px;padding:10px 11px;
+ border-bottom:1px solid #eef1f2;font-size:12px;color:#153640;
+ line-height:1.4;cursor:pointer;min-height:44px;box-sizing:border-box;
+}
+#page-map .giro-stop-row:last-child{border-bottom:0}
+#page-map .giro-stop-row:has(input:checked){background:#e9f6f2}
+#page-map .giro-stop-row input{
+ flex:none;width:20px;height:20px;min-height:0;margin:0;accent-color:#11877e;
+}
+#page-map .giro-stop-row span{overflow-wrap:anywhere}
+#page-map .giro-main-actions{
+ display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0 8px;
+}
+#page-map .giro-main-actions button{
+ min-height:49px;padding:10px 7px;font-size:12px;line-height:1.3;
+}
+#page-map .giro-hint{font-size:11px;line-height:1.45;color:#66808a;margin:10px 0}
+#page-map .giro-provider{
+ margin:13px 0;padding:12px;border:1px solid #dce6e8;border-radius:12px;
+ background:#f6f9f9;font-size:12px;color:#476772;
+}
+#page-map .giro-provider summary{font-size:12px;font-weight:780;color:#126d65;cursor:pointer}
+#page-map .giro-provider p{margin:10px 0;font-size:11px;line-height:1.45}
+#page-map .giro-provider label{display:block;margin:8px 0 5px;font-weight:700}
+#page-map .giro-provider button{margin-top:9px;min-height:44px;font-size:12px}
+#page-map .giro-next{
+ margin:13px 0;padding:13px;border-radius:14px;
+ background:#e9f7f4;border:1px solid #bfdfd9;
+}
+#page-map .giro-next .eyebrow{margin-bottom:5px}
+#page-map .giro-next strong{font-size:14px;color:#123c41;display:block;overflow-wrap:anywhere}
+#page-map .giro-nav-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:11px 0}
+#page-map .giro-nav-actions a{
+ display:flex;min-height:45px;padding:8px 5px;font-size:12px;
+ text-decoration:none;box-sizing:border-box;line-height:1.3;
+}
+#page-map .giro-complete{
+ display:block;width:100%;min-height:45px;border:0;border-radius:11px;
+ background:#187b73;color:#fff;font-size:13px;font-weight:760;
+}
+#page-map .giro-itinerary{margin:10px 0 8px;padding-left:21px;font-size:12px;line-height:1.7;color:#224a51}
+#page-map .giro-itinerary li{margin:5px 0;padding-left:3px}
+#page-map .giro-itinerary .giro-done{color:#81969c;text-decoration:line-through}
+@media(max-width:360px){
+ #page-map .giro-scroll{padding:11px 12px 26px}
+ #page-map .giro-main-actions{gap:5px}
+ #page-map .giro-main-actions button{font-size:11px;padding:7px 5px}
+}
+@media(max-height:620px){
+ #page-map .giro-panel{max-height:calc(100% - 44px)}
+ #page-map .giro-stops{max-height:130px}
+}
