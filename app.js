@@ -152,6 +152,9 @@
       void refreshMapFromCloud();
     }
     if(tab==='capture'&&state.db&&!gpsBusy&&!SC.isFreshGps(state.gps,Date.now(),GPS_REENTER_REFRESH_MS))startGpsAcquisition();
+    // La finestra esterna e' bloccata; cambia scheda azzerando lo scroll interno.
+    const scroller=document.querySelector('.app-shell > main');
+    if(scroller)scroller.scrollTop=0;
     window.scrollTo({top:0,behavior:'auto'});
   }
   document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.tab)));
@@ -221,7 +224,8 @@
       status=$('archive-pull-status'),keyboard=$('archive-sync-keyboard');
     const LIMIT=86,MAX=108;
     let start=null,travel=0,active=false,loading=false,resetTimer=0;
-    const atTop=()=>Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)<=5;
+    const scroller=document.querySelector('.app-shell > main');
+    const atTop=()=>scroller.scrollTop<=5;
     const reset=()=>{
       active=false;travel=0;start=null;
       indicator.style.height='0px';indicator.dataset.state='idle';
@@ -280,13 +284,16 @@
       if(!start||loading||event.touches.length!==1)return;
       const dx=event.touches[0].clientX-start.x,
         dy=event.touches[0].clientY-start.y;
-      if(!active&&(dy<9||Math.abs(dx)>dy*0.75||!atTop())){
-        if(dy<0||Math.abs(dx)>Math.max(12,Math.abs(dy)))start=null;
-        return;
+      // Intercetta subito la trazione: aspettare 9px puo' far partire
+      // il rubber-band nativo prima che Safari conceda preventDefault.
+      if(!active){
+        if(dy<=0){if(dy<-7)start=null;return;}
+        if(Math.abs(dx)>Math.max(12,dy*0.75)){start=null;return;}
+        if(dy<2)return;
       }
       if(!atTop()){reset();return;}
-      active=true;travel=Math.max(0,dy);
       if(event.cancelable)event.preventDefault();
+      active=true;travel=Math.max(0,dy);
       setProgress(travel);
     },{passive:false});
     page.addEventListener('touchend',()=>{
@@ -580,7 +587,8 @@
     const page=$('page-capture'),indicator=$('capture-pull'),label=$('capture-pull-label'),
       status=$('capture-pull-status'),LIMIT=86,MAX=108;
     let start=null,travel=0,active=false,loading=false,resetTimer=0;
-    const atTop=()=>Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)<=5;
+    const scroller=document.querySelector('.app-shell > main');
+    const atTop=()=>scroller.scrollTop<=5;
     const reset=()=>{
       start=null;travel=0;active=false;
       indicator.style.height='0px';indicator.dataset.state='idle';
@@ -624,13 +632,16 @@
     page.addEventListener('touchmove',event=>{
       if(!start||loading||event.touches.length!==1)return;
       const dx=event.touches[0].clientX-start.x,dy=event.touches[0].clientY-start.y;
-      if(!active&&(dy<9||Math.abs(dx)>dy*0.75||!atTop())){
-        if(dy<0||Math.abs(dx)>Math.max(12,Math.abs(dy)))start=null;
-        return;
+      // Intercetta subito la trazione: aspettare 9px puo' far partire
+      // il rubber-band nativo prima che Safari conceda preventDefault.
+      if(!active){
+        if(dy<=0){if(dy<-7)start=null;return;}
+        if(Math.abs(dx)>Math.max(12,dy*0.75)){start=null;return;}
+        if(dy<2)return;
       }
       if(!atTop()){reset();return;}
-      active=true;travel=Math.max(0,dy);
       if(event.cancelable)event.preventDefault();
+      active=true;travel=Math.max(0,dy);
       setProgress(travel);
     },{passive:false});
     page.addEventListener('touchend',()=>{
