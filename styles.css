@@ -1247,3 +1247,49 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
  #page-map .giro-panel{max-height:calc(100% - 44px)}
  #page-map .giro-stops{max-height:130px}
 }
+
+
+/* Beta 0.6.43 — assistenza localizzazione iPhone per Mappa e Giro.
+   Scheda di recupero visibile SOLO quando iOS rifiuta il permesso. */
+#page-map .gps-guide {
+ box-sizing:border-box;
+ border-radius:16px;
+ border:1px solid #d2e0df;
+ background:#fff;
+ color:#21444f;
+ padding:12px 14px;
+ box-shadow:0 5px 24px #102b3545;
+ font-size:12px;
+ line-height:1.45;
+}
+#page-map .gps-guide strong {font-size:14px;color:#144b4d}
+#page-map .gps-guide p {font-size:12px;line-height:1.45;margin:9px 0}
+#page-map .gps-guide b {font-weight:780}
+#page-map .gps-guide-retry {
+ width:100%;min-height:44px;padding:10px 12px;
+ border:0;border-radius:11px;
+ color:#fff;background:#0c8179;
+ font:inherit;font-size:13px;font-weight:770;
+ touch-action:manipulation;
+}
+#page-map .overview-gps-help {
+ position:absolute;z-index:1390;
+ left:12px;right:12px;bottom:82px;
+ max-height:min(56svh,375px);
+ overflow-y:auto;overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;touch-action:pan-y;
+}
+#page-map .gps-guide-heading {display:flex;justify-content:space-between;align-items:center;gap:9px}
+#page-map .gps-guide-heading button{
+ flex:none;width:35px;height:35px;border:0;border-radius:9px;
+ background:#edf2f4;color:#355e66;
+ display:grid;place-items:center;font-size:24px;
+}
+#page-map .giro-gps-help{
+ position:static;box-shadow:none;
+ margin:8px 0 12px;padding:12px;
+ background:#fff9ef;border-color:#ead5b7;
+}
+@media(max-height:640px) {
+ #page-map .overview-gps-help {max-height:60svh;bottom:70px}
+}
