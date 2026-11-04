@@ -243,7 +243,8 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  $('giro-api-key').addEventListener('input',updateButtons);
  $('giro-search').addEventListener('input',renderList);
  $('giro-select-all').addEventListener('click',()=>{
-  const filtered=records().filter(r=>normalize(label(r)).includes(normalize(search.value)));
+  const terms=normalize(search.value).split(/\s+/).filter(Boolean);
+  const filtered=records().filter(r=>terms.every(t=>normalize(label(r)).includes(t)));
   for(const r of filtered){if(selected.size>=LIMIT)break;selected.add(r.id);}
   save();clearPath();renderList();updateButtons();
  });
