@@ -1,4 +1,4 @@
-/* Beta 0.6.26 — bussola automatica su Mappa, rispettando i permessi iOS. */
+/* Beta 0.6.46 — bussola automatica con avvisi meno invasivi e temporanei. */
 (function(root){
 'use strict';
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -53,9 +53,17 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
   return layer;
  }
  configure(street);street.addTo(map);
+ let statusTimer=null;
+ function clearStatus(){
+  if(statusTimer!==null){clearTimeout(statusTimer);statusTimer=null;}
+  if(status){status.hidden=true;status.textContent='';}
+ }
  function setStatus(msg){
   if(!status)return;
+  clearStatus();
   status.hidden=false;status.textContent=msg;
+  // Solo avvisi temporanei, per non coprire stabilmente i civici.
+  statusTimer=setTimeout(()=>{status.hidden=true;statusTimer=null;},5000);
  }
  function toggleBasemap(){
   const nextSatellite=!satellite;
@@ -72,6 +80,7 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
  let compassAttempt=0;
  function stopCompass(){
   compassAttempt++;
+  clearStatus();
   if(orientationListener){
    root.removeEventListener('deviceorientation',orientationListener);
    root.removeEventListener('deviceorientationabsolute',orientationListener);
@@ -107,7 +116,8 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
    orientationListener=heading;
    root.addEventListener('deviceorientation',heading);
    root.addEventListener('deviceorientationabsolute',heading);
-   setStatus('Bussola attiva. Puoi ruotare con due dita per fermarla.');
+   // Lo stato e' gia' evidente dal pulsante «Bussola attiva».
+   clearStatus();
    return true;
   }).catch(()=>{
    if(attempt===compassAttempt)setStatus('Non è stato possibile attivare la bussola.');
