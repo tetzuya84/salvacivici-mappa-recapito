@@ -1137,22 +1137,39 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
 
 
 
-/* Beta 0.6.44 — Giro e' una quinta schermata autonoma, NON un overlay sulla Mappa.
- * La Mappa conserva la propria impaginazione fullscreen approvata. */
-.app-shell .tabbar {
+/* Beta 0.6.45 — barra inferiore UNICA in tutte e cinque le sezioni.
+ * Il vecchio .app-shell.is-capture .tabbar (4 colonne) aveva specificita'
+ * superiore al selettore della Beta 0.6.44: Dati finiva sulla seconda riga.
+ * Anche Salva usa esattamente le stesse misure di Archivio, Mappa, Giro e Dati. */
+.app-shell .tabbar,
+.app-shell.is-capture .tabbar {
  grid-template-columns:repeat(5,minmax(0,1fr));
- padding-left:5px;padding-right:5px;
+ grid-template-rows:1fr;
+ grid-auto-flow:row;
+ padding:8px 5px calc(9px + env(safe-area-inset-bottom));
+ min-height:calc(82px + env(safe-area-inset-bottom));
+ align-items:center;
 }
-.app-shell .tabbar .tab{
- min-width:0;min-height:52px;padding:6px 1px 5px;
- gap:4px;font-size:clamp(10px,2.7vw,12px);
+.app-shell .tabbar .tab,
+.app-shell.is-capture .tabbar .tab {
+ min-width:0;
+ min-height:52px;
+ padding:6px 1px 5px;
+ gap:4px;
+ font-size:clamp(10px,2.7vw,12px);
+ line-height:1.2;
 }
-.app-shell .tabbar .tab svg{
- width:23px;height:23px;flex:none;
+.app-shell .tabbar .tab svg,
+.app-shell.is-capture .tabbar .tab svg {
+ width:23px;
+ height:23px;
+ flex:none;
 }
 @media(max-width:355px){
- .app-shell .tabbar .tab{font-size:10px;padding-inline:0}
- .app-shell .tabbar .tab svg{width:21px;height:21px}
+ .app-shell .tabbar .tab,
+ .app-shell.is-capture .tabbar .tab {font-size:10px;padding-inline:0}
+ .app-shell .tabbar .tab svg,
+ .app-shell.is-capture .tabbar .tab svg {width:21px;height:21px}
 }
 .app-shell #page-giro.giro-page:not([hidden]){
  display:block;min-height:calc(100dvh - 195px);
