@@ -144,6 +144,52 @@
           <button id="overview-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
         </div>
         <p id="overview-layer-status" class="map-layer-status" role="status" aria-live="polite" hidden></p>
+        <button id="giro-open" class="giro-open" type="button" data-no-swipe aria-controls="giro-panel">↗ Crea giro</button>
+        <section id="giro-panel" class="giro-panel" aria-label="Pianificazione del giro di recapito" data-no-swipe hidden>
+          <div class="giro-head">
+            <div><p class="eyebrow">MAPPA RECAPITO</p><h2>Crea giro</h2></div>
+            <button id="giro-close" type="button" class="giro-close" aria-label="Chiudi pianificazione">×</button>
+          </div>
+          <div class="giro-scroll">
+            <p id="giro-status" class="giro-status" role="status" aria-live="polite">Seleziona i civici da raggiungere.</p>
+            <div class="giro-origin-row">
+              <span id="giro-origin">Partenza: GPS da rilevare</span>
+              <button id="giro-locate" type="button" class="secondary">⌖ GPS</button>
+            </div>
+            <label class="giro-label" for="giro-search">Scegli i civici pubblicati</label>
+            <input id="giro-search" type="search" placeholder="Cerca strada, comune o civico…" autocorrect="off" autocomplete="off">
+            <div class="giro-selection-actions">
+              <span id="giro-count">0 / 20 fermate selezionate</span>
+              <button id="giro-select-all" type="button">Seleziona trovati</button>
+              <button id="giro-clear" type="button">Azzera</button>
+            </div>
+            <div id="giro-stops" class="giro-stops" role="group" aria-label="Civici disponibili da selezionare"></div>
+            <div class="giro-main-actions">
+              <button id="giro-order" type="button" class="primary">Crea ordine indicativo</button>
+              <button id="giro-recalc" type="button" class="secondary">Ricalcola dal GPS</button>
+            </div>
+            <p class="giro-hint">L'ordine indicativo usa distanze in linea d'aria: non tiene conto di sensi unici, incroci, traffico o tempi reali. Le linee tratteggiate non sono indicazioni di guida.</p>
+            <details class="giro-provider">
+              <summary>Ottimizzazione sulle strade (facoltativa)</summary>
+              <p>Usa GraphHopper con una tua chiave API e un piano autorizzato all'uso professionale. Il piano gratuito è solo per uso non commerciale. Può avere costi. Vengono inviate a GraphHopper solo le coordinate della partenza e delle tappe.</p>
+              <label for="giro-api-key">Chiave API GraphHopper (non viene salvata)</label>
+              <input id="giro-api-key" type="password" placeholder="Incolla la chiave personale" autocomplete="off" autocorrect="off" spellcheck="false">
+              <button id="giro-road" type="button" class="secondary full" disabled>Ottimizza ordine sulle strade</button>
+              <p>Le svolte effettive sono fornite da Apple Mappe o Google Maps; sulla nostra mappa i collegamenti restano schematici.</p>
+            </details>
+            <section id="giro-next" class="giro-next" aria-label="Prossima fermata" hidden>
+              <p class="eyebrow">PROSSIMA FERMATA</p>
+              <strong id="giro-next-label"></strong>
+              <div class="giro-nav-actions">
+                <a id="giro-apple" class="primary" target="_blank" rel="noopener noreferrer">Naviga Apple</a>
+                <a id="giro-google" class="secondary" target="_blank" rel="noopener noreferrer">Google Maps</a>
+              </div>
+              <button id="giro-complete" type="button" class="giro-complete">✓ Fermata completata</button>
+            </section>
+            <ol id="giro-itinerary" class="giro-itinerary" aria-label="Ordine delle fermate"></ol>
+            <p class="giro-hint">Completare una fermata non elimina o modifica il civico originale. Il giro è memorizzato soltanto su questo dispositivo.</p>
+          </div>
+        </section>
         <div id="overview-sheet" class="overview-sheet" data-no-swipe>
           <button id="overview-sheet-toggle" type="button" class="overview-sheet-toggle" aria-controls="overview-sheet-body" aria-expanded="false">
             <span class="overview-sheet-grab" aria-hidden="true"></span>
@@ -246,7 +292,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.41</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.42</p>
       </section>
     </main>
 
@@ -299,6 +345,7 @@
   <script src="map-review.js" defer></script>
   <script src="map-features.js" defer></script>
   <script src="map-overview.js" defer></script>
+  <script src="giro.js" defer></script>
   <script src="updates.js" defer></script>
   <script src="app.js" defer></script>
   <script type="module" src="cloud-google.js"></script>
