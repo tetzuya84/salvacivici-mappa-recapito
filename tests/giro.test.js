@@ -58,7 +58,8 @@ async function testGraphhopper(){
   assert.equal(payload.services.length,3);
   assert.ok(!opts.body.includes("Casalromano"));
   assert.ok(!opts.body.includes("Kennedy"));
-  assert.ok(!opts.body.includes(samples[0].id+'"'));
+  assert.ok(payload.services.every(s=>!samples.some(r=>s.id===r.id)));
+  assert.deepEqual(Array.from(payload.services.map(x=>x.id)),['s0','s1','s2']);
   return {ok:true,json:async()=>({solution:{
    routes:[{activities:[{type:'start'},{type:'service',id:'s2'},{type:'service',id:'s0'},{type:'service',id:'s1'},{type:'end'}]}],
    distance:14000,transport_time:1200
