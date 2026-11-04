@@ -140,7 +140,7 @@
       if(name===tab)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
     });
     if(tab==='records')renderRecords();
-    if(tab!=='map')mapOverview.pauseCompass();
+    if(tab!=='map'){mapOverview.pauseCompass();giro.close();}
     if(tab==='map'){
       // iOS: la richiesta di accesso alla bussola deve partire dal tocco sul tab.
       const compassPermission=window.SCMapFeatures?.primeAutoCompass?.();
@@ -401,6 +401,12 @@
         editRecord(staged);
       }catch(_){toast('Non posso preparare la modifica: verifica l’Archivio.');}
     },
+    notify:toast
+  });
+  // Il Giro legge soltanto i civici pubblicati, mai l'Archivio delle acquisizioni.
+  const giro=window.SCGiro.create({
+    getRecords:()=>state.mapRecords,
+    drawRoute:route=>mapOverview.drawGiro(route),
     notify:toast
   });
   $('map-open').addEventListener('click',()=>mapReview.openCapture());
