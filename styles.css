@@ -1505,8 +1505,9 @@ body:has(#page-records:not([hidden])){height:100dvh}
  -webkit-overflow-scrolling:touch;
  touch-action:pan-y;
 }
-#page-capture .capture-swipe-hint,
-#page-records .archive-swipe-hint{
+#page-capture .intro,
+#page-records .intro{
+ /* Area gestuale dedicata: sul resto del modulo lo scroll resta nativo. */
  touch-action:none;
  user-select:none;
  -webkit-user-select:none;
