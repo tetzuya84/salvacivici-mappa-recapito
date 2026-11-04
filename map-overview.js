@@ -1,4 +1,4 @@
-/* Beta 0.6.38 — mappa a tutta altezza con ricerca e scheda dettaglio richiudibile. */
+/* Beta 0.6.42 — Mappa permanente con overlay itinerario Giro non distruttivo. */
 (function(root){
 'use strict';
 function valid(r){
@@ -25,6 +25,20 @@ function create({getRecords,onVerify,onEditData,notify}){
    filterPanel=$('overview-filter-panel');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
+ let giroLine=null,giroPending=null;
+ function drawGiro(data){
+   giroPending=data;
+   if(!map||!L)return;
+   if(giroLine){map.removeLayer?.(giroLine);giroLine=null;}
+   if(!data||!valid(data.origin)||!Array.isArray(data.stops)||!data.stops.length)return;
+   const coords=[data.origin,...data.stops].filter(valid).map(r=>[r.lat,r.lon]);
+   if(coords.length<2||typeof L.polyline!=='function')return;
+   // LINEA SCHEMATICA: non coincide necessariamente con strade percorribili.
+   giroLine=L.polyline(coords,{color:'#087f79',weight:4,opacity:.9,
+     dashArray:'8 10',interactive:false}).addTo(map);
+   map.fitBounds(L.latLngBounds(coords).pad(.2),{
+     maxZoom:15,paddingTopLeft:[30,110],paddingBottomRight:[30,135],animate:false});
+ }
  const visible=()=>!$('page-map').hidden;
  const records=()=>getRecords().filter(valid);
  function setSheetExpanded(expanded){
@@ -280,6 +294,7 @@ function create({getRecords,onVerify,onEditData,notify}){
        tiles.addTo(map);
        }
        options();render(true);
+       if(giroPending)drawGiro(giroPending);
        root.requestAnimationFrame(()=>map.invalidateSize({pan:false}));
        void cartography?.autoStartCompass(autoCompassPermission,visible);
      }catch(e){
@@ -319,7 +334,7 @@ function create({getRecords,onVerify,onEditData,notify}){
    root.addEventListener('salvacivici:mapchanged',update);
    initialized=true;
  }
- return {open,refresh:update,select,pauseCompass:()=>{autoCompassPermission=null;cartography?.pause();},helpers:{valid,statusOf,appleDirections,googleDirections}};
+ return {open,refresh:update,select,drawGiro,pauseCompass:()=>{autoCompassPermission=null;cartography?.pause();},helpers:{valid,statusOf,appleDirections,googleDirections}};
 }
 root.SCMapOverview={create};
 })(window);
