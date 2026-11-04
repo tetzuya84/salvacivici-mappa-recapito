@@ -1457,23 +1457,21 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
 }
 
 
-/* Beta 0.6.48 — blocco scorrimento iOS/PWA nelle sezioni Salva e Archivio.
-   L'area esterna non puo' essere trascinata: logo e 5 tasti restano fermi.
-   Il contenuto interno continua a scorrere se lo schermo e' troppo piccolo,
-   evitando che campi, Salva civico o azioni dell'Archivio diventino irraggiungibili.
-   Non cambiare l'overflow dei dialog e della Mappa Leaflet. */
-html:has(#page-capture:not([hidden])),
-html:has(#page-records:not([hidden])),
-body:has(#page-capture:not([hidden])),
-body:has(#page-records:not([hidden])){
+/* Beta 0.6.49 — blocco coerente dello scorrimento iOS/PWA su
+   Salva, Archivio, Giro e Dati. La Mappa fullscreen mantiene il proprio layout.
+   Header e navigazione inferiore NON devono muoversi con il trascinamento.
+   I contenuti lunghi scorrono solo in main, senza effetto elastico esterno.
+   Nessun touch-action:none su Giro/Dati: devono restare scrollabili. */
+html:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-data):not([hidden])),
+body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-data):not([hidden])){
  height:100%;
  overflow:hidden;
  overscroll-behavior:none;
 }
-body:has(#page-capture:not([hidden])),
-body:has(#page-records:not([hidden])){height:100dvh}
-.app-shell:has(#page-capture:not([hidden])),
-.app-shell:has(#page-records:not([hidden])){
+body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-data):not([hidden])){
+ height:100dvh;
+}
+.app-shell:has(> main > :is(#page-capture,#page-records,#page-giro,#page-data):not([hidden])){
  position:fixed;
  inset:0;
  width:100%;
@@ -1487,14 +1485,10 @@ body:has(#page-records:not([hidden])){height:100dvh}
  overflow:hidden;
  overscroll-behavior:none;
 }
-.app-shell:has(#page-capture:not([hidden])) > .topbar,
-.app-shell:has(#page-records:not([hidden])) > .topbar,
-.app-shell:has(#page-capture:not([hidden])) > .update-banner,
-.app-shell:has(#page-records:not([hidden])) > .update-banner{
+.app-shell:has(> main > :is(#page-capture,#page-records,#page-giro,#page-data):not([hidden])) > :is(.topbar,.update-banner){
  flex:none;
 }
-.app-shell:has(#page-capture:not([hidden])) > main,
-.app-shell:has(#page-records:not([hidden])) > main{
+.app-shell:has(> main > :is(#page-capture,#page-records,#page-giro,#page-data):not([hidden])) > main{
  flex:1 1 auto;
  min-height:0;
  margin:0 0 calc(82px + env(safe-area-inset-bottom));
@@ -1507,7 +1501,7 @@ body:has(#page-records:not([hidden])){height:100dvh}
 }
 #page-capture .intro,
 #page-records .intro{
- /* Area gestuale dedicata: sul resto del modulo lo scroll resta nativo. */
+ /* Zona dedicata a pull GPS/sync: non interferisce con Giro o Dati. */
  touch-action:none;
  user-select:none;
  -webkit-user-select:none;
