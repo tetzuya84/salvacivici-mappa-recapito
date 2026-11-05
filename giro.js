@@ -1,7 +1,7 @@
-/* SalvaCivici Beta 0.6.50 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.51 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
- * rete stradale serve una chiave GraphHopper personale e un piano adatto all'uso.
+ * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
  */
 (function(root){
 'use strict';
@@ -67,56 +67,16 @@ function googleRoute(stops){
  return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(coord(dest))+
   '&travelmode=driving&waypoints='+encodeURIComponent(via.map(coord).join('|'));
 }
-async function graphhopper(start,stops,key,fetcher){
- if(!safe(start)||!Array.isArray(stops)||!stops.length||stops.length>LIMIT||stops.some(r=>!safe(r)))
-  throw Error('Punti non validi per il routing stradale.');
- if(!key||typeof key!=='string')throw Error('Inserisci una chiave API GraphHopper valida.');
- const ids=stops.map((_,i)=>'s'+i);
- const body={
-  configuration:{routing:{calc_points:false}},
-  objectives:[{type:'min',value:'completion_time'}],
-  vehicles:[{vehicle_id:'v1',type_id:'car',start_address:{location_id:'partenza',lat:start.lat,lon:start.lon},return_to_depot:false}],
-  vehicle_types:[{type_id:'car',profile:'car'}],
-  services:stops.map((r,i)=>({id:ids[i],type:'service',address:{location_id:ids[i],lat:r.lat,lon:r.lon},duration:0}))
- };
- // Non inviare nomi, numeri civici, e-mail, UUID originali o dati di Google Drive.
- const res=await fetcher('https://graphhopper.com/api/1/vrp?key='+encodeURIComponent(key),{
-  method:'POST',mode:'cors',credentials:'omit',referrerPolicy:'no-referrer',
-  headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'
- });
- if(!res.ok){
-  if(res.status===401||res.status===403)throw Error('GraphHopper: chiave non autorizzata o piano non abilitato.');
-  if(res.status===429)throw Error('GraphHopper: limite di richieste raggiunto.');
-  throw Error('Servizio stradale non disponibile (HTTP '+res.status+').');
- }
- const response=await res.json();
- const solution=response.solution||response;
- const unassigned=solution.unassigned||response.unassigned;
- if(Array.isArray(unassigned)&&unassigned.length||
-    unassigned?.services?.length||unassigned?.shipments?.length||
-    (Number.isFinite(solution.no_unassigned)&&solution.no_unassigned>0))
-  throw Error('Non tutte le fermate sono raggiungibili sulle strade.');
- const routes=solution.routes||[];
- if(routes.length!==1||!Array.isArray(routes[0]?.activities))throw Error('Risposta stradale non valida.');
- const indices=routes[0].activities.filter(a=>a.type==='service').map(a=>ids.indexOf(String(a.id||a.service_id||'')));
- if(indices.length!==stops.length||new Set(indices).size!==stops.length||indices.some(i=>i<0))
-  throw Error('Ordine stradale incompleto: non applicato.');
- return{
-  order:indices.map(i=>stops[i]),
-  distanceMeters:Number.isFinite(solution.distance)?solution.distance:null,
-  durationSeconds:Number.isFinite(solution.transport_time)?solution.transport_time:null
- };
-}
 function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  const page=$('page-giro'),search=$('giro-search'),list=$('giro-stops'),
   count=$('giro-count'),status=$('giro-status'),steps=$('giro-itinerary'),
   next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
   googleLink=$('giro-google'),routeCoverage=$('giro-route-coverage'),
   singleLinks=$('giro-single-links'),singleApple=$('giro-single-apple'),
-  singleGoogle=$('giro-single-google'),keyInput=$('giro-api-key'),road=$('giro-road'),
+  singleGoogle=$('giro-single-google'),
   originLabel=$('giro-origin'),gpsHelp=$('giro-gps-help');
- let selected=new Set(),done=new Set(),order=[],origin=null,mode='indicativo',busy=false;
- let fingerprint='',lastRoad=null;
+ let selected=new Set(),done=new Set(),order=[],origin=null,busy=false;
+ let fingerprint='';
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
  function current(){return records().filter(r=>selected.has(r.id));}
  function save(){
@@ -135,7 +95,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  function updateButtons(){
   const has=selected.size>0;
   $('giro-order').disabled=busy||!has;
-  road.disabled=busy||!has||!keyInput.value.trim();
+
   $('giro-locate').disabled=busy;
   $('giro-recalc').disabled=busy||!has;
   $('giro-select-all').disabled=busy;
@@ -143,7 +103,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   count.textContent=selected.size+' / '+LIMIT+' fermate selezionate';
  }
  function clearPath(){
-  order=[];lastRoad=null;fingerprint='';mode='indicativo';drawRoute?.(null);renderItinerary();
+  order=[];fingerprint='';drawRoute?.(null);renderItinerary();
  }
  function snapshot(){
   return JSON.stringify(current().map(r=>[r.id,r.lat,r.lon]).sort((a,b)=>a[0].localeCompare(b[0])));
@@ -252,9 +212,8 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   if(!safe(p))throw Error('GPS non valido, riprova all’aperto.');
   origin=p;
   gpsHelp.hidden=true;
-  originLabel.textContent='Partenza GPS: '+p.lat.toFixed(5)+', '+p.lon.toFixed(5)+
-   (Number.isFinite(p.accuracy)?' (±'+Math.round(p.accuracy)+' m)':'');
-  if(p.accuracy>100)message('Partenza GPS imprecisa (±'+Math.round(p.accuracy)+' m): riprova prima di guidare.',true);
+  originLabel.textContent='La tua posizione'+(Number.isFinite(p.accuracy)?' · GPS ±'+Math.round(p.accuracy)+' m':' · GPS attivo');
+   if(p.accuracy>100)message('Partenza GPS imprecisa (±'+Math.round(p.accuracy)+' m): riprova prima di guidare.',true);
   return p;
  }
  async function withBusy(task){
@@ -273,21 +232,6 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    applyOrder(ordered,'Ordine indicativo per distanza geometrica (≈'+(routeDistance(origin,ordered)/1000).toFixed(1)+' km in linea d’aria). NON è il percorso stradale più veloce.');
   });
  }
- async function optimizeRoad(){
-  await withBusy(async()=>{
-   const stops=current().filter(r=>!done.has(r.id));
-   if(!stops.length){message('Seleziona almeno un civico.',true);return;}
-   const token=keyInput.value.trim();
-   if(!token){message('Inserisci la chiave GraphHopper. Non viene salvata nel dispositivo.',true);return;}
-   if(!origin)await gps();
-   message('Calcolo tempi e ordine sulla rete stradale…');
-   const result=await graphhopper(origin,stops,token,fetch);
-   mode='stradale';lastRoad=result;
-   applyOrder(result.order,'Ordine ottimizzato da GraphHopper sulla rete stradale'+
-    (result.durationSeconds!=null?' · guida stimata '+Math.round(result.durationSeconds/60)+' min':'')+
-    '. Le linee sulla mappa sono schematiche; per le svolte usa Naviga.');
-  });
- }
  // La nuova scheda Giro e' gestita dalla barra di navigazione principale.
  // Il passaggio Mappa/Giro non azzera selezione, sequenza o fermate completate.
  function open(){syncRecords();}
@@ -299,8 +243,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  $('giro-gps-help-retry').addEventListener('click',()=>void withBusy(async()=>{
    await gps();clearPath();message('GPS autorizzato. Posizione aggiornata: puoi calcolare il giro.');
  }));
- $('giro-road').addEventListener('click',()=>void optimizeRoad());
- $('giro-api-key').addEventListener('input',updateButtons);
+
  $('giro-search').addEventListener('input',renderList);
  $('giro-select-all').addEventListener('click',()=>{
   const terms=normalize(search.value).split(/\s+/).filter(Boolean);
@@ -319,7 +262,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  root.addEventListener('salvacivici:mapchanged',syncRecords);
  restore();syncRecords();renderItinerary();
  return {refresh:syncRecords,open,close,
-  helpers:{heuristic,graphhopper,distance,routeDistance,appleRoute,googleRoute}};
+  helpers:{heuristic,distance,routeDistance,appleRoute,googleRoute}};
 }
-root.SCGiro={create,helpers:{heuristic,graphhopper,distance,routeDistance,appleRoute,googleRoute}};
+root.SCGiro={create,helpers:{heuristic,distance,routeDistance,appleRoute,googleRoute}};
 })(window);
