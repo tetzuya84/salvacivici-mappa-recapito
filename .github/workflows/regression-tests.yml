@@ -1,0 +1,29 @@
+name: SalvaCivici regression tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run all regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for testfile in tests/*.test.js; do
+            echo "Running $testfile"
+            node "$testfile"
+          done
