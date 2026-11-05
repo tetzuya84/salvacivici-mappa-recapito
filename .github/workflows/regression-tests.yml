@@ -22,8 +22,17 @@ jobs:
       - name: Run all regression tests
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          failed=0
           for testfile in tests/*.test.js; do
-            echo "Running $testfile"
-            node "$testfile"
+            echo "::group::$testfile"
+            if node "$testfile"; then
+              echo "PASS $testfile"
+            else
+              echo "::error file=$testfile::Regression test failed"
+              failed=$((failed+1))
+            fi
+            echo "::endgroup::"
           done
+          echo "Total failed: $failed"
+          exit "$((failed>0))"
