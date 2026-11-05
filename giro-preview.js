@@ -1,5 +1,5 @@
-/* SalvaCivici Beta 0.6.51 — Anteprima stradale di Giro.
- * Usa SOLO su richiesta esplicita il demo pubblico Valhalla/OSM (fair use).
+/* SalvaCivici Beta 0.6.52 — Anteprima stradale di Giro.
+ * Usa il demo pubblico Valhalla/OSM per anteprime selezionate dall'utente (fair use).
  * Richiede solo le coordinate; non invia indirizzi, nomi, account, UUID o backup.
  * Nessuna linea d'aria in alternativa: se il router fallisce, restano i pin.
  * L'ordine delle tappe e' definito da Giro, non ottimizzato da questo servizio.
@@ -75,7 +75,7 @@ async function requestRoadRoute(points,fetcher,signal){
 function create({fetcher}={}){
  const page=$('page-giro'),panel=$('giro-preview'),canvas=$('giro-canvas'),status=$('giro-preview-status');
  let map=null,L=null,layer=null,loading=null,plan=null,generation=0,activeRequest=null;
- let cachedKey='',cachedRoute=null;
+ let cachedKey='',cachedRoute=null,debounceTimer=null,lastNetworkStart=0;
  const visible=()=>!page.hidden&&!panel.hidden;
  const http=fetcher||root.fetch?.bind(root);
  const getPoints=()=>plan?[plan.origin,...plan.stops]:[];
@@ -146,6 +146,7 @@ function create({fetcher}={}){
   });
  }
  async function activate(){
+  if(debounceTimer!==null){clearTimeout(debounceTimer);debounceTimer=null;}
   if(!visible()||!plan)return;
   stopRequest();
   const id=generation,points=getPoints(),key=routeKey(points);
@@ -165,6 +166,10 @@ function create({fetcher}={}){
    activeRequest=ctrl;
    let timer=null;
    try{
+    const wait=Math.max(0,1100-(Date.now()-lastNetworkStart));
+    if(wait)await new Promise(resolve=>setTimeout(resolve,wait));
+    if(id!==generation||!visible())return;
+    lastNetworkStart=Date.now();
     if(ctrl)timer=setTimeout(()=>ctrl.abort(),18000);
     const road=await requestRoadRoute(points,http,ctrl?.signal);
     if(id!==generation||!visible())return;
@@ -191,9 +196,13 @@ function create({fetcher}={}){
   plan=data&&safe(data.origin)&&Array.isArray(data.stops)&&data.stops.length&&
    data.stops.every(safe)?data:null;
   stopRequest();
+  if(debounceTimer!==null){clearTimeout(debounceTimer);debounceTimer=null;}
   panel.hidden=!plan;
   if(!plan){layer?.clearLayers();return;}
-  if(visible())void activate();
+  if(visible()){
+   status.textContent='Aggiorno l’anteprima sulle strade…';
+   debounceTimer=setTimeout(()=>{debounceTimer=null;void activate();},1100);
+  }
  }
  return{draw,activate};
 }
