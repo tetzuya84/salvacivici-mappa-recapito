@@ -197,7 +197,7 @@
               <button id="giro-gps-help-retry" class="gps-guide-retry" type="button">⌖ Riprova GPS</button>
             </div>
             <div class="giro-origin-row">
-              <span id="giro-origin">Partenza: GPS da rilevare</span>
+              <span id="giro-origin">La tua posizione · GPS da rilevare</span>
               <button id="giro-locate" type="button" class="secondary">⌖ GPS</button>
             </div>
             <label class="giro-label" for="giro-search">Scegli i civici pubblicati</label>
@@ -212,15 +212,8 @@
               <button id="giro-order" type="button" class="primary">Crea ordine indicativo</button>
               <button id="giro-recalc" type="button" class="secondary">Ricalcola dal GPS</button>
             </div>
-            <p class="giro-hint">L'ordine indicativo usa distanze in linea d'aria: non tiene conto di sensi unici, incroci, traffico o tempi reali. Le linee tratteggiate non sono indicazioni di guida.</p>
-            <details class="giro-provider">
-              <summary>Ottimizzazione sulle strade (facoltativa)</summary>
-              <p>Usa GraphHopper con una tua chiave API e un piano autorizzato all'uso professionale. Il piano gratuito è solo per uso non commerciale. Può avere costi. Vengono inviate a GraphHopper solo le coordinate della partenza e delle tappe.</p>
-              <label for="giro-api-key">Chiave API GraphHopper (non viene salvata)</label>
-              <input id="giro-api-key" type="password" placeholder="Incolla la chiave personale" autocomplete="off" autocorrect="off" spellcheck="false">
-              <button id="giro-road" type="button" class="secondary full" disabled>Ottimizza ordine sulle strade</button>
-              <p>Le svolte effettive sono fornite da Apple Mappe o Google Maps; sulla nostra mappa i collegamenti restano schematici.</p>
-            </details>
+            <p class="giro-hint">L'ordine delle fermate è indicativo e usa distanze geometriche. L'anteprima prova a mostrare le strade reali; traffico e tempi reali non sono calcolati.</p>
+            <p class="giro-hint giro-road-disclaimer">L'anteprima delle strade utilizza Valhalla/OpenStreetMap quando disponibile. Invia solo coordinate GPS e tappe; il servizio pubblico è dimostrativo, non garantito e senza traffico in tempo reale. Per navigare usa Apple Mappe o Google Maps.</p>
             <section id="giro-next" class="giro-next" aria-label="Prossima fermata" hidden>
               <p class="eyebrow">PROSSIMA FERMATA</p>
               <strong id="giro-next-label"></strong>
@@ -239,8 +232,8 @@
             </section>
             <section id="giro-preview" class="giro-preview" aria-labelledby="giro-preview-title" hidden>
               <h2 id="giro-preview-title">Anteprima del giro</h2>
-              <div id="giro-canvas" class="giro-canvas" data-no-swipe role="img" aria-label="Anteprima schematica delle fermate del giro"></div>
-              <p id="giro-preview-status" class="giro-hint">Tratto schematico: non rappresenta le strade. Per guidare usa Apple Mappe o Google Maps.</p>
+              <div id="giro-canvas" class="giro-canvas" data-no-swipe role="img" aria-label="Anteprima del percorso stradale e delle fermate del giro"></div>
+              <p id="giro-preview-status" class="giro-hint">Percorso stradale in caricamento, se disponibile. Per guidare usa Apple Mappe o Google Maps.</p>
             </section>
             <ol id="giro-itinerary" class="giro-itinerary" aria-label="Ordine delle fermate"></ol>
             <p class="giro-hint">Completare una fermata non elimina o modifica il civico originale. Il giro è memorizzato soltanto su questo dispositivo.</p>
@@ -312,7 +305,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati. Con la vista Satellite, anche Esri riceve le richieste per l’area visualizzata; si applicano le condizioni del fornitore, da verificare per uso professionale.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.50</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.51</p>
       </section>
     </main>
 
