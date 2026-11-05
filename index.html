@@ -295,7 +295,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati. Con la vista Satellite, anche Esri riceve le richieste per l’area visualizzata; si applicano le condizioni del fornitore, da verificare per uso professionale.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.55</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.56</p>
       </section>
     </main>
 
@@ -318,7 +318,7 @@
         <div><h2 id="map-review-title">Posizione sulla mappa</h2><p id="map-review-gps-status" role="status">In attesa del GPS</p></div>
         <button id="map-review-close" type="button" aria-label="Chiudi la mappa">×</button>
       </div>
-      <p class="map-review-instruction">Zoom e rotazione con due dita. <strong>Trascina il pin oppure tocca l’ingresso effettivo.</strong> Il GPS originale resta indicato in verde.</p>
+      <p class="map-review-instruction">Trascina il pin o tocca l’ingresso.</p>
       <div class="map-style-controls map-review-style-controls" data-no-swipe>
         <button id="map-review-basemap" type="button" class="map-style-toggle" aria-pressed="false">▧ Satellite</button>
         <button id="map-review-compass" type="button" class="map-style-toggle" aria-pressed="false" disabled>↗ Segui bussola</button>
@@ -328,9 +328,14 @@
         <div id="map-review-canvas" class="map-review-canvas" aria-label="Mappa interattiva per correggere il segnaposto"></div>
         <p id="map-review-loading" class="map-review-loading" role="status">Caricamento cartografia…</p>
       </div>
-      <p id="map-review-status" class="map-review-status" aria-live="polite"></p>
-      <p id="map-review-coordinates" class="map-review-coordinates"></p>
-      <p class="map-review-privacy">Cartografia © OpenStreetMap / immagini satellitari © Esri e fornitori. Serve Internet; l’area visualizzata viene richiesta al servizio mappe. Le immagini potrebbero non essere aggiornate; controlla sempre l’ingresso sul posto.</p>
+      <div class="map-review-meta">
+        <p id="map-review-status" class="map-review-status" aria-live="polite"></p>
+        <p id="map-review-coordinates" class="map-review-coordinates"></p>
+      </div>
+      <details class="map-review-about">
+        <summary>Info cartografia</summary>
+        <p>Cartografia © OpenStreetMap; immagini satellitari © Esri e fornitori. La mappa richiede Internet e comunica l’area visualizzata ai servizi cartografici. Le immagini possono non essere aggiornate: verifica sempre l’ingresso sul posto.</p>
+      </details>
       </div>
       <div class="map-review-footer" aria-label="Azioni di correzione pin">
       <div class="map-review-actions">

@@ -1614,3 +1614,88 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
  .app-shell.is-capture #page-capture .gps-meter{gap:4px}
  .app-shell.is-capture #page-capture .form-card{padding-top:7px;padding-bottom:7px;gap:6px}
 }
+
+/* Beta 0.6.56 — anteprima pin con più superficie cartografica:
+   mappa elastica, testo compatto e footer sempre raggiungibile. */
+@media (max-width:639px) {
+ .map-review-dialog {
+  width:min(calc(100vw - 12px),600px);
+  max-height:calc(100dvh - 12px);
+  border-radius:16px;
+ }
+ .map-review-pane {
+  height:96dvh;
+  max-height:calc(100dvh - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height:0;
+ }
+ .map-review-scroll {
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  gap:6px;
+  padding:9px 10px 6px;
+ }
+ .map-review-top {gap:7px}
+ .map-review-top h2 {font-size:18px;line-height:1.15}
+ .map-review-top p {font-size:11px;line-height:1.25;margin:2px 0 0}
+ #map-review-close {width:39px;height:39px;min-height:39px}
+ .map-review-instruction {margin:0;font-size:12px;line-height:1.25}
+ .map-review-style-controls {gap:7px;margin:0}
+ .map-review-style-controls .map-style-toggle {min-height:41px;padding:6px;font-size:12px}
+ .map-review-map-wrap {
+  flex:1 1 auto;
+  min-height:250px;
+  overflow:hidden;
+ }
+ .map-review-canvas {
+  display:block;
+  height:100%;
+  min-height:100%;
+  max-height:none;
+ }
+ .map-review-meta {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:2px 8px;
+  min-height:17px;
+  font-size:11px;
+  line-height:1.25;
+ }
+ .map-review-status {margin:0;font-size:11px;line-height:1.25}
+ .map-review-coordinates {margin:0;font-size:10px;line-height:1.25}
+ .map-review-about {flex:none;margin:0}
+ .map-review-about summary {
+  cursor:pointer;
+  width:max-content;
+  min-height:22px;
+  padding:4px 2px;
+  color:#547681;
+  font-size:10px;
+  line-height:1.2;
+  touch-action:manipulation;
+ }
+ .map-review-about p {
+  margin:2px 0 5px;
+  color:#657e86;
+  font-size:10px;
+  line-height:1.35;
+ }
+ .map-review-footer {
+  flex:none;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  gap:3px;
+ }
+ .map-review-actions button {min-height:46px;padding:8px 6px}
+ .map-review-footer .map-review-cancel {min-height:38px}
+}
+@media (max-width:639px) and (max-height:670px) {
+ .map-review-pane {height:97dvh;max-height:calc(100dvh - 8px)}
+ .map-review-scroll {padding:6px 8px;gap:5px}
+ .map-review-map-wrap {min-height:185px;flex:1 1 auto}
+ .map-review-canvas {height:100%;min-height:100%;max-height:none}
+ .map-review-footer {padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+}

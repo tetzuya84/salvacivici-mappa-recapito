@@ -41,9 +41,10 @@ function create({getCaptureGps,getCaptureReady,onCaptureConfirm,onArchiveConfirm
     const distance=root.SC.metersBetween(original,chosen);
     const moved=active.moved&&distance>=.5;
     const accuracy=Number.isFinite(original.accuracy)?Math.round(original.accuracy):null;
-    status.textContent=!active.mapLoaded?'Attendo la cartografia: il pin potrà essere confermato solo quando la mappa sarà visibile.':
-      moved?'Posizione corretta di '+Math.round(distance)+' m rispetto al GPS. Controlla che il pin sia sull’ingresso.':
-      'Pin sul GPS'+(accuracy!==null?' (precisione stimata ±'+accuracy+' m)':'')+'. Trascina il pin o tocca l’ingresso sulla mappa.';
+    const gpsLabel=accuracy!==null?'GPS ±'+accuracy+' m':'GPS';
+    status.textContent=!active.mapLoaded?'Caricamento mappa…':
+      moved?'Posizione corretta di '+Math.round(distance)+' m · '+gpsLabel:
+      'Pin originale · '+gpsLabel;
     $('map-review-coordinates').textContent=chosen.lat.toFixed(7)+', '+chosen.lon.toFixed(7);
     $('map-review-gps-status').textContent=active.kind==='capture'
       ?(active.ready?'3/3 letture GPS · scegli l’ingresso':'Attendi le tre letture GPS prima di confermare')
