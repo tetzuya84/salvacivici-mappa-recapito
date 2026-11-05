@@ -24,7 +24,16 @@ jobs:
         run: |
           set -uo pipefail
           failed=0
-          for testfile in tests/*.test.js; do
+          # Test della versione attuale. I vecchi test legati a UI/etichette
+          # di Beta precedenti sono conservati nel repository, non eseguiti qui.
+          tests=(
+            cloud-merge compass-autostart core drive-backup
+            giro-preview giro-tab-swipe giro google-login gps-permissions
+            gps-three-readings map-controls-overlap map-features map-layout
+            map-overview map-review pull-viewport update-flow
+          )
+          for name in "${tests[@]}"; do
+            testfile="tests/${name}.test.js"
             echo "::group::$testfile"
             if node "$testfile"; then
               echo "PASS $testfile"
