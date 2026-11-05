@@ -209,18 +209,14 @@
             </div>
             <div id="giro-stops" class="giro-stops" data-no-swipe role="group" aria-label="Civici disponibili da selezionare"></div>
             <div class="giro-main-actions">
-              <button id="giro-order" type="button" class="primary">Crea ordine indicativo</button>
               <button id="giro-recalc" type="button" class="secondary">Ricalcola dal GPS</button>
             </div>
-            <p class="giro-hint">L'ordine delle fermate è indicativo e usa distanze geometriche. L'anteprima prova a mostrare le strade reali; traffico e tempi reali non sono calcolati.</p>
+            <p class="giro-hint">Selezionando i civici, il giro si aggiorna automaticamente. La sequenza usa la vicinanza geografica e non considera il traffico; l'anteprima segue le strade quando disponibili.</p>
             <p class="giro-hint giro-road-disclaimer">L'anteprima delle strade utilizza Valhalla/OpenStreetMap quando disponibile. Invia solo coordinate GPS e tappe; il servizio pubblico è dimostrativo, non garantito e senza traffico in tempo reale. Per navigare usa Apple Mappe o Google Maps.</p>
-            <section id="giro-next" class="giro-next" aria-label="Prossima fermata" hidden>
-              <p class="eyebrow">PROSSIMA FERMATA</p>
-              <strong id="giro-next-label"></strong>
-              <p class="giro-nav-heading">APRI IL PERCORSO CON TUTTE LE TAPPE POSSIBILI</p>
+            <section id="giro-next" class="giro-next" aria-label="Navigazione del giro" hidden>
               <div class="giro-nav-actions">
-                <a id="giro-apple" class="primary" target="_blank" rel="noopener noreferrer">Giro completo · Apple</a>
-                <a id="giro-google" class="secondary" target="_blank" rel="noopener noreferrer">Giro completo · Google</a>
+                <a id="giro-apple" class="primary" target="_blank" rel="noopener noreferrer">Naviga con Apple Mappe</a>
+                <a id="giro-google" class="secondary" target="_blank" rel="noopener noreferrer">Naviga con Google Maps</a>
               </div>
               <p id="giro-route-coverage" class="giro-route-coverage" role="status" aria-live="polite"></p>
               <p id="giro-single-links" class="giro-single-links" hidden>Solo prossima fermata:
@@ -305,7 +301,7 @@
         </div>
         <div class="data-card"><div class="data-icon">↗</div><h2>CSV per Google My Maps</h2><p>Esporta tutti i punti della <strong>Mappa permanente</strong>, anche se hai già pulito l’Archivio. Include coordinate definitive, verifica e GPS originale.</p><button id="export-csv" type="button" class="primary full">Esporta CSV</button></div>
         <div class="privacy-note"><strong>Importante</strong><p>Questa versione non sincronizza automaticamente Google My Maps. Il database è locale: esporta periodicamente un backup per evitare perdite di dati.</p><p>Riconoscimento del comune sul dispositivo, tramite confini amministrativi ISTAT 2026 (CC BY), distribuiti da <a href="https://github.com/guglielmo/geojson-italy" target="_blank" rel="noopener noreferrer">geojson-italy</a>. Non vengono inviate le tue coordinate a servizi di geocodifica. Quando apri la mappa live, il servizio OpenStreetMap riceve richieste delle sole tessere dell’area visualizzata; non vengono inviati i civici registrati. Con la vista Satellite, anche Esri riceve le richieste per l’area visualizzata; si applicano le condizioni del fornitore, da verificare per uso professionale.</p></div>
-        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.51</p>
+        <p class="app-version" aria-label="Versione dell'applicazione">SalvaCivici · BETA 0.6.52</p>
       </section>
     </main>
 
