@@ -1,4 +1,4 @@
-/* Beta 0.6.50 — routing completo dei waypoint e singola prossima fermata, senza rete. */
+/* Beta 0.6.51 — giro multistop, etichetta GPS e nessun GraphHopper. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync('giro.js','utf8');
@@ -83,32 +83,7 @@ function testNavigationUrls(){
  assert.throws(()=>helpers.googleRoute(many),/4/);
  assert.throws(()=>helpers.googleRoute([]),/1 a 4/);
 }
-async function testGraphhopper(){
- let payload;
- const reversed=await helpers.graphhopper(start,samples,'temporary-key',async(url,opts)=>{
-  assert.match(url,/graphhopper\.com\/api\/1\/vrp\?key=temporary-key/);
-  assert.equal(opts.credentials,'omit');assert.equal(opts.referrerPolicy,'no-referrer');
-  payload=JSON.parse(opts.body);
-  assert.equal(payload.vehicles[0].return_to_depot,false);
-  assert.equal(payload.services.length,3);
-  assert.ok(!opts.body.includes("Casalromano"));
-  assert.ok(!opts.body.includes("Kennedy"));
-  assert.ok(payload.services.every(s=>!samples.some(r=>s.id===r.id)));
-  assert.deepEqual(Array.from(payload.services.map(x=>x.id)),['s0','s1','s2']);
-  return {ok:true,json:async()=>({solution:{
-   routes:[{activities:[{type:'start'},{type:'service',id:'s2'},{type:'service',id:'s0'},{type:'service',id:'s1'},{type:'end'}]}],
-   distance:14000,transport_time:1200
-  }})};
- });
- assert.deepEqual(Array.from(reversed.order.map(r=>r.id)),['c','a','b']);
- assert.equal(reversed.durationSeconds,1200);
- assert.equal(reversed.distanceMeters,14000);
- assert.equal(payload.services[0].duration,0);
- await assert.rejects(()=>helpers.graphhopper(start,samples,'temporary-key',async()=>({ok:false,status:429})),/limite/);
- await assert.rejects(()=>helpers.graphhopper(start,samples,'temporary-key',async()=>({ok:true,json:async()=>({solution:{
-  routes:[{activities:[{type:'service',id:'s0'}]}]
- }})})),/incompleto/);
-}
+assert.equal(helpers.graphhopper,undefined,'GraphHopper è stato eliminato dal Giro');
 async function testUI(){
  const instance=win.SCGiro.create({getRecords:()=>samples,drawRoute:plan=>drawn.push(plan),notify(){}});
  node('page-giro').hidden=false;
@@ -157,6 +132,6 @@ async function testUI(){
  assert.equal(JSON.stringify(samples),original,'Giro never changes permanent civics');
 }
 (async()=>{
- testNavigationUrls();await testGraphhopper();await testUI();
- console.log('PASS Beta 0.6.50: optimization mock, GPS, selection, navigation, progress, no data mutation.');
+ testNavigationUrls();await testUI();
+ console.log('PASS Beta 0.6.51: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
