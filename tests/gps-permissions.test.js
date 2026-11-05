@@ -76,7 +76,6 @@ async function testGiro(){
  node('page-giro').hidden=false;
  giro.open();
  const check=node('giro-stops').children[0].children[0];check.checked=true;check.events.change();
- node('giro-order').events.click();
  await new Promise(resolve=>setTimeout(resolve,0));
  assert.equal(calls,1);
  assert.equal(node('giro-gps-help').hidden,false);
@@ -86,7 +85,7 @@ async function testGiro(){
  await new Promise(resolve=>setTimeout(resolve,0));
  assert.equal(calls,2);
  assert.equal(node('giro-gps-help').hidden,true);
- assert.match(node('giro-origin').textContent,/Partenza GPS/);
+ assert.match(node('giro-origin').textContent,/La tua posizione/);
  assert.equal(JSON.stringify(points),unchanged,'non scrivere coordinate dei civici');
  return 'Giro: codice 1, retry e dati civici invariati';
 }
