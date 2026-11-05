@@ -12,8 +12,8 @@ function dom(){
     blur(){}});
    return nodes.get(id);
   },
-  createElement(type){return {type,checked:false,disabled:false,textContent:'',value:'',className:'',children:[],events:{},
-   addEventListener(k,fn){this.events[k]=fn},append(...xs){this.children.push(...xs);}}}
+  createElement(type){return {type,checked:false,disabled:false,textContent:'',value:'',className:'',children:[],events:{},attrs:{},
+   setAttribute(k,v){this.attrs[k]=v},addEventListener(k,fn){this.events[k]=fn},append(...xs){this.children.push(...xs);}}}
  };
  return {doc,node:doc.getElementById.bind(doc)};
 }
