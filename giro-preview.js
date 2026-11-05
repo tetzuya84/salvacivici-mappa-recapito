@@ -188,9 +188,8 @@ function create({fetcher}={}){
  }
  function routeSummary(road){
   const km=road.km==null?'':road.km.toFixed(1).replace('.',',')+' km';
-  const minutes=road.seconds==null?'':' · circa '+Math.round(road.seconds/60)+' min';
-  return 'Percorso sulle strade OpenStreetMap'+(km?' · '+km:'')+minutes+
-   '. Stima senza traffico; per navigare usa Apple Mappe o Google Maps.';
+  const minutes=road.seconds==null?'':Math.round(road.seconds/60)+' min';
+  return [km,minutes].filter(Boolean).join(' · ')||'Distanza e durata non disponibili';
  }
  function draw(data){
   plan=data&&safe(data.origin)&&Array.isArray(data.stops)&&data.stops.length&&

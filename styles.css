@@ -1509,16 +1509,18 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
 
 
 /* Beta 0.6.51 — scheda Giro snella, anteprima stradale e swipe laterale. */
-#page-giro .giro-road-disclaimer{
- padding:10px 12px;margin:11px 0 13px;
- background:#edf5f4;border:1px solid #d9e7e4;
- border-radius:12px;color:#466a70;font-size:11px;line-height:1.5;
-}
 #page-giro .giro-preview #giro-preview-status[role="status"]{
  margin:8px 0 0;color:#446975;font-size:11px;line-height:1.5;
 }
 #page-giro .giro-stops{touch-action:pan-y}
 
-/* Beta 0.6.53 — comando GPS unico e navigazione essenziale. */
+/* Beta 0.6.54 — comando GPS unico e navigazione essenziale. */
 #page-giro .giro-main-actions button{font-size:14px}
 #page-giro .giro-next{padding-top:11px}
+
+/* Beta 0.6.54 — tasti manuali accessibili sulla destra dell'elenco delle fermate. */
+#page-giro .giro-itinerary li{position:relative;box-sizing:border-box;min-height:50px;padding:8px 98px 8px 0;overflow-wrap:anywhere}
+#page-giro .giro-order-controls{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:5px;align-items:center}
+#page-giro .giro-order-move{width:44px;min-width:44px;height:44px;min-height:44px;display:grid;place-items:center;border:1px solid #c7e1dd;border-radius:10px;background:#e4f3ef;color:#11736c;font-size:22px;font-weight:800;line-height:1;touch-action:manipulation}
+#page-giro .giro-order-move:disabled{opacity:.32;cursor:default}
+#page-giro .giro-order-move:not(:disabled):active{background:#b8e7db}

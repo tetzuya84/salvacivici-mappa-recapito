@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.53 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.54 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
@@ -75,17 +75,22 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   singleLinks=$('giro-single-links'),singleApple=$('giro-single-apple'),
   singleGoogle=$('giro-single-google'),gpsHelp=$('giro-gps-help');
  let selected=new Set(),done=new Set(),order=[],origin=null,busy=false;
- let fingerprint='',revision=0,gpsInFlight=null;
+ let fingerprint='',revision=0,gpsInFlight=null,manualMode=false,manualOrderIds=[];
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
  function current(){return records().filter(r=>selected.has(r.id));}
  function save(){
-  try{localStorage.setItem(STORAGE,JSON.stringify({selected:[...selected],done:[...done]}));}catch(_){}
+  try{localStorage.setItem(STORAGE,JSON.stringify({selected:[...selected],done:[...done],
+   manualOrder:manualMode?manualOrderIds:[]}));}catch(_){}
  }
  function restore(){
   try{
    const v=JSON.parse(localStorage.getItem(STORAGE)||'{}');
    if(Array.isArray(v.selected))selected=new Set(v.selected.filter(x=>typeof x==='string').slice(0,LIMIT));
    if(Array.isArray(v.done))done=new Set(v.done.filter(x=>typeof x==='string'));
+   if(Array.isArray(v.manualOrder)&&v.manualOrder.length){
+    manualOrderIds=[...new Set(v.manualOrder.filter(x=>typeof x==='string'))].slice(0,LIMIT);
+    manualMode=manualOrderIds.length>0;
+   }
   }catch(_){}
  }
  function message(text,error=false){
@@ -113,6 +118,10 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    const ids=new Set(records().map(r=>r.id));
    selected=new Set([...selected].filter(id=>ids.has(id)));
    done=new Set([...done].filter(id=>selected.has(id)));
+   if(manualMode){
+    manualOrderIds=manualOrderIds.filter(id=>selected.has(id));
+    if(!manualOrderIds.length)manualMode=false;
+   }
   }
   const changed=order.length&&fingerprint!==snapshot();
   if(changed)clearPath();
@@ -146,13 +155,36 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   const first=lastDone||origin;
   drawRoute?.(remaining.length&&first?{origin:first,stops:remaining,road:false}:null);
  }
+ function moveStop(index,delta){
+  const other=index+delta;
+  if(index<0||other<0||other>=order.length||
+    done.has(order[index].id)||done.has(order[other].id))return;
+  [order[index],order[other]]=[order[other],order[index]];
+  ++revision;
+  manualMode=true;manualOrderIds=order.map(r=>r.id);
+  save();refreshPath();renderItinerary();
+  message('Ordine personalizzato aggiornato.');
+ }
  function renderItinerary(){
   steps.replaceChildren();
   for(let i=0;i<order.length;i++){
    const r=order[i],item=document.createElement('li');
    if(done.has(r.id))item.className='giro-done';
-   item.textContent=label(r)+(done.has(r.id)?' ✓':'');
-   steps.append(item);
+   const name=document.createElement('span');
+   name.className='giro-itinerary-text';
+   name.textContent=label(r)+(done.has(r.id)?' ✓':'');
+   const controls=document.createElement('span');
+   controls.className='giro-order-controls';
+   for(const [delta,symbol,direction] of [[-1,'↑','alto'],[1,'↓','basso']]){
+    const button=document.createElement('button');
+    button.type='button';button.className='giro-order-move';
+    button.textContent=symbol;
+    button.setAttribute('aria-label','Sposta '+label(r)+' in '+direction);
+    button.disabled=done.has(r.id)||!order[i+delta]||done.has(order[i+delta].id);
+    button.addEventListener('click',()=>moveStop(i,delta));
+    controls.append(button);
+   }
+   item.append(name,controls);steps.append(item);
   }
   const remaining=order.filter(r=>!done.has(r.id));
   const target=remaining[0];
@@ -221,7 +253,14 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    const stops=current().filter(r=>!done.has(r.id));
    if(!stops.length){clearPath();return;}
    try{
-    const ordered=heuristic(origin,stops);
+    let ordered=heuristic(origin,stops);
+    if(manualMode&&manualOrderIds.length){
+     const byId=new Map(stops.map(r=>[r.id,r]));
+     const preserved=manualOrderIds.map(id=>byId.get(id)).filter(Boolean);
+     const seen=new Set(preserved.map(r=>r.id));
+     ordered=preserved.concat(ordered.filter(r=>!seen.has(r.id)));
+     manualOrderIds=ordered.map(r=>r.id);
+    }
     applyOrder(ordered,'Percorso aggiornato automaticamente · '+ordered.length+' fermate. La sequenza usa la vicinanza geografica; per guidare segui il navigatore.');
    }catch(error){message(error.message||'Impossibile calcolare il giro.',true);}
   };
@@ -241,6 +280,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    if(ticket!==revision)return;
    const stops=current().filter(r=>!done.has(r.id));
    if(!stops.length){clearPath();return;}
+   manualMode=false;manualOrderIds=[];
    applyOrder(heuristic(origin,stops),
     'Percorso ricalcolato dal GPS · '+stops.length+' fermate. Sequenza per vicinanza geografica, senza traffico in tempo reale.');
   });
@@ -265,7 +305,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   save();clearPath();renderList();updateButtons();void autoEstimate();
  });
  $('giro-clear').addEventListener('click',()=>{
-  selected.clear();done.clear();save();clearPath();renderList();updateButtons();
+  selected.clear();done.clear();manualMode=false;manualOrderIds=[];save();clearPath();renderList();updateButtons();
   ++revision;message('Selezione azzerata. I civici sono invariati.');
  });
  complete.addEventListener('click',()=>{

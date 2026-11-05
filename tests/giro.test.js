@@ -1,4 +1,4 @@
-/* Beta 0.6.52 — giro multistop, etichetta GPS e nessun GraphHopper. */
+/* Beta 0.6.54 — giro multistop, etichetta GPS e nessun GraphHopper. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync('giro.js','utf8');
@@ -17,7 +17,8 @@ function node(id){
  return elements.get(id);
 }
 const doc={getElementById:node,createElement:type=>({
- type,children:[],textContent:'',checked:false,disabled:false,events:{},className:'',
+ type,children:[],textContent:'',checked:false,disabled:false,events:{},className:'',attrs:{},
+ setAttribute(k,v){this.attrs[k]=v},
  addEventListener(k,f){this.events[k]=f},
  append(...x){this.children.push(...x)}
 })};
@@ -110,6 +111,27 @@ async function testUI(){
  const restored=node('giro-stops').children[2].children[0];
  restored.checked=true;restored.events.change();
  assert.equal(drawn.at(-1)?.stops?.length,2,'Selezione ricalcolata');
+ const firstBefore=Array.from(drawn.at(-1).stops,r=>r.id);
+ const firstRow=node('giro-itinerary').children[0];
+ assert.equal(firstRow.children[1].className,'giro-order-controls');
+ assert.equal(firstRow.children[1].children[0].disabled,true);
+ assert.equal(firstRow.children[1].children[1].disabled,false);
+ firstRow.children[1].children[1].events.click();
+ assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),[firstBefore[1],firstBefore[0]],'Manual move updates preview');
+ assert.deepEqual(JSON.parse(store['salvacivici-giro-v1']).manualOrder,[firstBefore[1],firstBefore[0]]);
+ assert.equal(new URL(node('giro-apple').href).searchParams.get('waypoint'),
+  drawn.at(-1).stops[0].lat+','+drawn.at(-1).stops[0].lon);
+ assert.equal(new URL(node('giro-google').href).searchParams.get('destination'),
+  drawn.at(-1).stops[1].lat+','+drawn.at(-1).stops[1].lon);
+ instance.close();instance.open();
+ assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),[firstBefore[1],firstBefore[0]],'Tab change preserves manual order');
+ const extra=node('giro-stops').children[1].children[0];
+ extra.checked=true;extra.events.change();
+ assert.equal(drawn.at(-1).stops.length,3);
+ assert.deepEqual(Array.from(drawn.at(-1).stops.slice(0,2),r=>r.id),[firstBefore[1],firstBefore[0]],'Add stop preserves manual order');
+ const extraOff=node('giro-stops').children[1].children[0];
+ extraOff.checked=false;extraOff.events.change();
+ assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),[firstBefore[1],firstBefore[0]],'Remove stop preserves manual order');
  assert.match(node('giro-apple').href,/maps\.apple\.com\/directions/);
  assert.match(node('giro-google').href,/waypoints=/);
  assert.match(node('giro-apple').textContent,/Naviga con Apple Mappe/);
@@ -128,6 +150,7 @@ async function testUI(){
  assert.equal(node('giro-itinerary').children.length,2);
  assert.equal(JSON.parse(store['salvacivici-giro-v1']).done.length,1);
  assert.equal(drawn.at(-1)?.stops?.length,1);
+ assert.equal(node('giro-itinerary').children[0].children[1].children[0].disabled,true);
  assert.equal(node('giro-single-links').hidden,true,'Un civico residuo: solo un navigatore diretto');
  assert.ok(!node('giro-google').href.includes('waypoints='));
  assert.match(node('giro-apple').textContent,/Naviga con Apple/);
@@ -137,5 +160,5 @@ async function testUI(){
 }
 (async()=>{
  testNavigationUrls();await testUI();
- console.log('PASS Beta 0.6.52: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
+ console.log('PASS Beta 0.6.54: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});

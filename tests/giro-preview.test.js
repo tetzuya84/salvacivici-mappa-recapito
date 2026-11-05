@@ -1,4 +1,4 @@
-/* Beta 0.6.52 — anteprima stradale reale; nessuna linea d'aria se il router fallisce. */
+/* Beta 0.6.54 — anteprima stradale reale; nessuna linea d'aria se il router fallisce. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('giro-preview.js','utf8');
@@ -81,8 +81,7 @@ const fetcher=async(url,opts)=>{
  assert.ok(effects.lines.every(x=>!('dashArray' in x.opts)));
  assert.equal(effects.lines[1].coords.length,7,'Polyline non rettilinea: tutte le svolte');
  assert.equal(effects.markers.length,6,'Tre pin per due render');
- assert.match(node('giro-preview-status').textContent,/Percorso sulle strade OpenStreetMap/);
- assert.match(node('giro-preview-status').textContent,/5,2 km/);
+ assert.equal(node('giro-preview-status').textContent,'5,2 km · 14 min');
  const oldLines=effects.lines.length;
  fail=true;
  preview.draw({origin:start,stops:[stops[0],{id:'c',lat:45.22,lon:10.44}]});
@@ -93,5 +92,5 @@ const fetcher=async(url,opts)=>{
  preview.draw(null);
  assert.equal(node('giro-preview').hidden,true);
  assert.ok(effects.clears>=1);
- console.log('PASS Beta 0.6.52: geometria Valhalla/polyline6, lazy preview, error without straight line, privacy, no data changes.');
+ console.log('PASS Beta 0.6.54: geometria Valhalla/polyline6, lazy preview, error without straight line, privacy, no data changes.');
 })().catch(e=>{console.error(e);process.exitCode=1});
