@@ -47,7 +47,7 @@ const win={SCMapReview:{loadLeaflet:async()=>L}};
 vm.runInNewContext(source,{window:win,document:docs,Number,Math,Array,Error,Promise});
 const {decodePolyline6,requestRoadRoute}=win.SCGiroPreview.helpers;
 assert.deepEqual(Array.from(decodePolyline6('e~epoA|jfpOiDaK')[0]),[42.225139,-8.670911]);
-assert.deepEqual(decodePolyline6(encode(leg1)).map(c=>Array.from(c)),leg1);
+assert.deepEqual(Array.from(decodePolyline6(encode(leg1)),c=>Array.from(c)),leg1);
 assert.throws(()=>decodePolyline6('bad!'),/Forma percorso/);
 const unchanged=JSON.stringify(stops);
 let calls=0,fail=false;
