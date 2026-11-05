@@ -1518,12 +1518,42 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
 #page-giro .giro-main-actions button{font-size:14px}
 #page-giro .giro-next{padding-top:11px}
 
-/* Beta 0.6.54 — tasti manuali accessibili sulla destra dell'elenco delle fermate. */
-#page-giro .giro-itinerary li{position:relative;box-sizing:border-box;min-height:50px;padding:8px 98px 8px 0;overflow-wrap:anywhere}
-#page-giro .giro-order-controls{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:5px;align-items:center}
-#page-giro .giro-order-move{width:44px;min-width:44px;height:44px;min-height:44px;display:grid;place-items:center;border:1px solid #c7e1dd;border-radius:10px;background:#e4f3ef;color:#11736c;font-size:22px;font-weight:800;line-height:1;touch-action:manipulation}
-#page-giro .giro-order-move:disabled{opacity:.32;cursor:default}
-#page-giro .giro-order-move:not(:disabled):active{background:#b8e7db}
+/* Beta 0.6.57 — maniglia a tre linee, trascinabile su iPhone.
+   Il touch-action:none e' limitato alla maniglia: Giro resta scorrevole. */
+#page-giro .giro-itinerary li{
+ position:relative;box-sizing:border-box;min-height:52px;
+ padding:7px 58px 7px 0;overflow-wrap:anywhere;
+}
+#page-giro .giro-drag-handle{
+ position:absolute;right:0;top:50%;transform:translateY(-50%);
+ display:flex;align-items:center;justify-content:center;
+ width:48px;min-width:48px;height:48px;min-height:48px;
+ border:1px solid #d5dee0;border-radius:11px;
+ background:#f9fbfb;color:#667b80;
+ cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+ -webkit-touch-callout:none;
+}
+#page-giro .giro-drag-handle:active{cursor:grabbing;background:#e4f3ef}
+#page-giro .giro-drag-handle:focus-visible{outline:3px solid #0d8e86;outline-offset:2px}
+#page-giro .giro-drag-handle:disabled{opacity:.28;cursor:default}
+#page-giro .giro-grip-bars{
+ width:23px;display:flex;flex-direction:column;gap:4px;
+ align-items:stretch;pointer-events:none;
+}
+#page-giro .giro-grip-bars i{
+ display:block;height:3px;border-radius:3px;background:currentColor;
+}
+#page-giro .giro-itinerary li.giro-dragging{
+ z-index:2;background:#edf8f5;box-shadow:0 5px 18px rgba(6,48,46,.18);
+ border-radius:10px;opacity:.93;
+}
+#page-giro .giro-itinerary li.giro-drop-before::before,
+#page-giro .giro-itinerary li.giro-drop-after::after{
+ content:'';position:absolute;left:-21px;right:0;height:4px;
+ border-radius:4px;background:#0d8e86;z-index:3;
+}
+#page-giro .giro-itinerary li.giro-drop-before::before{top:-3px}
+#page-giro .giro-itinerary li.giro-drop-after::after{bottom:-3px}
 
 /* Beta 0.6.55 — Acquisizione iPhone in un'unica schermata.
    Recupero i ~70-100 px sprecati fra status, card, GPS e mappa;

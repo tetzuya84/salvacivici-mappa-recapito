@@ -1,4 +1,4 @@
-/* Beta 0.6.56 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
+/* Beta 0.6.57 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,8 +8,8 @@ const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app.js','utf8');
 const map=html.split('<section id="page-map"')[1]?.split('<section id="page-giro"')[0]||'';
 const giro=html.split('<section id="page-giro"')[1]?.split('<section id="page-data"')[0]||'';
-assert.match(html,/BETA 0\.6\.56/);
-assert.match(sw,/salvacivici-v0\.6\.56/);
+assert.match(html,/BETA 0\.6\.57/);
+assert.match(sw,/salvacivici-v0\.6\.57/);
 assert.match(sw,/\.\/giro-preview\.js/);
 assert.match(sw,/\.\/giro\.js/);
 assert.match(css,/\.app-shell \.topbar,[\s\S]*?z-index:2000;/);
@@ -60,8 +60,10 @@ assert.ok(giro.includes('Naviga con Apple Mappe'));
 assert.ok(giro.includes('Naviga con Google Maps'));
 assert.ok(giro.includes('id="giro-canvas"'));
 assert.ok(giro.includes('id="giro-preview"'));
-assert.ok(css.includes('#page-giro .giro-order-controls'));
-assert.ok(css.includes('#page-giro .giro-order-move'));
+assert.ok(css.includes('#page-giro .giro-drag-handle'));
+assert.ok(css.includes('#page-giro .giro-grip-bars'));
+assert.ok(!css.includes('#page-giro .giro-order-move'));
+assert.match(css,/#page-giro \.giro-drag-handle\{[\s\S]*?touch-action:none/);
 assert.ok(giro.indexOf('id="giro-stops"')<giro.indexOf('id="giro-preview"'));
 assert.ok(giro.indexOf('id="giro-preview"')<giro.indexOf('id="giro-itinerary"'));
 assert.ok(giro.indexOf('id="giro-itinerary"')<giro.indexOf('id="giro-recalc"'));
@@ -89,4 +91,4 @@ const approved=css.split('/* Beta 0.6.40 — tre comandi Mappa')[1]||'';
 assert.ok(approved.includes('--overview-command-width:min(168px,44vw)'));
 assert.ok(approved.includes('--overview-command-height:44px'));
 assert.ok(approved.includes('--overview-command-gap:8px'));
-console.log('PASS Beta 0.6.56: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
+console.log('PASS Beta 0.6.57: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');

@@ -1,4 +1,4 @@
-/* Beta 0.6.54 — giro multistop, etichetta GPS e nessun GraphHopper. */
+/* Beta 0.6.57 — giro multistop, etichetta GPS e nessun GraphHopper. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync('giro.js','utf8');
@@ -6,7 +6,7 @@ const elements=new Map(),listeners={},store={},drawn=[];
 function node(id){
  if(!elements.has(id)){
   const n={id,hidden:id==='giro-panel'||id==='giro-next',value:'',disabled:false,checked:false,textContent:'',
-   children:[],attrs:{},classList:{toggle(){}},events:{},
+   children:[],attrs:{},classList:{toggle(){},add(){},remove(){}},style:{},events:{},
    addEventListener(k,fn){this.events[k]=fn},
    append(...els){this.children.push(...els)},
    replaceChildren(){this.children=[]},
@@ -16,11 +16,16 @@ function node(id){
  }
  return elements.get(id);
 }
-const doc={getElementById:node,createElement:type=>({
+const doc={getElementById:node,querySelector(){return null},createElement:type=>({
  type,children:[],textContent:'',checked:false,disabled:false,events:{},className:'',attrs:{},
+ style:{},classList:{add(){},remove(){},toggle(){}},
  setAttribute(k,v){this.attrs[k]=v},
  addEventListener(k,f){this.events[k]=f},
- append(...x){this.children.push(...x)}
+ append(...x){this.children.push(...x)},
+ getBoundingClientRect(){
+  const i=node('giro-itinerary').children.indexOf(this);
+  return {top:100+i*60,bottom:160+i*60,height:60};
+ }
 })};
 const samples=[
  {id:'a',via:'Via Roma',civico:'50',comune:'Casalromano',lat:45.19126,lon:10.37015},
@@ -113,11 +118,16 @@ async function testUI(){
  assert.equal(drawn.at(-1)?.stops?.length,2,'Selezione ricalcolata');
  const firstBefore=Array.from(drawn.at(-1).stops,r=>r.id);
  const firstRow=node('giro-itinerary').children[0];
- assert.equal(firstRow.children[1].className,'giro-order-controls');
- assert.equal(firstRow.children[1].children[0].disabled,true);
- assert.equal(firstRow.children[1].children[1].disabled,false);
- firstRow.children[1].children[1].events.click();
- assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),[firstBefore[1],firstBefore[0]],'Manual move updates preview');
+ const grip=firstRow.children[1];
+ assert.equal(grip.className,'giro-drag-handle');
+ assert.equal(grip.children[0].className,'giro-grip-bars');
+ assert.equal(grip.children[0].children.length,3);
+ assert.equal(grip.disabled,false);
+ assert.ok(grip.events.pointerdown&&grip.events.pointermove&&grip.events.pointerup);
+ grip.events.pointerdown({pointerId:1,pointerType:'touch',isPrimary:true,clientY:130,preventDefault(){}});
+ grip.events.pointermove({pointerId:1,clientY:210,preventDefault(){}});
+ grip.events.pointerup({pointerId:1});
+ assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),[firstBefore[1],firstBefore[0]],'Drag updates preview');
  assert.deepEqual(JSON.parse(store['salvacivici-giro-v1']).manualOrder,[firstBefore[1],firstBefore[0]]);
  assert.equal(new URL(node('giro-apple').href).searchParams.get('waypoint'),
   drawn.at(-1).stops[0].lat+','+drawn.at(-1).stops[0].lon);
@@ -150,7 +160,7 @@ async function testUI(){
  assert.equal(node('giro-itinerary').children.length,2);
  assert.equal(JSON.parse(store['salvacivici-giro-v1']).done.length,1);
  assert.equal(drawn.at(-1)?.stops?.length,1);
- assert.equal(node('giro-itinerary').children[0].children[1].children[0].disabled,true);
+ assert.equal(node('giro-itinerary').children[0].children[1].disabled,true);
  assert.equal(node('giro-single-links').hidden,true,'Un civico residuo: solo un navigatore diretto');
  assert.ok(!node('giro-google').href.includes('waypoints='));
  assert.match(node('giro-apple').textContent,/Naviga con Apple/);
@@ -160,5 +170,5 @@ async function testUI(){
 }
 (async()=>{
  testNavigationUrls();await testUI();
- console.log('PASS Beta 0.6.54: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
+ console.log('PASS Beta 0.6.57: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});

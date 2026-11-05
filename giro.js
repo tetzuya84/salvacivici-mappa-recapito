@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.54 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.57 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
@@ -155,15 +155,110 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   const first=lastDone||origin;
   drawRoute?.(remaining.length&&first?{origin:first,stops:remaining,road:false}:null);
  }
- function moveStop(index,delta){
-  const other=index+delta;
-  if(index<0||other<0||other>=order.length||
-    done.has(order[index].id)||done.has(order[other].id))return;
-  [order[index],order[other]]=[order[other],order[index]];
-  ++revision;
-  manualMode=true;manualOrderIds=order.map(r=>r.id);
+ // Riordino della sequenza senza modificare dati civici o fermate completate.
+ function moveStop(from,to){
+  if(busy||from===to||from<0||to<0||from>=order.length||to>=order.length)return false;
+  for(let i=Math.min(from,to);i<=Math.max(from,to);i++)
+   if(done.has(order[i].id))return false;
+  const moved=order.splice(from,1)[0];order.splice(to,0,moved);
+  ++revision;manualMode=true;manualOrderIds=order.map(r=>r.id);
   save();refreshPath();renderItinerary();
   message('Ordine personalizzato aggiornato.');
+  return true;
+ }
+ // iPhone: trascina dalla sola maniglia, mentre il resto della pagina
+ // conserva lo scroll verticale e lo swipe orizzontale fra le schede.
+ function attachDrag(handle,item,index){
+  let active=null;
+  const scroller=document.querySelector?.('.app-shell > main');
+  const clearVisual=()=>{
+   item.classList.remove('giro-dragging');item.style.transform='';
+   for(const row of steps.children){
+    row.classList.remove('giro-drop-before');
+    row.classList.remove('giro-drop-after');
+   }
+  };
+  const findTarget=y=>{
+   let target=index;
+   const rows=Array.from(steps.children);
+   if(y<active.startY){
+    for(let k=index-1;k>=0;k--){
+     if(done.has(order[k].id))break;
+     const rect=rows[k].getBoundingClientRect();
+     if(y<rect.top+rect.height/2)target=k;
+    }
+   }else if(y>active.startY){
+    for(let k=index+1;k<rows.length;k++){
+     if(done.has(order[k].id))break;
+     const rect=rows[k].getBoundingClientRect();
+     if(y>rect.top+rect.height/2)target=k;
+    }
+   }
+   active.target=target;
+   for(let k=0;k<rows.length;k++){
+    rows[k].classList.toggle('giro-drop-before',k===target&&target<index);
+    rows[k].classList.toggle('giro-drop-after',k===target&&target>index);
+   }
+  };
+  // Continua a far scorrere main quando il dito rimane vicino al bordo,
+  // cosi' si possono spostare anche le ultime fermate di un giro lungo.
+  const autoScroll=()=>{
+   if(!active||!active.moved)return;
+   if(scroller?.getBoundingClientRect){
+    const rect=scroller.getBoundingClientRect(),y=active.lastY;
+    if(y<rect.top+48)scroller.scrollTop-=12;
+    else if(y>rect.bottom-48)scroller.scrollTop+=12;
+    findTarget(y);
+   }
+   active.frame=root.requestAnimationFrame?.(autoScroll)||null;
+  };
+  const stop=commit=>{
+   if(!active)return;
+   const {pointerId,moved,target,frame}=active;
+   active=null;
+   if(frame!=null)root.cancelAnimationFrame?.(frame);
+   try{if(handle.hasPointerCapture?.(pointerId))handle.releasePointerCapture(pointerId);}catch(_){}
+   clearVisual();
+   if(commit&&moved&&target!==index)moveStop(index,target);
+  };
+  handle.addEventListener('pointerdown',event=>{
+   if(handle.disabled||busy||active||event.isPrimary===false||
+      (event.pointerType==='mouse'&&event.button!==0))return;
+   active={pointerId:event.pointerId,startY:event.clientY,target:index,moved:false};
+   try{handle.setPointerCapture?.(event.pointerId);}catch(_){}
+   event.preventDefault?.();
+  });
+  handle.addEventListener('pointermove',event=>{
+   if(!active||event.pointerId!==active.pointerId)return;
+   active.lastY=event.clientY;
+   if(!active.moved&&Math.abs(event.clientY-active.startY)<8)return;
+   active.moved=true;
+   item.classList.add('giro-dragging');
+   item.style.transform='translateY('+(event.clientY-active.startY)+'px)';
+   if(root.requestAnimationFrame){
+    if(!active.frame)active.frame=root.requestAnimationFrame(autoScroll);
+   }else if(scroller?.getBoundingClientRect){
+    const rect=scroller.getBoundingClientRect();
+    if(event.clientY<rect.top+48)scroller.scrollTop-=12;
+    else if(event.clientY>rect.bottom-48)scroller.scrollTop+=12;
+   }
+   findTarget(event.clientY);
+   event.preventDefault?.();
+  });
+  handle.addEventListener('pointerup',event=>{
+   if(active&&event.pointerId===active.pointerId)stop(true);
+  });
+  handle.addEventListener('pointercancel',()=>stop(false));
+  handle.addEventListener('lostpointercapture',()=>stop(false));
+  handle.addEventListener('keydown',event=>{
+   if(handle.disabled||busy||!['ArrowUp','ArrowDown'].includes(event.key))return;
+   const to=index+(event.key==='ArrowUp'?-1:1);
+   if(to<0||to>=order.length||done.has(order[to].id))return;
+   event.preventDefault();
+   if(moveStop(index,to)){
+    steps.children[to]?.querySelector?.('.giro-drag-handle')?.focus?.({preventScroll:true});
+   }
+  });
  }
  function renderItinerary(){
   steps.replaceChildren();
@@ -173,18 +268,19 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    const name=document.createElement('span');
    name.className='giro-itinerary-text';
    name.textContent=label(r)+(done.has(r.id)?' ✓':'');
-   const controls=document.createElement('span');
-   controls.className='giro-order-controls';
-   for(const [delta,symbol,direction] of [[-1,'↑','alto'],[1,'↓','basso']]){
-    const button=document.createElement('button');
-    button.type='button';button.className='giro-order-move';
-    button.textContent=symbol;
-    button.setAttribute('aria-label','Sposta '+label(r)+' in '+direction);
-    button.disabled=done.has(r.id)||!order[i+delta]||done.has(order[i+delta].id);
-    button.addEventListener('click',()=>moveStop(i,delta));
-    controls.append(button);
-   }
-   item.append(name,controls);steps.append(item);
+   const handle=document.createElement('button');
+   handle.type='button';handle.className='giro-drag-handle';
+   handle.setAttribute('data-no-swipe','');
+   handle.setAttribute('aria-label','Riordina '+label(r)+': trascina oppure usa freccia su o giù');
+   handle.setAttribute('aria-keyshortcuts','ArrowUp ArrowDown');
+   handle.title='Tieni premuto e trascina per cambiare l’ordine';
+   handle.disabled=done.has(r.id)||order.length<2;
+   const bars=document.createElement('span');
+   bars.className='giro-grip-bars';bars.setAttribute('aria-hidden','true');
+   for(let k=0;k<3;k++)bars.append(document.createElement('i'));
+   handle.append(bars);
+   item.append(name,handle);steps.append(item);
+   attachDrag(handle,item,i);
   }
   const remaining=order.filter(r=>!done.has(r.id));
   const target=remaining[0];
