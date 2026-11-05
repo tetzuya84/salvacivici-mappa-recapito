@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.52 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.53 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
@@ -73,8 +73,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
   googleLink=$('giro-google'),routeCoverage=$('giro-route-coverage'),
   singleLinks=$('giro-single-links'),singleApple=$('giro-single-apple'),
-  singleGoogle=$('giro-single-google'),
-  originLabel=$('giro-origin'),gpsHelp=$('giro-gps-help');
+  singleGoogle=$('giro-single-google'),gpsHelp=$('giro-gps-help');
  let selected=new Set(),done=new Set(),order=[],origin=null,busy=false;
  let fingerprint='',revision=0,gpsInFlight=null;
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
@@ -95,7 +94,6 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  function updateButtons(){
   const has=selected.size>0;
 
-  $('giro-locate').disabled=busy;
   $('giro-recalc').disabled=busy||!has;
   $('giro-select-all').disabled=busy;
   $('giro-clear').disabled=busy||!has;
@@ -203,8 +201,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   if(!safe(p))throw Error('GPS non valido, riprova all’aperto.');
   origin=p;
   gpsHelp.hidden=true;
-  originLabel.textContent='La tua posizione'+(Number.isFinite(p.accuracy)?' · GPS ±'+Math.round(p.accuracy)+' m':' · GPS attivo');
-   if(p.accuracy>100)message('Partenza GPS imprecisa (±'+Math.round(p.accuracy)+' m): riprova prima di guidare.',true);
+  if(p.accuracy>100)message('Partenza GPS imprecisa (±'+Math.round(p.accuracy)+' m): riprova prima di guidare.',true);
   return p;
  }
  async function withBusy(task){
@@ -254,11 +251,6 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  function close(){/* Stato del Giro mantenuto sul dispositivo. */}
 
  $('giro-recalc').addEventListener('click',()=>void estimate(true));
- $('giro-locate').addEventListener('click',()=>void withBusy(async()=>{
-   await gps();
-   if(selected.size)await autoEstimate();
-   else message('Posizione GPS aggiornata.');
- }));
  $('giro-gps-help-retry').addEventListener('click',()=>void withBusy(async()=>{
    await gps();
    if(selected.size)await autoEstimate();

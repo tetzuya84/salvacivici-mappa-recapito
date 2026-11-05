@@ -85,7 +85,7 @@ async function testGiro(){
  await new Promise(resolve=>setTimeout(resolve,0));
  assert.equal(calls,2);
  assert.equal(node('giro-gps-help').hidden,true);
- assert.match(node('giro-origin').textContent,/La tua posizione/);
+ assert.match(node('giro-status').textContent,/Percorso aggiornato automaticamente/);
  assert.equal(JSON.stringify(points),unchanged,'non scrivere coordinate dei civici');
  return 'Giro: codice 1, retry e dati civici invariati';
 }
