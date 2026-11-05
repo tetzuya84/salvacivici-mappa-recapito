@@ -1,4 +1,4 @@
-/* Beta 0.6.59 — pulsante Ottimizza percorso e integrazione col Giro. */
+/* Beta 0.6.61 — soltanto il pulsante Ottimizza cambia l'ordine dei tap. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const optimizer=fs.readFileSync('giro-optimizer.js','utf8');
@@ -32,6 +32,7 @@ const grid=[
  [900,100,900,0]
 ];
 let fetchCalls=0,fail=false,gpsCalls=0;
+const requestedOrders=[];
 const window={
  addEventListener(){},
  fetch:async(url,opts)=>{
@@ -39,8 +40,17 @@ const window={
   assert.equal(opts.method,'POST');
   if(fail) return{ok:false,status:429};
   const body=JSON.parse(opts.body);assert.equal(body.sources.length,4);
+  // Il server restituisce la matrice nell'ordine richiesto dalla app:
+  // partenza GPS + fermate effettivamente mostrate, anche dopo un drag.
+  const indices=[0,...body.sources.slice(1).map(point=>{
+   const id=records.findIndex(r=>r.lat===point.lat&&r.lon===point.lon);
+   assert.ok(id>=0,'Fermata richiesta al provider inesistente');
+   return id+1;
+  })];
+  requestedOrders.push(indices.slice(1).map(i=>'stop'+(i-1)));
+  const matrix=indices.map(i=>indices.map(j=>grid[i][j]));
   return{ok:true,json:async()=>({sources_to_targets:{
-   durations:grid,distances:grid.map(row=>row.map(x=>x/100))
+   durations:matrix,distances:matrix.map(row=>row.map(x=>x/100))
   }})};
  }
 };
@@ -60,11 +70,16 @@ const delay=()=>new Promise(resolve=>setTimeout(resolve,25));
  assert.equal(drawn.at(-1).stops.length,3);
  // Cambia manualmente l'ordine, poi richiedi ottimizzazione stradale.
  const initial=Array.from(drawn.at(-1).stops,r=>r.id);
+ assert.deepEqual(initial,['stop0','stop1','stop2'],'Selezione ordinata, non geodesica');
+ assert.equal(fetchCalls,0,'Nessuna matrice stradale richiesta senza il pulsante');
  const old=node('giro-itinerary').children[0].children[1];
  old.events.keydown({key:'ArrowDown',preventDefault(){}});
  assert.notDeepEqual(Array.from(drawn.at(-1).stops,r=>r.id),initial);
+ assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),['stop1','stop0','stop2']);
  node('giro-recalc').events.click();await delay();
  assert.equal(fetchCalls,1);
+ assert.deepEqual(requestedOrders[0],['stop1','stop0','stop2'],
+  'L\'ottimizzazione usa l\'ordine VISIBILE, non l\'ordine del catalogo');
  assert.ok(gpsCalls>=2,'GPS aggiornato a ogni ottimizzazione');
  assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),['stop2','stop0','stop1']);
  assert.match(node('giro-status').textContent,/ottimizzato su strada/);
@@ -83,5 +98,5 @@ const delay=()=>new Promise(resolve=>setTimeout(resolve,25));
  assert.equal(node('giro-recalc').disabled,false,'Pulsante ripristinato dopo errore');
  instance.close();instance.open();
  assert.deepEqual(Array.from(drawn.at(-1).stops,r=>r.id),['stop2','stop0','stop1']);
- console.log('PASS Beta 0.6.59: ottimizzazione stradale, GPS, link, persistenza, errore senza perdita.');
+ console.log('PASS Beta 0.6.61: ottimizzazione solo su click, ordine visibile, GPS, persistenza, rollback.');
 })().catch(e=>{console.error(e);process.exitCode=1});

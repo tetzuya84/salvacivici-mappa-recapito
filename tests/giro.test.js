@@ -108,7 +108,7 @@ async function testUI(){
  assert.equal(locateCalls,1);
  assert.equal(node('giro-next').hidden,false);
  assert.equal(node('giro-itinerary').children.length,2);
- assert.match(node('giro-status').textContent,/Ordine iniziale provvisorio/);
+ assert.match(node('giro-status').textContent,/Ordine di selezione/);
  assert.equal(drawn.at(-1)?.stops?.length,2);
  const removed=node('giro-stops').children[2].children[0];
  removed.checked=false;removed.events.change();
@@ -163,5 +163,5 @@ async function testUI(){
 }
 (async()=>{
  testNavigationUrls();await testUI();
- console.log('PASS Beta 0.6.59: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
+ console.log('PASS Beta 0.6.59: multi-stop links, selection-order, GPS La tua posizione, no GraphHopper, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});

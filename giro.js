@@ -1,7 +1,7 @@
-/* SalvaCivici Beta 0.6.59 — Giro: pianificazione non distruttiva.
- * La selezione usa un ordine geografico provvisorio. Su «Ottimizza percorso»
- * il motore stradale Valhalla minimizza i tempi di guida della matrice.
- * Nessun dato salvato, civico o coordinata viene modificato.
+/* SalvaCivici Beta 0.6.61 — Giro: ordine di selezione distinto da ottimizzazione.
+ * I tap seguono ESATTAMENTE la sequenza di scelta dell'utente, tracciata su strada
+ * dalla preview; SOLO «Ottimizza percorso» puo' riordinare via matrice Valhalla.
+ * Nessun dato salvato, civico o coordinata permanente viene modificato.
  */
 (function(root){
 'use strict';
@@ -76,7 +76,20 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  let selected=new Set(),order=[],origin=null,busy=false;
  let fingerprint='',revision=0,gpsInFlight=null,manualMode=false,manualOrderIds=[];
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
- function current(){return records().filter(r=>selected.has(r.id));}
+ // Il Set conserva l'ordine dei tocchi; il catalogo puo' essere ordinato
+ // alfabeticamente o caricato in un ordine diverso senza cambiare il giro.
+ function current(){
+  const byId=new Map(records().map(r=>[r.id,r]));
+  return [...selected].map(id=>byId.get(id)).filter(Boolean);
+ }
+ // «Seleziona trovati» segue lo stesso ordine ALFABETICO mostrato a video;
+ // i tap individuali rimangono invece nell'esatto ordine in cui avvengono.
+ function matchingRecords(){
+  const query=normalize(search.value);
+  return records().filter(r=>!query||query.split(/\s+/).every(t=>normalize(label(r)).includes(t)))
+   .sort((a,b)=>a.comune.localeCompare(b.comune,'it')||a.via.localeCompare(b.via,'it')||
+    String(a.civico).localeCompare(String(b.civico),'it'));
+ }
  function save(){
   try{localStorage.setItem(STORAGE,JSON.stringify({selected:[...selected],
    manualOrder:manualMode?manualOrderIds:[]}));}catch(_){}
@@ -128,15 +141,14 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   if(areRecordsReady()&&!selected.size&&changed)void autoEstimate();
  }
  function renderList(){
-  const query=normalize(search.value);
   list.replaceChildren();
-  const options=records().filter(r=>!query||query.split(/\s+/).every(t=>normalize(label(r)).includes(t)))
-    .sort((a,b)=>a.comune.localeCompare(b.comune,'it')||a.via.localeCompare(b.via,'it')||String(a.civico).localeCompare(String(b.civico),'it'));
+  const options=matchingRecords();
   for(const r of options){
    const row=document.createElement('label');row.className='giro-stop-row';
    const input=document.createElement('input');input.type='checkbox';input.checked=selected.has(r.id);
    input.disabled=busy||(!input.checked&&selected.size>=LIMIT);
    input.addEventListener('change',()=>{
+    if(busy){input.checked=selected.has(r.id);return;}
     if(input.checked&&selected.size>=LIMIT){input.checked=false;message('Massimo '+LIMIT+' fermate per giro.',true);return;}
     if(input.checked)selected.add(r.id);else selected.delete(r.id);
     save();clearPath();renderList();updateButtons();void autoEstimate();
@@ -328,28 +340,33 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   if(!current().length){
    clearPath();message('Seleziona i civici da raggiungere.');return Promise.resolve();
   }
-  const apply=()=>{
-   if(ticket!==revision)return;
-   const stops=current();
-   if(!stops.length){clearPath();return;}
-   try{
-    let ordered=heuristic(origin,stops);
-    if(manualMode&&manualOrderIds.length){
-     const byId=new Map(stops.map(r=>[r.id,r]));
-     const preserved=manualOrderIds.map(id=>byId.get(id)).filter(Boolean);
-     const seen=new Set(preserved.map(r=>r.id));
-     ordered=preserved.concat(ordered.filter(r=>!seen.has(r.id)));
-     manualOrderIds=ordered.map(r=>r.id);
-    }
-    applyOrder(ordered,'Ordine iniziale provvisorio · '+ordered.length+(ordered.length===1?' fermata.':' fermate.')+' Premi «Ottimizza percorso» per usare i tempi stimati sulla rete stradale (senza traffico live).');
-   }catch(error){message(error.message||'Impossibile calcolare il giro.',true);}
-  };
-  if(origin){apply();return Promise.resolve();}
-  message('Rilevo la tua posizione per creare il percorso…');
+  const stops=current();
+  if(!stops.length){clearPath();return Promise.resolve();}
+  // Nessun nearest-neighbour o 2-opt qui: l'ordine dei tap e' gia' la rotta.
+  // Se l'utente ha trascinato o ottimizzato, preservare la sua scelta e
+  // aggiungere in fondo i civici eventualmente selezionati in seguito.
+  let ordered=stops;
+  if(manualMode&&manualOrderIds.length){
+   const byId=new Map(stops.map(r=>[r.id,r]));
+   const preserved=manualOrderIds.map(id=>byId.get(id)).filter(Boolean);
+   const seen=new Set(preserved.map(r=>r.id));
+   ordered=preserved.concat(stops.filter(r=>!seen.has(r.id)));
+   manualOrderIds=ordered.map(r=>r.id);
+  }
+  const title=manualMode?'Ordine personalizzato':'Ordine di selezione';
+  const info=title+' · '+ordered.length+(ordered.length===1?' fermata':' fermate')+
+   '. Percorso su strada nell’ordine mostrato. «Ottimizza percorso» può riorganizzarlo.';
+  // L'elenco è disponibile immediatamente, anche quando il GPS e' ancora in
+  // acquisizione: il tracciato stradale parte appena arriva una posizione valida.
+  applyOrder(ordered,info);
+  if(origin)return Promise.resolve();
   if(!gpsInFlight)gpsInFlight=gps().finally(()=>{gpsInFlight=null;});
-  return gpsInFlight.then(apply,error=>{
+  return gpsInFlight.then(()=>{
    if(ticket!==revision)return;
-   clearPath();message(error.message||'GPS non disponibile. Riprova.',true);
+   refreshPath();message(info);
+  },error=>{
+   if(ticket!==revision)return;
+   message((error.message||'GPS non disponibile.')+' Ordine di selezione conservato.',true);
   });
  }
  // Ottimizzazione solo su comando esplicito: matrice dei tempi stradali
@@ -362,7 +379,9 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    message('Acquisisco il GPS per ottimizzare la partenza…');
    await gps();
    if(ticket!==revision)return;
-   const stops=current(),solver=root.SCGiroOptimizer?.optimizeRoad;
+   // Ottimizza la sequenza che l'utente vede, NON quella del catalogo.
+   // Questo preserva anche l'ordine preesistente come baseline dei tempi.
+   const stops=order.length?[...order]:current(),solver=root.SCGiroOptimizer?.optimizeRoad;
    if(!stops.length)return;
    if(typeof solver!=='function')throw Error('Motore di ottimizzazione non disponibile. Ordine invariato.');
    message('Ottimizzo i tempi di guida sulle strade…');
@@ -402,8 +421,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
 
  $('giro-search').addEventListener('input',renderList);
  $('giro-select-all').addEventListener('click',()=>{
-  const terms=normalize(search.value).split(/\s+/).filter(Boolean);
-  const filtered=records().filter(r=>terms.every(t=>normalize(label(r)).includes(t)));
+  const filtered=matchingRecords();
   for(const r of filtered){if(selected.size>=LIMIT)break;selected.add(r.id);}
   save();clearPath();renderList();updateButtons();void autoEstimate();
  });

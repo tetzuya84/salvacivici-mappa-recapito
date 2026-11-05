@@ -4,7 +4,7 @@
 
 SalvaCivici è una web app progressiva (PWA) per la gestione personale di riferimenti civici e punti geografici verificati durante il recapito.
 
-**Versione pubblicata:** Beta 0.6.60.
+**Versione pubblicata:** Beta 0.6.61.
 
 ## Diritti e utilizzo
 
@@ -29,3 +29,5 @@ La documentazione operativa estesa e i backup delle versioni originali sono cons
 **Ottimizza percorso (Beta 0.6.60):** dalla sezione Giro si può ordinare le fermate sulla base della matrice dei tempi di percorrenza stradali calcolata da Valhalla su esplicito comando, con GPS dell'iPhone come partenza e arrivo libero. Fino a 12 fermate il solver trova l'ottimo per la matrice stimata, oltre 12 utilizza una ricerca euristica multi-avvio. Senza traffico live o garanzia di tragitto globalmente migliore nella realtà; se la rete non risponde, l'ordine già salvato non viene sostituito. Al servizio vengono inviate solo coordinate, nessun civico, nome, account o backup. La demo pubblica Valhalla è soggetta a limiti; per utilizzo su larga scala serve un provider dedicato.
 
 **Allineamento Giro (Beta 0.6.60):** titolo, descrizione, avvisi, ricerca, contatore e azioni, testi dell'anteprima e indicazioni di navigazione centrati come nelle altre schede. Le righe selezionabili e l'elenco delle fermate conservano allineamento a sinistra e maniglie trascinabili. Solo CSS: nessun cambiamento ai dati o al motore di ottimizzazione.
+
+**Ordine iniziale e ottimizzazione (Beta 0.6.61):** la sequenza del giro segue l'ordine ESATTO in cui vengono selezionati i civici, con una traccia stradale fra fermate costruita nell'ordine scelto; non viene eseguito alcun riordino automatico per semplice vicinanza. Il pulsante «Seleziona trovati» aggiunge invece i risultati nell'ordine alfabetico visibile. Il riordino manuale tramite maniglie ≡ resta persistente, e ogni nuova fermata si aggiunge in fondo. Solo il pulsante «Ottimizza percorso» calcola una sequenza alternativa usando i tempi stradali Valhalla con partenza GPS aggiornata e arrivo libero; il calcolo parte dall'ordine effettivamente mostrato. Se la rete non risponde l'ordine resta invariato. Il tracciato non promette traffico live né un ottimo globale per giri lunghi.

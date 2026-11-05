@@ -29,7 +29,7 @@ jobs:
           tests=(
             capture-one-screen map-review-compact
             cloud-merge compass-autostart core drive-backup
-            giro-preview giro-tab-swipe giro giro-drag giro-optimizer giro-optimization-ui google-login gps-permissions
+            giro-preview giro-tab-swipe giro giro-drag giro-selection-order giro-optimizer giro-optimization-ui google-login gps-permissions
             gps-three-readings map-controls-overlap map-features map-layout
             map-overview map-review pull-viewport update-flow giro-centered
           )
