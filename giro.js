@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.51 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.52 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
@@ -76,7 +76,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   singleGoogle=$('giro-single-google'),
   originLabel=$('giro-origin'),gpsHelp=$('giro-gps-help');
  let selected=new Set(),done=new Set(),order=[],origin=null,busy=false;
- let fingerprint='';
+ let fingerprint='',revision=0,gpsInFlight=null;
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
  function current(){return records().filter(r=>selected.has(r.id));}
  function save(){
@@ -94,7 +94,6 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  }
  function updateButtons(){
   const has=selected.size>0;
-  $('giro-order').disabled=busy||!has;
 
   $('giro-locate').disabled=busy;
   $('giro-recalc').disabled=busy||!has;
@@ -117,12 +116,12 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    selected=new Set([...selected].filter(id=>ids.has(id)));
    done=new Set([...done].filter(id=>selected.has(id)));
   }
-  if(order.length&&fingerprint!==snapshot()){
-   clearPath();
-   message('I civici della Mappa sono cambiati: ricalcola il giro.',true);
-  }
+  const changed=order.length&&fingerprint!==snapshot();
+  if(changed)clearPath();
   if(was!==selected.size)save();
   renderList();updateButtons();
+  if(areRecordsReady()&&selected.size&&(!order.length||changed))void autoEstimate();
+  if(areRecordsReady()&&!selected.size&&changed)void autoEstimate();
  }
  function renderList(){
   const query=normalize(search.value);
@@ -136,7 +135,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    input.addEventListener('change',()=>{
     if(input.checked&&selected.size>=LIMIT){input.checked=false;message('Massimo '+LIMIT+' fermate per giro.',true);return;}
     if(input.checked)selected.add(r.id);else{selected.delete(r.id);done.delete(r.id);}
-    save();clearPath();renderList();updateButtons();
+    save();clearPath();renderList();updateButtons();void autoEstimate();
    });
    const title=document.createElement('span');title.textContent=label(r);
    row.append(input,title);list.append(row);
@@ -161,24 +160,16 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   const target=remaining[0];
   next.hidden=!target;
   if(target){
-   $('giro-next-label').textContent=label(target);
    const appleCount=Math.min(remaining.length,APPLE_STOPS);
    const googleCount=Math.min(remaining.length,GOOGLE_STOPS);
    appleLink.href=appleRoute(remaining.slice(0,appleCount));
    googleLink.href=googleRoute(remaining.slice(0,googleCount));
-   appleLink.textContent=appleCount===remaining.length?
-    (remaining.length===1?'Naviga Apple':'Giro completo · Apple'):
-    'Prime '+appleCount+' · Apple';
-   googleLink.textContent=googleCount===remaining.length?
-    (remaining.length===1?'Google Maps':'Giro completo · Google'):
-    'Prime '+googleCount+' · Google';
-   const allCovered=appleCount===remaining.length&&googleCount===remaining.length;
-   routeCoverage.textContent=remaining.length===1?
-    'Una fermata: navigazione diretta dalla tua posizione attuale.':
-    allCovered?
-     remaining.length+' fermate incluse in entrambi i navigatori, nell’ordine scelto.':
-     'Fermate rimanenti: '+remaining.length+'. Apple ne apre '+appleCount+
-      ', Google '+googleCount+' per volta (limiti dei collegamenti mobili). Le successive si aprono dopo le fermate completate.';
+   appleLink.textContent='Naviga con Apple Mappe';
+   googleLink.textContent='Naviga con Google Maps';
+   routeCoverage.textContent='Apple Mappe: '+appleCount+' di '+remaining.length+' fermate\n'+
+     'Google Maps: '+googleCount+' di '+remaining.length+' fermate'+
+     (appleCount<remaining.length||googleCount<remaining.length?
+      '\nLe altre fermate saranno disponibili dopo aver completato le precedenti (limiti dei navigatori mobili).':'');
    singleLinks.hidden=remaining.length===1;
    singleApple.href=apple(target);singleGoogle.href=google(target);
    complete.disabled=busy;
@@ -223,13 +214,38 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   catch(error){message(error.message||'Operazione non riuscita: dati invariati.',true);}
   finally{busy=false;updateButtons();}
  }
+ function autoEstimate(){
+  const ticket=++revision;
+  if(!current().some(r=>!done.has(r.id))){
+   clearPath();message('Seleziona i civici da raggiungere.');return Promise.resolve();
+  }
+  const apply=()=>{
+   if(ticket!==revision)return;
+   const stops=current().filter(r=>!done.has(r.id));
+   if(!stops.length){clearPath();return;}
+   try{
+    const ordered=heuristic(origin,stops);
+    applyOrder(ordered,'Percorso aggiornato automaticamente · '+ordered.length+' fermate. La sequenza usa la vicinanza geografica; per guidare segui il navigatore.');
+   }catch(error){message(error.message||'Impossibile calcolare il giro.',true);}
+  };
+  if(origin){apply();return Promise.resolve();}
+  message('Rilevo la tua posizione per creare il percorso…');
+  if(!gpsInFlight)gpsInFlight=gps().finally(()=>{gpsInFlight=null;});
+  return gpsInFlight.then(apply,error=>{
+   if(ticket!==revision)return;
+   clearPath();message(error.message||'GPS non disponibile. Riprova.',true);
+  });
+ }
  async function estimate(refetch){
   await withBusy(async()=>{
-   const stops=current().filter(r=>!done.has(r.id));
-   if(!stops.length){message('Seleziona almeno un civico da raggiungere.',true);return;}
+   const ticket=++revision;
+   if(!current().some(r=>!done.has(r.id))){message('Seleziona almeno un civico da raggiungere.',true);return;}
    if(refetch||!origin){message('Acquisisco il GPS di partenza…');await gps();}
-   const ordered=heuristic(origin,stops);
-   applyOrder(ordered,'Ordine indicativo per distanza geometrica (≈'+(routeDistance(origin,ordered)/1000).toFixed(1)+' km in linea d’aria). NON è il percorso stradale più veloce.');
+   if(ticket!==revision)return;
+   const stops=current().filter(r=>!done.has(r.id));
+   if(!stops.length){clearPath();return;}
+   applyOrder(heuristic(origin,stops),
+    'Percorso ricalcolato dal GPS · '+stops.length+' fermate. Sequenza per vicinanza geografica, senza traffico in tempo reale.');
   });
  }
  // La nuova scheda Giro e' gestita dalla barra di navigazione principale.
@@ -237,11 +253,16 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  function open(){syncRecords();}
  function close(){/* Stato del Giro mantenuto sul dispositivo. */}
 
- $('giro-order').addEventListener('click',()=>void estimate(false));
  $('giro-recalc').addEventListener('click',()=>void estimate(true));
- $('giro-locate').addEventListener('click',()=>void withBusy(async()=>{await gps();clearPath();message('Posizione GPS rilevata. Calcola il giro.');}));
+ $('giro-locate').addEventListener('click',()=>void withBusy(async()=>{
+   await gps();
+   if(selected.size)await autoEstimate();
+   else message('Posizione GPS aggiornata.');
+ }));
  $('giro-gps-help-retry').addEventListener('click',()=>void withBusy(async()=>{
-   await gps();clearPath();message('GPS autorizzato. Posizione aggiornata: puoi calcolare il giro.');
+   await gps();
+   if(selected.size)await autoEstimate();
+   else message('GPS autorizzato. Posizione aggiornata.');
  }));
 
  $('giro-search').addEventListener('input',renderList);
@@ -249,10 +270,11 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   const terms=normalize(search.value).split(/\s+/).filter(Boolean);
   const filtered=records().filter(r=>terms.every(t=>normalize(label(r)).includes(t)));
   for(const r of filtered){if(selected.size>=LIMIT)break;selected.add(r.id);}
-  save();clearPath();renderList();updateButtons();
+  save();clearPath();renderList();updateButtons();void autoEstimate();
  });
  $('giro-clear').addEventListener('click',()=>{
-  selected.clear();done.clear();save();clearPath();renderList();updateButtons();message('Selezione azzerata. I civici sono invariati.');
+  selected.clear();done.clear();save();clearPath();renderList();updateButtons();
+  ++revision;message('Selezione azzerata. I civici sono invariati.');
  });
  complete.addEventListener('click',()=>{
   const item=order.find(r=>!done.has(r.id));
