@@ -167,11 +167,20 @@
     const MIN_X=78,MAX_Y=85,MAX_DURATION=1000,EDGE=25;
     let start=null,locked=false;
     const currentTab=()=>pages.findIndex(name=>!$('page-'+name).hidden);
-    const ignoredTarget=target=>target.closest('input,textarea,select,button,a,label,summary,dialog,[contenteditable],[role="button"],[data-no-swipe]');
+    const ignoredTarget=(target,tab)=>{
+      if(!target?.closest)return true;
+      // In Giro le righe/etichette dei civici occupano quasi tutto lo schermo.
+      // Non confondere un trascinamento orizzontale con un semplice tap checkbox.
+      // La mappa Leaflet e i controlli interattivi conservano i propri gesti.
+      if(tab===3)return !!target.closest(
+        'input,textarea,select,button,a,summary,dialog,[contenteditable],[role="button"],#giro-canvas,.leaflet-container,[data-no-swipe]:not(#giro-stops)'
+      );
+      return !!target.closest('input,textarea,select,button,a,label,summary,dialog,[contenteditable],[role="button"],[data-no-swipe]');
+    };
     const reset=()=>{start=null;locked=false;};
     main.addEventListener('touchstart',event=>{
       reset();
-      if(event.touches.length!==1||document.querySelector('dialog[open]')||ignoredTarget(event.target))return;
+      if(event.touches.length!==1||document.querySelector('dialog[open]')||ignoredTarget(event.target,currentTab()))return;
       const point=event.touches[0];
       const width=window.innerWidth||document.documentElement.clientWidth;
       // Preserva il gesto nativo Indietro di Safari ai bordi dello schermo.
