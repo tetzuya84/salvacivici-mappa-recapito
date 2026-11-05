@@ -1,4 +1,4 @@
-/* Beta 0.6.54 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
+/* Beta 0.6.55 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,8 +8,8 @@ const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app.js','utf8');
 const map=html.split('<section id="page-map"')[1]?.split('<section id="page-giro"')[0]||'';
 const giro=html.split('<section id="page-giro"')[1]?.split('<section id="page-data"')[0]||'';
-assert.match(html,/BETA 0\.6\.54/);
-assert.match(sw,/salvacivici-v0\.6\.54/);
+assert.match(html,/BETA 0\.6\.55/);
+assert.match(sw,/salvacivici-v0\.6\.55/);
 assert.match(sw,/\.\/giro-preview\.js/);
 assert.match(sw,/\.\/giro\.js/);
 assert.match(css,/\.app-shell \.topbar,[\s\S]*?z-index:2000;/);
@@ -89,4 +89,4 @@ const approved=css.split('/* Beta 0.6.40 — tre comandi Mappa')[1]||'';
 assert.ok(approved.includes('--overview-command-width:min(168px,44vw)'));
 assert.ok(approved.includes('--overview-command-height:44px'));
 assert.ok(approved.includes('--overview-command-gap:8px'));
-console.log('PASS Beta 0.6.54: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
+console.log('PASS Beta 0.6.55: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');

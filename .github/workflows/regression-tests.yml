@@ -27,6 +27,7 @@ jobs:
           # Test della versione attuale. I vecchi test legati a UI/etichette
           # di Beta precedenti sono conservati nel repository, non eseguiti qui.
           tests=(
+            capture-one-screen
             cloud-merge compass-autostart core drive-backup
             giro-preview giro-tab-swipe giro google-login gps-permissions
             gps-three-readings map-controls-overlap map-features map-layout
