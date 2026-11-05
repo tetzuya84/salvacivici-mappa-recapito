@@ -1,4 +1,4 @@
-/* SalvaCivici Beta 0.6.57 — Giro: pianificazione non distruttiva con civici pubblicati.
+/* SalvaCivici Beta 0.6.58 — Giro: pianificazione non distruttiva con civici pubblicati.
  * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
  * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
  * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
@@ -70,23 +70,21 @@ function googleRoute(stops){
 function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  const page=$('page-giro'),search=$('giro-search'),list=$('giro-stops'),
   count=$('giro-count'),status=$('giro-status'),steps=$('giro-itinerary'),
-  next=$('giro-next'),complete=$('giro-complete'),appleLink=$('giro-apple'),
+  next=$('giro-next'),appleLink=$('giro-apple'),
   googleLink=$('giro-google'),routeCoverage=$('giro-route-coverage'),
-  singleLinks=$('giro-single-links'),singleApple=$('giro-single-apple'),
-  singleGoogle=$('giro-single-google'),gpsHelp=$('giro-gps-help');
- let selected=new Set(),done=new Set(),order=[],origin=null,busy=false;
+  gpsHelp=$('giro-gps-help');
+ let selected=new Set(),order=[],origin=null,busy=false;
  let fingerprint='',revision=0,gpsInFlight=null,manualMode=false,manualOrderIds=[];
  function records(){return (getRecords()||[]).filter(r=>safe(r)&&typeof r.id==='string'&&!!r.id);}
  function current(){return records().filter(r=>selected.has(r.id));}
  function save(){
-  try{localStorage.setItem(STORAGE,JSON.stringify({selected:[...selected],done:[...done],
+  try{localStorage.setItem(STORAGE,JSON.stringify({selected:[...selected],
    manualOrder:manualMode?manualOrderIds:[]}));}catch(_){}
  }
  function restore(){
   try{
    const v=JSON.parse(localStorage.getItem(STORAGE)||'{}');
    if(Array.isArray(v.selected))selected=new Set(v.selected.filter(x=>typeof x==='string').slice(0,LIMIT));
-   if(Array.isArray(v.done))done=new Set(v.done.filter(x=>typeof x==='string'));
    if(Array.isArray(v.manualOrder)&&v.manualOrder.length){
     manualOrderIds=[...new Set(v.manualOrder.filter(x=>typeof x==='string'))].slice(0,LIMIT);
     manualMode=manualOrderIds.length>0;
@@ -117,7 +115,6 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   if(areRecordsReady()){
    const ids=new Set(records().map(r=>r.id));
    selected=new Set([...selected].filter(id=>ids.has(id)));
-   done=new Set([...done].filter(id=>selected.has(id)));
    if(manualMode){
     manualOrderIds=manualOrderIds.filter(id=>selected.has(id));
     if(!manualOrderIds.length)manualMode=false;
@@ -141,7 +138,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    input.disabled=busy||(!input.checked&&selected.size>=LIMIT);
    input.addEventListener('change',()=>{
     if(input.checked&&selected.size>=LIMIT){input.checked=false;message('Massimo '+LIMIT+' fermate per giro.',true);return;}
-    if(input.checked)selected.add(r.id);else{selected.delete(r.id);done.delete(r.id);}
+    if(input.checked)selected.add(r.id);else selected.delete(r.id);
     save();clearPath();renderList();updateButtons();void autoEstimate();
    });
    const title=document.createElement('span');title.textContent=label(r);
@@ -150,16 +147,11 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   if(!options.length){const p=document.createElement('p');p.textContent='Nessun civico pubblicato corrisponde alla ricerca.';list.append(p);}
  }
  function refreshPath(){
-  const remaining=order.filter(r=>!done.has(r.id));
-  const lastDone=[...order].reverse().find(r=>done.has(r.id));
-  const first=lastDone||origin;
-  drawRoute?.(remaining.length&&first?{origin:first,stops:remaining,road:false}:null);
+  drawRoute?.(order.length&&origin?{origin,stops:order,road:false}:null);
  }
- // Riordino della sequenza senza modificare dati civici o fermate completate.
+ // Riordina liberamente i civici selezionati, senza modificare i loro dati.
  function moveStop(from,to){
   if(busy||from===to||from<0||to<0||from>=order.length||to>=order.length)return false;
-  for(let i=Math.min(from,to);i<=Math.max(from,to);i++)
-   if(done.has(order[i].id))return false;
   const moved=order.splice(from,1)[0];order.splice(to,0,moved);
   ++revision;manualMode=true;manualOrderIds=order.map(r=>r.id);
   save();refreshPath();renderItinerary();
@@ -183,13 +175,11 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    const rows=Array.from(steps.children);
    if(y<active.startY){
     for(let k=index-1;k>=0;k--){
-     if(done.has(order[k].id))break;
      const rect=rows[k].getBoundingClientRect();
      if(y<rect.top+rect.height/2)target=k;
     }
    }else if(y>active.startY){
     for(let k=index+1;k<rows.length;k++){
-     if(done.has(order[k].id))break;
      const rect=rows[k].getBoundingClientRect();
      if(y>rect.top+rect.height/2)target=k;
     }
@@ -253,7 +243,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   handle.addEventListener('keydown',event=>{
    if(handle.disabled||busy||!['ArrowUp','ArrowDown'].includes(event.key))return;
    const to=index+(event.key==='ArrowUp'?-1:1);
-   if(to<0||to>=order.length||done.has(order[to].id))return;
+   if(to<0||to>=order.length)return;
    event.preventDefault();
    if(moveStop(index,to)){
     steps.children[to]?.querySelector?.('.giro-drag-handle')?.focus?.({preventScroll:true});
@@ -264,17 +254,16 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   steps.replaceChildren();
   for(let i=0;i<order.length;i++){
    const r=order[i],item=document.createElement('li');
-   if(done.has(r.id))item.className='giro-done';
    const name=document.createElement('span');
    name.className='giro-itinerary-text';
-   name.textContent=label(r)+(done.has(r.id)?' ✓':'');
+   name.textContent=label(r);
    const handle=document.createElement('button');
    handle.type='button';handle.className='giro-drag-handle';
    handle.setAttribute('data-no-swipe','');
    handle.setAttribute('aria-label','Riordina '+label(r)+': trascina oppure usa freccia su o giù');
    handle.setAttribute('aria-keyshortcuts','ArrowUp ArrowDown');
    handle.title='Tieni premuto e trascina per cambiare l’ordine';
-   handle.disabled=done.has(r.id)||order.length<2;
+   handle.disabled=order.length<2;
    const bars=document.createElement('span');
    bars.className='giro-grip-bars';bars.setAttribute('aria-hidden','true');
    for(let k=0;k<3;k++)bars.append(document.createElement('i'));
@@ -282,10 +271,9 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    item.append(name,handle);steps.append(item);
    attachDrag(handle,item,i);
   }
-  const remaining=order.filter(r=>!done.has(r.id));
-  const target=remaining[0];
-  next.hidden=!target;
-  if(target){
+  const remaining=order;
+  next.hidden=!remaining.length;
+  if(remaining.length){
    const appleCount=Math.min(remaining.length,APPLE_STOPS);
    const googleCount=Math.min(remaining.length,GOOGLE_STOPS);
    appleLink.href=appleRoute(remaining.slice(0,appleCount));
@@ -295,15 +283,11 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    routeCoverage.textContent='Apple Mappe: '+appleCount+' di '+remaining.length+' fermate\n'+
      'Google Maps: '+googleCount+' di '+remaining.length+' fermate'+
      (appleCount<remaining.length||googleCount<remaining.length?
-      '\nLe altre fermate saranno disponibili dopo aver completato le precedenti (limiti dei navigatori mobili).':'');
-   singleLinks.hidden=remaining.length===1;
-   singleApple.href=apple(target);singleGoogle.href=google(target);
-   complete.disabled=busy;
-  }else if(order.length)message('Giro completato. Nessun civico è stato modificato.');
+      '\nPer le altre fermate, prepara un successivo segmento di navigazione (limiti dei navigatori mobili).':'');
+  }
  }
  function applyOrder(result,labelText){
   order=result;
-  done=new Set([...done].filter(id=>selected.has(id)));
   fingerprint=snapshot();save();refreshPath();renderItinerary();
   message(labelText);
  }
@@ -341,12 +325,12 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  }
  function autoEstimate(){
   const ticket=++revision;
-  if(!current().some(r=>!done.has(r.id))){
+  if(!current().length){
    clearPath();message('Seleziona i civici da raggiungere.');return Promise.resolve();
   }
   const apply=()=>{
    if(ticket!==revision)return;
-   const stops=current().filter(r=>!done.has(r.id));
+   const stops=current();
    if(!stops.length){clearPath();return;}
    try{
     let ordered=heuristic(origin,stops);
@@ -371,10 +355,10 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  async function estimate(refetch){
   await withBusy(async()=>{
    const ticket=++revision;
-   if(!current().some(r=>!done.has(r.id))){message('Seleziona almeno un civico da raggiungere.',true);return;}
+   if(!current().length){message('Seleziona almeno un civico da raggiungere.',true);return;}
    if(refetch||!origin){message('Acquisisco il GPS di partenza…');await gps();}
    if(ticket!==revision)return;
-   const stops=current().filter(r=>!done.has(r.id));
+   const stops=current();
    if(!stops.length){clearPath();return;}
    manualMode=false;manualOrderIds=[];
    applyOrder(heuristic(origin,stops),
@@ -382,7 +366,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   });
  }
  // La nuova scheda Giro e' gestita dalla barra di navigazione principale.
- // Il passaggio Mappa/Giro non azzera selezione, sequenza o fermate completate.
+ // Il passaggio Mappa/Giro non azzera selezione o sequenza.
  function open(){syncRecords();}
  function close(){/* Stato del Giro mantenuto sul dispositivo. */}
 
@@ -401,13 +385,8 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
   save();clearPath();renderList();updateButtons();void autoEstimate();
  });
  $('giro-clear').addEventListener('click',()=>{
-  selected.clear();done.clear();manualMode=false;manualOrderIds=[];save();clearPath();renderList();updateButtons();
+  selected.clear();manualMode=false;manualOrderIds=[];save();clearPath();renderList();updateButtons();
   ++revision;message('Selezione azzerata. I civici sono invariati.');
- });
- complete.addEventListener('click',()=>{
-  const item=order.find(r=>!done.has(r.id));
-  if(!item)return;
-  done.add(item.id);save();refreshPath();renderItinerary();
  });
  root.addEventListener('salvacivici:mapchanged',syncRecords);
  restore();syncRecords();renderItinerary();

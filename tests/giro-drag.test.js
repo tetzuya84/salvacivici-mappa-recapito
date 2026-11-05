@@ -1,5 +1,5 @@
-/* Beta 0.6.57 — trascinamento verticale Giro: mobile, annullamento,
-   completate bloccate, ordine persistente, link ricalcolati e tastiera. */
+/* Beta 0.6.58 — trascinamento verticale Giro: mobile, annullamento,
+   riordino libero, ordine persistente, link ricalcolati e tastiera. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('giro.js','utf8');
@@ -91,22 +91,19 @@ function expectedLink(){
  assert.equal(prevented,true);
  assert.deepEqual(sequence(),[current[1],current[0],current[2],current[3]]);
  expectedLink();
- // La fermata completata rimane fissa; non e' trascinabile.
- node('giro-complete').events.click();
- const finish=sequence(),doneHandle=handle(0);
- assert.equal(doneHandle.disabled,true);
- point(doneHandle,'pointerdown',125,14);
- if(doneHandle.events.pointermove)point(doneHandle,'pointermove',400,14);
- if(doneHandle.events.pointerup)point(doneHandle,'pointerup',400,14);
- assert.deepEqual(sequence(),finish,'Fermata completata non spostata');
- const secondGrip=handle(1);
- point(secondGrip,'pointerdown',190,15);
- point(secondGrip,'pointermove',70,15);
- point(secondGrip,'pointerup',70,15);
- assert.deepEqual(sequence(),finish,'Non oltrepassare la fermata completata');
- assert.equal(JSON.parse(store['salvacivici-giro-v1']).done.length,1);
+ // Non esiste più la spunta «completata»: tutte le fermate
+ // selezionate restano liberamente riordinabili e navigabili.
+ const beforeLast=sequence(),handleLast=handle(3);
+ assert.equal(handleLast.disabled,false);
+ point(handleLast,'pointerdown',305,15);
+ point(handleLast,'pointermove',145,15);
+ point(handleLast,'pointerup',145,15);
+ assert.deepEqual(sequence(),[beforeLast[0],beforeLast[3],beforeLast[1],beforeLast[2]]);
+ assert.equal(JSON.parse(store['salvacivici-giro-v1']).done,undefined);
+ assert.ok(!/\bdone\b/.test(source),'La logica completamenti non deve limitare i civici');
+ expectedLink();
  assert.match(css,/#page-giro \.giro-drag-handle\{[\s\S]*?touch-action:none/);
  assert.ok(css.includes('#page-giro .giro-grip-bars'));
  assert.ok(!css.includes('#page-giro .giro-order-move'));
- console.log('PASS Beta 0.6.57: drag iPhone, click, cancel, keyboard, completed, links, persistence.');
+ console.log('PASS Beta 0.6.58: drag iPhone, click, cancel, keyboard, free reorder, links, persistence.');
 })().catch(e=>{console.error(e);process.exitCode=1});

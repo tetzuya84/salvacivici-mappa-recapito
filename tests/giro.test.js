@@ -1,4 +1,4 @@
-/* Beta 0.6.57 — giro multistop, etichetta GPS e nessun GraphHopper. */
+/* Beta 0.6.58 — giro multistop, etichetta GPS e nessun GraphHopper. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync('giro.js','utf8');
@@ -147,28 +147,21 @@ async function testUI(){
  assert.match(node('giro-apple').textContent,/Naviga con Apple Mappe/);
  assert.match(node('giro-google').textContent,/Naviga con Google Maps/);
  assert.match(node('giro-route-coverage').textContent,/Apple Mappe: 2 di 2 fermate[\s\S]*Google Maps: 2 di 2 fermate/);
- assert.equal(node('giro-single-links').hidden,false);
- assert.match(node('giro-single-apple').href,/daddr=/);
- assert.ok(!node('giro-single-google').href.includes('waypoints='));
  const fullApple=new URL(node('giro-apple').href);
  const fullGoogle=new URL(node('giro-google').href);
  assert.equal(fullApple.searchParams.getAll('waypoint').length,1);
  assert.equal(fullGoogle.searchParams.get('waypoints').split('|').length,1);
  const persisted=JSON.parse(store['salvacivici-giro-v1']);
  assert.equal(persisted.selected.length,2);
- node('giro-complete').events.click();
- assert.equal(node('giro-itinerary').children.length,2);
- assert.equal(JSON.parse(store['salvacivici-giro-v1']).done.length,1);
- assert.equal(drawn.at(-1)?.stops?.length,1);
- assert.equal(node('giro-itinerary').children[0].children[1].disabled,true);
- assert.equal(node('giro-single-links').hidden,true,'Un civico residuo: solo un navigatore diretto');
- assert.ok(!node('giro-google').href.includes('waypoints='));
- assert.match(node('giro-apple').textContent,/Naviga con Apple/);
+ assert.equal(Object.prototype.hasOwnProperty.call(persisted,'done'),false);
+ assert.equal(drawn.at(-1)?.stops?.length,2,'Tutte le fermate rimangono nel percorso');
+ assert.ok(!node('giro-google').href.includes('SingleStop'));
+// Se la versione precedente aveva completamenti salvati, non escludere i civici.
  instance.close();
  assert.equal(node('page-giro').hidden,false,'La barra di navigazione gestisce la pagina');
  assert.equal(JSON.stringify(samples),original,'Giro never changes permanent civics');
 }
 (async()=>{
  testNavigationUrls();await testUI();
- console.log('PASS Beta 0.6.57: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
+ console.log('PASS Beta 0.6.58: multi-stop links, GPS La tua posizione, no GraphHopper, no data mutation.');
 })().catch(e=>{console.error(e);process.exitCode=1});
