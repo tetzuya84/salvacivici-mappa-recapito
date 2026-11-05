@@ -1715,3 +1715,56 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
  .map-review-canvas {height:100%;min-height:100%;max-height:none}
  .map-review-footer {padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
 }
+
+/* Beta 0.6.60 — Giro allineato allo stile centrato di Salva, Archivio e Dati.
+   Solo i controlli di ogni singolo civico rimangono allineati a sinistra. */
+.app-shell #page-giro .giro-head{
+ display:flex;
+ justify-content:center;
+ text-align:center;
+}
+#page-giro .giro-head > div{
+ width:100%;
+ min-width:0;
+ text-align:center;
+}
+#page-giro .giro-head h1,
+#page-giro .giro-head .eyebrow,
+#page-giro .giro-subtitle{
+ text-align:center;
+}
+#page-giro .giro-status,
+#page-giro .giro-label,
+#page-giro #giro-search,
+#page-giro #giro-count,
+#page-giro .giro-preview h2,
+#page-giro .giro-preview .giro-hint,
+#page-giro .giro-hint,
+#page-giro .giro-next,
+#page-giro .giro-route-coverage,
+#page-giro .giro-gps-help{
+ text-align:center;
+}
+#page-giro .giro-selection-actions{
+ justify-content:center;
+ column-gap:9px;
+ row-gap:7px;
+}
+#page-giro #giro-count{
+ flex:0 0 100%;
+ margin-right:0;
+ text-align:center;
+}
+#page-giro .giro-selection-actions button{
+ text-align:center;
+}
+#page-giro .giro-main-actions button{
+ justify-content:center;
+ text-align:center;
+}
+#page-giro .giro-stops,
+#page-giro .giro-stop-row,
+#page-giro .giro-itinerary,
+#page-giro .giro-itinerary li{
+ text-align:left;
+}

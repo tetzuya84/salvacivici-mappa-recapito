@@ -31,7 +31,7 @@ jobs:
             cloud-merge compass-autostart core drive-backup
             giro-preview giro-tab-swipe giro giro-drag giro-optimizer giro-optimization-ui google-login gps-permissions
             gps-three-readings map-controls-overlap map-features map-layout
-            map-overview map-review pull-viewport update-flow
+            map-overview map-review pull-viewport update-flow giro-centered
           )
           for name in "${tests[@]}"; do
             testfile="tests/${name}.test.js"
