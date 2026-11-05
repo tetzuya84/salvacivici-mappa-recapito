@@ -1,4 +1,4 @@
-/* Beta 0.6.56 — popup per la revisione del pin su iPhone. */
+/* Beta 0.6.57 — popup per la revisione del pin su iPhone. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -16,7 +16,7 @@ for(const id of ['map-review-canvas','map-review-gps-status','map-review-basemap
 'map-review-reset','map-review-confirm','map-review-cancel','map-review-close']){
  assert.ok(part.includes('id="'+id+'"'),'Controllo essenziale mancante: '+id);
 }
-const fit=css.split('/* Beta 0.6.56 — anteprima pin con più superficie cartografica:')[1];
+const fit=css.split('/* Beta 0.6.57 — anteprima pin con più superficie cartografica:')[1];
 assert.ok(fit,'Nuovo layout mancante');
 for(const selector of ['.map-review-pane','.map-review-scroll','.map-review-map-wrap',
 '.map-review-canvas','.map-review-footer','.map-review-about'])
@@ -27,5 +27,5 @@ assert.match(fit,/\.map-review-footer\s*\{[^}]*flex:none/s);
 assert.ok(!fit.includes('display:none'),'Nessun comando nascosto');
 assert.ok(js.includes('Posizione corretta di '));
 assert.ok(js.includes('Caricamento mappa…'));
-assert.match(html,/BETA 0\.6\.56/);
-console.log('PASS Beta 0.6.56: popup compatto, mappa elastica, tasti e copyright preservati.');
+assert.match(html,/BETA 0\.6\.57/);
+console.log('PASS Beta 0.6.57: popup compatto, mappa elastica, tasti e copyright preservati.');
