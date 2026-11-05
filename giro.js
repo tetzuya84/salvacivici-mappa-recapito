@@ -1,7 +1,7 @@
-/* SalvaCivici Beta 0.6.58 — Giro: pianificazione non distruttiva con civici pubblicati.
- * Nessun record viene creato o modificato; selezione/completamenti restano solo sul dispositivo.
- * L'ordine base usa distanze geografiche, NON tempi stradali. Per gli itinerari su
- * l'anteprima stradale utilizza Valhalla demo, senza traffico in tempo reale.
+/* SalvaCivici Beta 0.6.59 — Giro: pianificazione non distruttiva.
+ * La selezione usa un ordine geografico provvisorio. Su «Ottimizza percorso»
+ * il motore stradale Valhalla minimizza i tempi di guida della matrice.
+ * Nessun dato salvato, civico o coordinata viene modificato.
  */
 (function(root){
 'use strict';
@@ -341,7 +341,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
      ordered=preserved.concat(ordered.filter(r=>!seen.has(r.id)));
      manualOrderIds=ordered.map(r=>r.id);
     }
-    applyOrder(ordered,'Percorso aggiornato automaticamente · '+ordered.length+' fermate. La sequenza usa la vicinanza geografica; per guidare segui il navigatore.');
+    applyOrder(ordered,'Ordine iniziale provvisorio · '+ordered.length+' fermate. Premi «Ottimizza percorso» per usare i tempi reali della rete stradale (senza traffico live).');
    }catch(error){message(error.message||'Impossibile calcolare il giro.',true);}
   };
   if(origin){apply();return Promise.resolve();}
@@ -352,17 +352,40 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
    clearPath();message(error.message||'GPS non disponibile. Riprova.',true);
   });
  }
- async function estimate(refetch){
+ // Ottimizzazione solo su comando esplicito: matrice dei tempi stradali
+ // e ricerca del miglior ordine (fine libera). Non cambiare l'ordine se
+ // il servizio non risponde o se la selezione cambia durante il calcolo.
+ async function optimize(){
   await withBusy(async()=>{
    const ticket=++revision;
    if(!current().length){message('Seleziona almeno un civico da raggiungere.',true);return;}
-   if(refetch||!origin){message('Acquisisco il GPS di partenza…');await gps();}
+   message('Acquisisco il GPS per ottimizzare la partenza…');
+   await gps();
    if(ticket!==revision)return;
-   const stops=current();
-   if(!stops.length){clearPath();return;}
-   manualMode=false;manualOrderIds=[];
-   applyOrder(heuristic(origin,stops),
-    'Percorso ricalcolato dal GPS · '+stops.length+' fermate. Sequenza per vicinanza geografica, senza traffico in tempo reale.');
+   const stops=current(),solver=root.SCGiroOptimizer?.optimizeRoad;
+   if(!stops.length)return;
+   if(typeof solver!=='function')throw Error('Motore di ottimizzazione non disponibile. Ordine invariato.');
+   message('Ottimizzo i tempi di guida sulle strade…');
+   const ctrl=typeof AbortController==='function'?new AbortController():null;
+   let timeout=null,result;
+   try{
+    if(ctrl)timeout=setTimeout(()=>ctrl.abort(),25000);
+    result=await solver({origin,stops,signal:ctrl?.signal});
+   }finally{if(timeout!==null)clearTimeout(timeout);}
+   if(ticket!==revision)return;
+   if(!result||result.stops.length!==stops.length||
+     new Set(result.stops.map(r=>r.id)).size!==stops.length||
+     result.stops.some(r=>!selected.has(r.id)))
+    throw Error('Risposta di ottimizzazione incoerente. Ordine invariato.');
+   manualMode=true;manualOrderIds=result.stops.map(r=>r.id);
+   const reduction=Math.max(0,Math.round((result.beforeSeconds-result.seconds)/60));
+   const summary=result.single?
+    'Una fermata selezionata: nessun riordino necessario.':
+    'Percorso ottimizzato su strada · '+result.km.toFixed(1).replace('.',',')+' km · '+
+      Math.round(result.seconds/60)+' min stimati'+
+      (reduction>0?' · '+reduction+' min stimati risparmiati':'')+
+      '. Stima senza traffico in tempo reale.';
+   applyOrder(result.stops,summary);
   });
  }
  // La nuova scheda Giro e' gestita dalla barra di navigazione principale.
@@ -370,7 +393,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
  function open(){syncRecords();}
  function close(){/* Stato del Giro mantenuto sul dispositivo. */}
 
- $('giro-recalc').addEventListener('click',()=>void estimate(true));
+ $('giro-recalc').addEventListener('click',()=>void optimize());
  $('giro-gps-help-retry').addEventListener('click',()=>void withBusy(async()=>{
    await gps();
    if(selected.size)await autoEstimate();

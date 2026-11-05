@@ -1,4 +1,4 @@
-/* Beta 0.6.58 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
+/* Beta 0.6.59 — layout autonomo Giro, navigazione a cinque schede e Mappa protetta. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,8 +8,8 @@ const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app.js','utf8');
 const map=html.split('<section id="page-map"')[1]?.split('<section id="page-giro"')[0]||'';
 const giro=html.split('<section id="page-giro"')[1]?.split('<section id="page-data"')[0]||'';
-assert.match(html,/BETA 0\.6\.58/);
-assert.match(sw,/salvacivici-v0\.6\.58/);
+assert.match(html,/BETA 0\.6\.59/);
+assert.match(sw,/salvacivici-v0\.6\.59/);
 assert.match(sw,/\.\/giro-preview\.js/);
 assert.match(sw,/\.\/giro\.js/);
 assert.match(css,/\.app-shell \.topbar,[\s\S]*?z-index:2000;/);
@@ -43,7 +43,10 @@ assert.ok(!giro.includes('class="giro-provider"'));
 assert.ok(!giro.includes('id="giro-origin"'));
 assert.ok(!giro.includes('id="giro-locate"'));
 assert.ok(!css.includes('#page-giro .giro-origin-row'));
-assert.ok(giro.includes('>Ricalcolo percorso</button>'));
+assert.ok(giro.includes('>Ottimizza percorso</button>'));
+assert.ok(!giro.includes('>Ricalcolo percorso</button>'));
+assert.ok(html.includes('<script src="giro-optimizer.js" defer></script>'));
+assert.ok(sw.includes("'./giro-optimizer.js'"));
 assert.ok(!giro.includes('giro-road-disclaimer'));
 assert.ok(!giro.includes('Selezionando i civici, il giro si aggiorna automaticamente'));
 assert.ok(giro.includes('Calcolo distanza e durata…'));
@@ -95,4 +98,4 @@ const approved=css.split('/* Beta 0.6.40 — tre comandi Mappa')[1]||'';
 assert.ok(approved.includes('--overview-command-width:min(168px,44vw)'));
 assert.ok(approved.includes('--overview-command-height:44px'));
 assert.ok(approved.includes('--overview-command-gap:8px'));
-console.log('PASS Beta 0.6.58: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');
+console.log('PASS Beta 0.6.59: Giro pagina autonoma, 5 tab, Mappa e comandi conservati.');

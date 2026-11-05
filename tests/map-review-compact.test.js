@@ -27,5 +27,5 @@ assert.match(fit,/\.map-review-footer\s*\{[^}]*flex:none/s);
 assert.ok(!fit.includes('display:none'),'Nessun comando nascosto');
 assert.ok(js.includes('Posizione corretta di '));
 assert.ok(js.includes('Caricamento mappa…'));
-assert.match(html,/BETA 0\.6\.58/);
+assert.match(html,/BETA 0\.6\.59/);
 console.log('PASS Beta 0.6.57: popup compatto, mappa elastica, tasti e copyright preservati.');

@@ -4,7 +4,7 @@
 
 SalvaCivici è una web app progressiva (PWA) per la gestione personale di riferimenti civici e punti geografici verificati durante il recapito.
 
-**Versione pubblicata:** Beta 0.6.58.
+**Versione pubblicata:** Beta 0.6.59.
 
 ## Diritti e utilizzo
 
@@ -25,3 +25,5 @@ I file di questo repository non costituiscono un archivio condiviso dei civici d
 La documentazione operativa estesa e i backup delle versioni originali sono conservati separatamente in un archivio privato del progetto. La documentazione qui pubblicata è intenzionalmente sintetica; non serve come guida di clonazione o distribuzione.
 
 © 2026 tetzuya84 — SalvaCivici / Mappa Recapito. Tutti i diritti riservati.
+
+**Ottimizza percorso (Beta 0.6.59):** dalla sezione Giro si può ordinare le fermate sulla base della matrice dei tempi di percorrenza stradali calcolata da Valhalla su esplicito comando, con GPS dell'iPhone come partenza e arrivo libero. Fino a 12 fermate il solver trova l'ottimo per la matrice stimata, oltre 12 utilizza una ricerca euristica multi-avvio. Senza traffico live o garanzia di tragitto globalmente migliore nella realtà; se la rete non risponde, l'ordine già salvato non viene sostituito. Al servizio vengono inviate solo coordinate, nessun civico, nome, account o backup. La demo pubblica Valhalla è soggetta a limiti; per utilizzo su larga scala serve un provider dedicato.
