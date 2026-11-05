@@ -1250,7 +1250,7 @@ body:has(#page-map.map-screen:not([hidden])){overflow:hidden}
 }
 #page-giro .giro-stop-row span{overflow-wrap:anywhere}
 #page-giro .giro-main-actions{
- display:grid;grid-template-columns:1fr 1fr;gap:10px;
+ display:grid;grid-template-columns:1fr;gap:10px;
  margin:15px 0 10px;
 }
 #page-giro .giro-main-actions button{
@@ -1507,7 +1507,7 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
 }
 #page-giro .giro-route-coverage {
  margin:5px 1px 12px;color:#416b74;
- font-size:12px;line-height:1.45;
+ font-size:12px;line-height:1.6;white-space:pre-line;
 }
 #page-giro .giro-single-links {
  margin:6px 0 14px;font-size:12px;
@@ -1531,3 +1531,7 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
  margin:8px 0 0;color:#446975;font-size:11px;line-height:1.5;
 }
 #page-giro .giro-stops{touch-action:pan-y}
+
+/* Beta 0.6.52 — comando GPS unico e navigazione essenziale. */
+#page-giro .giro-main-actions button{font-size:14px}
+#page-giro .giro-next{padding-top:11px}
