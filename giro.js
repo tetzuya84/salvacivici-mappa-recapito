@@ -341,7 +341,7 @@ function create({getRecords,drawRoute,notify,areRecordsReady=()=>true}){
      ordered=preserved.concat(ordered.filter(r=>!seen.has(r.id)));
      manualOrderIds=ordered.map(r=>r.id);
     }
-    applyOrder(ordered,'Ordine iniziale provvisorio · '+ordered.length+' fermate. Premi «Ottimizza percorso» per usare i tempi reali della rete stradale (senza traffico live).');
+    applyOrder(ordered,'Ordine iniziale provvisorio · '+ordered.length+(ordered.length===1?' fermata.':' fermate.')+' Premi «Ottimizza percorso» per usare i tempi stimati sulla rete stradale (senza traffico live).');
    }catch(error){message(error.message||'Impossibile calcolare il giro.',true);}
   };
   if(origin){apply();return Promise.resolve();}

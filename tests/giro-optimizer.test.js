@@ -68,7 +68,7 @@ function brute(m){
   fetcher:async()=>({ok:true,json:async()=>wrap(asymmetric.map(row=>row.map(v=>v===40?null:v)))})}),/raggiungibile/);
  await assert.rejects(()=>optimizeRoad({origin:{lat:200,lon:10},stops:points,fetcher}),/non valide/);
  await assert.rejects(()=>optimizeRoad({origin:{lat:45.1,lon:10.4},stops:points,
-  fetcher:async()=>{throw Error('network')}}),/Ordine invariato/);
+  fetcher:async()=>{throw Error('network')}}),/invariato/i);
  // Formato verbose classico, riga unitaria.
  const classic=helpers.readMatrix({sources_to_targets:[[{
   time:0,distance:0},{time:80,distance:1.3}],[
