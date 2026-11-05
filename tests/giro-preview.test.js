@@ -1,4 +1,4 @@
-/* Beta 0.6.51 — anteprima stradale reale; nessuna linea d'aria se il router fallisce. */
+/* Beta 0.6.52 — anteprima stradale reale; nessuna linea d'aria se il router fallisce. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('giro-preview.js','utf8');
@@ -44,7 +44,7 @@ const L={
  latLngBounds(coords){return{coords,pad(){return this}}}
 };
 const win={SCMapReview:{loadLeaflet:async()=>L}};
-vm.runInNewContext(source,{window:win,document:docs,Number,Math,Array,Error,Promise});
+vm.runInNewContext(source,{window:win,document:docs,Number,Math,Array,Error,Promise,setTimeout,clearTimeout,Date,AbortController});
 const {decodePolyline6,requestRoadRoute}=win.SCGiroPreview.helpers;
 assert.deepEqual(Array.from(decodePolyline6('e~epoA|jfpOiDaK')[0]),[42.225139,-8.670911]);
 assert.deepEqual(Array.from(decodePolyline6(encode(leg1)),c=>Array.from(c)),leg1);
@@ -93,5 +93,5 @@ const fetcher=async(url,opts)=>{
  preview.draw(null);
  assert.equal(node('giro-preview').hidden,true);
  assert.ok(effects.clears>=1);
- console.log('PASS Beta 0.6.51: geometria Valhalla/polyline6, lazy preview, error without straight line, privacy, no data changes.');
+ console.log('PASS Beta 0.6.52: geometria Valhalla/polyline6, lazy preview, error without straight line, privacy, no data changes.');
 })().catch(e=>{console.error(e);process.exitCode=1});
