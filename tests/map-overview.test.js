@@ -62,7 +62,18 @@ async function run(){
   assert.equal(node('overview-apple').href,'https://maps.apple.com/?daddr=45.16595,10.51232&dirflg=d');
   assert.match(node('overview-google').href,/destination=45.16595,10.51232/);
   assert.equal(JSON.stringify(records),original,'Apertura e navigazione non devono scrivere i civici');
-  node('overview-town').value='Mariana Mantovana';node('overview-town').events.change();
+  // Un select nativo iPhone NON deve essere rigenerato al momento della scelta:
+  // alcune versioni Safari annullano il valore se vengono sostituite le option.
+  const municipality=node('overview-town'),oldOptions=municipality.children;
+  const replaceOptions=municipality.replaceChildren;
+  municipality.replaceChildren=()=>{throw new Error('Picker iOS ricostruito durante change!');};
+  node('overview-filters-toggle').events.click();
+  municipality.value='Mariana Mantovana';municipality.events.change();
+  municipality.replaceChildren=replaceOptions;
+  assert.strictEqual(municipality.children,oldOptions,'Le opzioni native rimangono intatte');
+  assert.equal(node('overview-filter-panel').hidden,true,'Dopo la scelta la mappa torna visibile');
+  assert.equal(node('overview-filter-result').hidden,false,'Filtro confermato a video');
+  assert.match(node('overview-filter-result').textContent,/1 civico visibile · Comune: Mariana Mantovana/);
   assert.equal(overlay.layers.length,1);
   assert.equal(node('overview-detail').hidden,true);
   assert.equal(node('overview-sheet').hidden,true,'Il cambio filtro richiude la scheda');
@@ -73,6 +84,7 @@ async function run(){
   assert.equal(overlay.layers.length,1);assert.equal(overlay.layers[0].opts.icon.html.textContent,'24');
   node('overview-status-filter').value='verified';node('overview-status-filter').events.change();
   assert.equal(overlay.layers.length,0);assert.equal(node('overview-empty').hidden,false);
+  assert.match(node('overview-filter-result').textContent,/Nessun punto corrisponde ai filtri/);
   node('overview-status-filter').value='';node('overview-status-filter').events.change();
   records[0]={...records[0],lat:45.17,positionSource:'manual'};
   events['salvacivici:mapchanged']();
@@ -108,6 +120,6 @@ async function run(){
   assert.equal(node('overview-sheet').hidden,true,'Apertura Filtri chiude dettaglio');
   node('overview-filters-toggle').events.click();
   assert.equal(JSON.stringify(records),JSON.stringify([base[0]&&{...base[0],lat:45.17,positionSource:'manual'},base[1],base[2]]),'Nessuna scrittura nei dati con la ricerca');
-  console.log('PASS Beta 0.6.37: ricerca live dei pin, filtri, selezione, dati invariati.');
+  console.log('PASS Beta 0.6.63: ricerca live, filtro Comune nativo stabile, conferma immediata, dati invariati.');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

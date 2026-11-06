@@ -1,4 +1,4 @@
-/* Beta 0.6.46 — bussola automatica con avvisi meno invasivi e temporanei. */
+/* Beta 0.6.63 — heading affidabile iPhone e sincronizzazione con orientamento schermo. */
 (function(root){
 'use strict';
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -77,9 +77,15 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
   baseButton.textContent=satellite?'▤ Stradale':'▧ Satellite';
   baseButton.setAttribute('aria-pressed',satellite?'true':'false');
  }
- let compassAttempt=0;
+ let compassAttempt=0,compassSource=null,headingReady=false,compassWarmup=null;
+ const screenAngle=()=>{
+  const angle=Number(root.screen?.orientation?.angle??root.orientation??0);
+  return Number.isFinite(angle)?angle:0;
+ };
  function stopCompass(){
   compassAttempt++;
+  if(compassWarmup!==null){clearTimeout(compassWarmup);compassWarmup=null;}
+  compassSource=null;headingReady=false;
   clearStatus();
   if(orientationListener){
    root.removeEventListener('deviceorientation',orientationListener);
@@ -92,13 +98,32 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
   compassButton.setAttribute('aria-pressed','false');
  }
  function heading(event){
-  let angle=Number.isFinite(event.webkitCompassHeading)&&event.webkitCompassHeading>=0?
-   event.webkitCompassHeading:null;
-  if(angle===null&&event.absolute===true&&Number.isFinite(event.alpha))
-   angle=(360-event.alpha)%360;
-  if(angle===null)return;
-  if(typeof map.setHeading==='function')map.setHeading(angle,{ease:.24,deadzone:2});
+  if(!compassOn)return;
+  let angle=null;
+  // Safari iOS: webkitCompassHeading è il riferimento al nord MAGNETICO.
+  // alpha può invece essere relativo a un'origine casuale, anche quando
+  // deviceorientationabsolute e deviceorientation arrivano in parallelo.
+  const appleHeading=Number.isFinite(event.webkitCompassHeading)&&
+    event.webkitCompassHeading>=0&&event.webkitCompassHeading<360;
+  if(appleHeading){
+   const accuracy=event.webkitCompassAccuracy;
+   if(Number.isFinite(accuracy)&&(accuracy<0||accuracy>45))return;
+   compassSource='webkit';angle=event.webkitCompassHeading;
+  }else{
+   // Su iPhone non sostituire mai un heading WebKit con 360-alpha.
+   if(compassSource==='webkit'||typeof root.DeviceOrientationEvent?.requestPermission==='function')return;
+   if(event.absolute!==true||!Number.isFinite(event.alpha))return;
+   compassSource='absolute';angle=(360-event.alpha)%360;
+  }
+  // La bussola misura la parte ALTA del telefono; in modalità landscape
+  // la parte alta dello schermo può essere ruotata rispetto al dispositivo.
+  angle=((angle-screenAngle())%360+360)%360;
+  if(typeof map.setHeading==='function')map.setHeading(angle,{ease:.22,deadzone:1.5});
   else map.setBearing(-angle);
+  headingReady=true;
+  if(compassWarmup!==null){clearTimeout(compassWarmup);compassWarmup=null;}
+  clearStatus();
+  compassButton.setAttribute('aria-pressed','true');
   compassButton.textContent='◉ Bussola attiva';
  }
  function activateCompass(permission,isStillVisible){
@@ -110,14 +135,18 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
     return false;
    }
    if(compassOn)return true;
-   compassOn=true;
-   compassButton.setAttribute('aria-pressed','true');
-   compassButton.textContent='◉ Bussola attiva';
+   compassOn=true;headingReady=false;compassSource=null;
+   compassButton.setAttribute('aria-pressed','false');
+   compassButton.textContent='◌ Attendo la bussola…';
    orientationListener=heading;
    root.addEventListener('deviceorientation',heading);
    root.addEventListener('deviceorientationabsolute',heading);
-   // Lo stato e' gia' evidente dal pulsante «Bussola attiva».
    clearStatus();
+   compassWarmup=setTimeout(()=>{
+    compassWarmup=null;
+    if(compassOn&&!headingReady)
+     setStatus('Bussola iPhone non calibrata o dati del nord non disponibili. Ruota lentamente il telefono oppure disattiva la bussola.');
+   },2500);
    return true;
   }).catch(()=>{
    if(attempt===compassAttempt)setStatus('Non è stato possibile attivare la bussola.');

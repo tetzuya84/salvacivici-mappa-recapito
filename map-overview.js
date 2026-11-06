@@ -1,4 +1,4 @@
-/* Beta 0.6.47 — Mappa libera da pannello fisso; dettagli solo sui pin selezionati. */
+/* Beta 0.6.63 — filtri iPhone applicati al cambio, select nativo stabile. */
 (function(root){
 'use strict';
 function valid(r){
@@ -24,7 +24,7 @@ function create({getRecords,onVerify,onEditData,notify}){
    nearbyOptions=$('overview-nearby-options'),
    sheet=$('overview-sheet'),sheetClose=$('overview-sheet-close'),
    filterToggle=$('overview-filters-toggle'),
-   filterPanel=$('overview-filter-panel');
+   filterPanel=$('overview-filter-panel'),filterResult=$('overview-filter-result');
  let map=null,L=null,layer=null,selectedId=null,loadingPromise=null,initialized=false,hasTiles=false;
  let locationMarker=null,locationAccuracy=null,locating=false,cartography=null,autoCompassPermission=null;
  const visible=()=>!$('page-map').hidden;
@@ -72,6 +72,11 @@ function create({getRecords,onVerify,onEditData,notify}){
    const current=town.value;
    const names=[...new Set(records().map(r=>r.comune.trim()).filter(Boolean))]
      .sort((a,b)=>a.localeCompare(b,'it'));
+   // CRITICO iOS Safari: non ricostruire un <select> mentre il picker nativo
+   // sta confermando un comune. Rendeva la selezione instabile o annullata.
+   const displayed=Array.from(town.options||town.children||[]).map(opt=>opt.value);
+   if(displayed.length===names.length+1&&displayed[0]===''&&
+     names.every((name,index)=>displayed[index+1]===name))return;
    town.replaceChildren();
    const all=document.createElement('option');all.value='';all.textContent='Tutti i comuni';town.append(all);
    for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;town.append(opt);}
@@ -144,6 +149,13 @@ function create({getRecords,onVerify,onEditData,notify}){
    rebuildCivicPicker();
    const list=filtered();
    const term=searchTerm();
+   const applied=[town.value&&'Comune: '+town.value,
+     filter.value&&'Stato: '+(filter.selectedOptions?.[0]?.textContent||filter.value)].filter(Boolean);
+   filterResult.hidden=!applied.length;
+   filterResult.textContent=applied.length
+     ?list.length+' '+(list.length===1?'civico visibile':'civici visibili')+' · '+applied.join(' · ')+
+       (list.length?'':' · Nessun punto corrisponde ai filtri.')
+     :'';
    layer.clearLayers();
    if(!list.some(r=>r.id===selectedId))select(null);
    // Il conteggio indica QUANTI punti sono pubblicati, non quante etichette
@@ -294,8 +306,14 @@ function create({getRecords,onVerify,onEditData,notify}){
    })();
    return loadingPromise;
  }
- town.addEventListener('change',()=>render(true));
- filter.addEventListener('change',()=>render(true));
+ function applyFiltersImmediately(){
+   // Il change è la conferma nativa di iOS. Aggiorna marker e zoom subito,
+   // poi richiudi il pannello per lasciare visibile la mappa filtrata.
+   render(true);
+   setFiltersExpanded(false);
+ }
+ town.addEventListener('change',applyFiltersImmediately);
+ filter.addEventListener('change',applyFiltersImmediately);
  civicSearch.addEventListener('input',()=>{
    // La ricerca prevale sui filtri precedenti; aggiorna subito anche i pin e la vista.
    town.value='';filter.value='';

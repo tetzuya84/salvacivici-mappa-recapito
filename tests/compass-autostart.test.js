@@ -28,10 +28,12 @@ async function run(){
  const kart=win.SCMapFeatures.create({L,map,baseButton:buttons.base,compassButton:buttons.compass,status:buttons.status});
  const started=await kart.autoStartCompass(granted,()=>true);
  assert.equal(started,true);
- assert.equal(buttons.compass.attrs['aria-pressed'],'true');
+ assert.equal(buttons.compass.attrs['aria-pressed'],'false','Non dichiarare attiva una bussola senza orientamento');
+ assert.match(buttons.compass.textContent,/Attendo/);
  assert.equal(listenersActive,2);
- events.deviceorientation({webkitCompassHeading:54});
+ events.deviceorientation({webkitCompassHeading:54,webkitCompassAccuracy:8});
  assert.equal(heading.at(-1),54);
+ assert.equal(buttons.compass.attrs['aria-pressed'],'true');
  kart.pause();
  assert.equal(listenersActive,0,'Nessuna lettura sensori fuori dalla mappa');
  assert.equal(buttons.compass.attrs['aria-pressed'],'false');
@@ -50,6 +52,8 @@ async function run(){
  // Manual restart with explicit tap should still work.
  buttons.compass.events.click();
  await Promise.resolve();await Promise.resolve();await Promise.resolve();
+ assert.equal(buttons.compass.attrs['aria-pressed'],'false');
+ events.deviceorientation({webkitCompassHeading:44,webkitCompassAccuracy:9});
  assert.equal(buttons.compass.attrs['aria-pressed'],'true');
  kart.pause();
  // Manual rotation cancels compass.
@@ -57,6 +61,6 @@ async function run(){
  await Promise.resolve();await Promise.resolve();await Promise.resolve();
  mapEvents.rotatestart();
  assert.equal(listenersActive,0);
- console.log('PASS Beta 0.6.26: ingresso automatico, permesso iOS, pause e rotazione manuale');
+ console.log('PASS Beta 0.6.63: permesso iOS, bussola solo dopo prima lettura reale, pause e rotazione manuale');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

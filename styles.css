@@ -1768,3 +1768,17 @@ body:has(.app-shell > main > :is(#page-capture,#page-records,#page-giro,#page-da
 #page-giro .giro-itinerary li{
  text-align:left;
 }
+
+/* Beta 0.6.63 — conferma visiva dei filtri iPhone, senza coprire i civici. */
+#page-map .overview-filter-result{
+ position:absolute;z-index:1120;left:12px;right:12px;bottom:10px;
+ margin:0;padding:10px 12px;box-sizing:border-box;
+ border:1px solid #b9d8d4;border-radius:12px;background:#f0fbf8f2;
+ color:#11645d;font-size:12px;line-height:1.4;font-weight:710;text-align:center;
+ box-shadow:0 3px 13px #112d2632;pointer-events:none;
+}
+#page-map .overview-filter-result[hidden],
+#page-map:has(#overview-filter-panel:not([hidden])) .overview-filter-result,
+#page-map:has(#overview-sheet:not([hidden])) .overview-filter-result{
+ display:none!important;
+}
