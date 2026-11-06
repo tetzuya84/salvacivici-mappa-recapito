@@ -7,7 +7,7 @@ const css=fs.readFileSync('styles.css','utf8');
 const html=fs.readFileSync('index.html','utf8');
 const app=fs.readFileSync('app.js','utf8');
 const tag='/* Beta 0.6.55 — Acquisizione iPhone in un\'unica schermata.';
-const fit=css.split(tag)[1];
+const fit=css.split(tag)[1]?.split('/* Beta 0.6.63 — conferma visiva dei filtri iPhone')[0];
 assert.ok(fit,'Manca la regola di acquisizione compatta');
 assert.match(fit,/@media\s*\(max-width:639px\) and \(orientation:portrait\)/);
 for(const selector of [

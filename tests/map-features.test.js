@@ -38,9 +38,10 @@ async function run(){
  compassButton.events.click();
  assert.equal(requestInvoked,1,'Permission request must begin on user gesture');
  await Promise.resolve();await Promise.resolve();
- assert.equal(compassButton.attrs['aria-pressed'],'true');
+ assert.equal(compassButton.attrs['aria-pressed'],'false');
  assert.equal(typeof listeners.deviceorientation,'function');
  listeners.deviceorientation({webkitCompassHeading:83,webkitCompassAccuracy:12});
+ assert.equal(compassButton.attrs['aria-pressed'],'true');
  assert.equal(headings.at(-1),83,'The heading from iPhone compass must align the map');
  shared.pause();
  assert.equal(compassButton.attrs['aria-pressed'],'false');

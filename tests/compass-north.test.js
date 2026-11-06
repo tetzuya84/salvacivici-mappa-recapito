@@ -58,7 +58,7 @@ function makeApple(){
  const win={DeviceOrientationEvent:function(){},
   addEventListener(k,fn){listeners[k]=fn},removeEventListener(k){delete listeners[k]}};
  vm.runInNewContext(src,{window:win,document:doc,setTimeout,clearTimeout,Promise});
- const fake={setHeading:n=>angles.push(n),on(){}};
+ const fake={setHeading:n=>angles.push(n),setBearing(){},on(){}};
  const L={Map:function(){},tileLayer(){return{on(){return this},addTo(){return this}}}};
  L.Map.prototype.setBearing=function(){};
  const n=()=>({textContent:'',setAttribute(){},addEventListener(){}});

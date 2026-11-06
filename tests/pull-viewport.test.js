@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const app=fs.readFileSync('app.js','utf8'),css=fs.readFileSync('styles.css','utf8');
 
-const block=css.split('/* Beta 0.6.49 — blocco coerente dello scorrimento iOS/PWA')[1]||'';
+const block=css.split('/* Beta 0.6.49 — blocco coerente dello scorrimento iOS/PWA')[1]?.split('/* Beta 0.6.63 — conferma visiva dei filtri iPhone')[0]||'';
 const all=['#page-capture','#page-records','#page-giro','#page-data'];
 for(const fragment of [
  'html:has(.app-shell > main > :is(','body:has(.app-shell > main > :is(',

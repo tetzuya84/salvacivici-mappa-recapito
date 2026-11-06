@@ -51,6 +51,8 @@ async function testCompass(){
  assert.equal(compassButton.disabled,false);
  const ok=await controls.autoStartCompass(Promise.resolve(true),()=>true);
  assert.equal(ok,true);
+ assert.match(compassButton.textContent,/Attendo la bussola/);
+ events.deviceorientationabsolute({alpha:270,absolute:true});
  assert.match(compassButton.textContent,/Bussola attiva/);
  assert.equal(status.hidden,true,'la fascia Bussola attiva non deve apparire');
  assert.equal(status.textContent,'');
