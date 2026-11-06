@@ -4,7 +4,7 @@
 
 SalvaCivici è una web app progressiva (PWA) per la gestione personale di riferimenti civici e punti geografici verificati durante il recapito.
 
-**Versione pubblicata:** Beta 0.6.61.
+**Versione pubblicata:** Beta 0.6.62.
 
 ## Diritti e utilizzo
 
@@ -30,4 +30,7 @@ La documentazione operativa estesa e i backup delle versioni originali sono cons
 
 **Allineamento Giro (Beta 0.6.60):** titolo, descrizione, avvisi, ricerca, contatore e azioni, testi dell'anteprima e indicazioni di navigazione centrati come nelle altre schede. Le righe selezionabili e l'elenco delle fermate conservano allineamento a sinistra e maniglie trascinabili. Solo CSS: nessun cambiamento ai dati o al motore di ottimizzazione.
 
-**Ordine iniziale e ottimizzazione (Beta 0.6.61):** la sequenza del giro segue l'ordine ESATTO in cui vengono selezionati i civici, con una traccia stradale fra fermate costruita nell'ordine scelto; non viene eseguito alcun riordino automatico per semplice vicinanza. Il pulsante «Seleziona trovati» aggiunge invece i risultati nell'ordine alfabetico visibile. Il riordino manuale tramite maniglie ≡ resta persistente, e ogni nuova fermata si aggiunge in fondo. Solo il pulsante «Ottimizza percorso» calcola una sequenza alternativa usando i tempi stradali Valhalla con partenza GPS aggiornata e arrivo libero; il calcolo parte dall'ordine effettivamente mostrato. Se la rete non risponde l'ordine resta invariato. Il tracciato non promette traffico live né un ottimo globale per giri lunghi.
+**Ordine iniziale e ottimizzazione (Beta 0.6.62):** la sequenza del giro segue l'ordine ESATTO in cui vengono selezionati i civici, con una traccia stradale fra fermate costruita nell'ordine scelto; non viene eseguito alcun riordino automatico per semplice vicinanza. Il pulsante «Seleziona trovati» aggiunge invece i risultati nell'ordine alfabetico visibile. Il riordino manuale tramite maniglie ≡ resta persistente, e ogni nuova fermata si aggiunge in fondo. Solo il pulsante «Ottimizza percorso» calcola una sequenza alternativa usando i tempi stradali Valhalla con partenza GPS aggiornata e arrivo libero; il calcolo parte dall'ordine effettivamente mostrato. Se la rete non risponde l'ordine resta invariato. Il tracciato non promette traffico live né un ottimo globale per giri lunghi.
+
+### Sincronizzazione sicura (Beta 0.6.62)
+La Mappa permanente e' protetta da sovrascritture silenziose fra dispositivi. Ricevere dati da Firebase puo' aggiungere ID mancanti ma non sostituire un civico locale con un record cloud diverso dello stesso ID. L'app segnala il conflitto, non cambia coordinate e non applica parzialmente la ricezione; la sincronizzazione richiesta dall'utente usa il confronto con la versione comune salvata sul dispositivo per distinguere una sola modifica legittima da due modifiche concorrenti. Se la versione comune manca o esistono due modifiche differenti, si blocca e richiede verifica manuale prima del ripristino. Google Drive resta un archivio di backup append-only, mentre Google My Maps e Google Sheets sono copie esterne e non modificano Firebase o il telefono automaticamente. Questa protezione non sposta né corregge i civici già presenti: per risolvere i conflitti rimasti serve una futura schermata di confronto per ID.

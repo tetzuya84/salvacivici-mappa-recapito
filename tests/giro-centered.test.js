@@ -22,6 +22,6 @@ for(const id of ['giro-stops','giro-itinerary','giro-recalc','giro-preview','gir
  assert.ok(panel.includes('id="'+id+'"'),'Controllo Giro conservato: '+id);
 assert.ok(!style.includes('touch-action:none'),'Lo scroll della scheda non viene bloccato');
 assert.match(css,/#page-giro \.giro-drag-handle\{[\s\S]*?touch-action:none/);
-assert.match(html,/BETA 0\.6\.61/);
-assert.match(sw,/salvacivici-v0\.6\.61/);
+assert.match(html,/BETA 0\.6\.62/);
+assert.match(sw,/salvacivici-v0\.6\.62/);
 console.log('PASS Beta 0.6.60: Giro centrato come altre schede, righe leggibili, controlli intatti.');

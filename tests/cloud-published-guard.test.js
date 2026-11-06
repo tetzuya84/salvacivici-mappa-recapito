@@ -1,0 +1,32 @@
+/* Beta 0.6.62 — published map merges: never overwrite ambiguous civic IDs. */
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const scope={};scope.window=scope;
+vm.runInNewContext(fs.readFileSync('cloud-merge.js','utf8'),scope);
+const M=scope.SCCloudMerge;
+const a={id:'a',comune:'Redondesco',via:'Piazza Castello',civico:'5',lat:45.1663,lon:10.5122,positionSource:'manual',positionVerifiedAt:'2026-11-05'};
+const b={...a,id:'b',civico:'7',lat:45.1664};
+const old=[a],remoteUpdated={...a,lat:45.1669,positionVerifiedAt:'2026-11-06'};
+const localUpdated={...a,lat:45.1658,positionVerifiedAt:'2026-11-06'};
+function ids(x){return Array.from(x.records,r=>r.id).sort();}
+const newOnly=M.publishedUnion([a],[a,b]);
+assert.deepEqual(ids(newOnly),['a','b']);
+assert.equal(newOnly.conflicts.length,0,'Remote new ID safe to add');
+const localOnly=M.publishedUnion([a,b],[a]);
+assert.deepEqual(ids(localOnly),['a','b'],'Remote omission must not delete published point');
+const oldConflict=M.publishedUnion([a],[remoteUpdated]);
+assert.deepEqual(Array.from(oldConflict.conflicts),['a']);
+assert.equal(oldConflict.records.length,0,'Never publish partly reconciled conflict result');
+const explicitRemote=M.publishedUnion([a],[remoteUpdated],[a],true);
+assert.equal(explicitRemote.conflicts.length,0);
+assert.equal(explicitRemote.records[0].lat,remoteUpdated.lat,'Only remote changed since common baseline');
+const explicitLocal=M.publishedUnion([localUpdated],[a],[a],true);
+assert.equal(explicitLocal.records[0].lat,localUpdated.lat,'Local newer than common baseline');
+const both=M.publishedUnion([localUpdated],[remoteUpdated],[a],true);
+assert.deepEqual(Array.from(both.conflicts),['a'],'Both changed = block');
+assert.equal(both.records.length,0);
+assert.equal(M.publishedUnion([a],[remoteUpdated],[],true).conflicts.length,1,'No common baseline = block');
+assert.throws(()=>M.publishedUnion([a,a],[a]),/duplicati/);
+assert.throws(()=>M.publishedUnion([a],[a,a]),/duplicati/);
+assert.deepEqual(a,{id:'a',comune:'Redondesco',via:'Piazza Castello',civico:'5',lat:45.1663,lon:10.5122,positionSource:'manual',positionVerifiedAt:'2026-11-05'},'No mutation');
+console.log('PASS Beta 0.6.62: only new records auto-added, verified pin conflicts blocked, three-way manual reconciliation.');

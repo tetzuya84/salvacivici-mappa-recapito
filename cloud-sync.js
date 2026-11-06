@@ -3,7 +3,7 @@
    Nessun invio in background: solo consenso esplicito al pulsante Sincronizza. */
 (function(root){
 'use strict';
-const $=id=>document.getElementById(id),KEY='sc-cloud-settings-v1',SESSION='sc-cloud-session-v1',BASE='sc-cloud-base-',OWNER='sc-cloud-owner-v1';
+const $=id=>document.getElementById(id),KEY='sc-cloud-settings-v1',SESSION='sc-cloud-session-v1',BASE='sc-cloud-base-',MAP_BASE='sc-cloud-map-base-',OWNER='sc-cloud-owner-v1';
 const DEFAULT_CONFIG={projectId:'salvacivici-mappa-recapito',apiKey:'AIzaSyAZfrIhmPy25_xDLIvb2SMPPsw_5H8hnCg'};
 const M=root.SCCloudMerge;
 let engine=null,config=null,session=null,token='',expires=0,busy=false;
@@ -33,8 +33,11 @@ async function api(url,options){
 }
 function configOk(x){return x&&/^[a-z][a-z0-9-]{4,60}$/.test(x.projectId)&&/^[A-Za-z0-9_-]{20,}$/.test(x.apiKey);}
 function baseKey(){return BASE+(config?.projectId||'')+'-'+(session?.uid||'');}
+function mapBaseKey(){return MAP_BASE+(config?.projectId||'')+'-'+(session?.uid||'');}
 function baseSnapshot(){const data=read(baseKey(),null);return Array.isArray(data?.records)?data.records:[];}
+function mapBaseSnapshot(){const data=read(mapBaseKey(),null);return Array.isArray(data?.records)?data.records:[];}
 function saveBase(records){store(baseKey(),{records,at:new Date().toISOString()});}
+function saveMapBase(records){store(mapBaseKey(),{records,at:new Date().toISOString()});}
 function sameRecords(a,b){return M.same([...a].sort((x,y)=>x.id.localeCompare(y.id)),[...b].sort((x,y)=>x.id.localeCompare(y.id)));}
 function showState(){
  const authenticated=!!session?.uid,connected=!!configOk(config);
@@ -164,8 +167,13 @@ function mergedPublishedMap(localMap,remoteMap,newArchive,baseArchive){
    if(map.has(r.id)&&!M.same(map.get(r.id),r))throw Error('Conflitto mappa locale.');
    map.set(r.id,r);
  }
- // Il server prevale sulle copie gia' pubblicate dallo stesso account.
- for(const r of remoteMap)map.set(r.id,r);
+ // Riconcilia prima i punti pubblicati. Nessun prevalere automatico di
+ // Firebase sul pin locale: per modifiche diverse servira' una base comune.
+ const review=M.publishedUnion(localMap,remoteMap,mapBaseSnapshot(),true);
+ if(review.conflicts.length)throw Error('Conflitto su '+review.conflicts.length+
+  ' civici della Mappa permanente. Nessuna coordinata sostituita. Conserva i backup e controlla i punti su entrambi i dispositivi.');
+ map.clear();
+ for(const r of review.records)map.set(r.id,r);
  const baseline=new Map(baseArchive.map(r=>[r.id,r]));
  const cached=new Map(localMap.map(r=>[r.id,r]));
  for(const r of newArchive){
@@ -192,10 +200,14 @@ async function pullPublishedMap({quiet=false}={}){
  busy=true;showState();
  try{
    const local=await engine.getMapRecords(),cloud=await getCloud();
-   const merged=new Map(local.map(r=>[r.id,r]));
-   for(const r of cloud.mapRecords)merged.set(r.id,r);
-   const next=[...merged.values()],changed=!sameRecords(local,next);
+   const review=M.publishedUnion(local,cloud.mapRecords);
+   if(review.conflicts.length){
+     if(!quiet)message('Mappa: '+review.conflicts.length+' civici differiscono dal cloud. Nessuna posizione sovrascritta automaticamente.',true);
+     return{ok:false,reason:'map-conflict',conflicts:review.conflicts.length};
+   }
+   const next=review.records,changed=!sameRecords(local,next);
    if(changed)await engine.applyMapSnapshot(next);
+   saveMapBase(cloud.mapRecords);
    return{ok:true,count:next.length,changed};
  }catch(e){
    if(!quiet)message('Mappa cloud non disponibile: '+errorMessage(e),true);
@@ -228,9 +240,12 @@ async function pullIfSafe({quiet=false}={}){
    // La ricezione dell'Archivio puo' aggiornare anche la copia permanente
    // della Mappa, ma MAI aggiungere acquisizioni locali non pubblicate.
    const currentMap=await engine.getMapRecords();
-   const mapUnion=new Map(currentMap.map(record=>[record.id,record]));
-   for(const record of cloud.mapRecords)mapUnion.set(record.id,record);
-   const receivedMap=[...mapUnion.values()];
+   const review=M.publishedUnion(currentMap,cloud.mapRecords);
+   if(review.conflicts.length){
+     if(!quiet)message('Mappa: '+review.conflicts.length+' civici differenti fra telefono e cloud. Nessuna sostituzione automatica.',true);
+     return{ok:false,reason:'map-conflict',conflicts:review.conflicts.length};
+   }
+   const receivedMap=review.records;
    if(!sameRecords(currentMap,receivedMap))await engine.applyMapSnapshot(receivedMap);
    if(!sameRecords(before,await engine.getRecords()))return{ok:false,reason:'local-changed-during-read'};
    // Sicurezza aggiuntiva: un cloud vuoto non deve svuotare in automatico
@@ -249,6 +264,7 @@ async function pullIfSafe({quiet=false}={}){
    const changed=!sameRecords(before,cloud.records);
    if(changed)await engine.applySnapshot(cloud.records);
    if(!saved||!sameRecords(saved.records,cloud.records))saveBase(cloud.records);
+   saveMapBase(cloud.mapRecords);
    store(OWNER,session.uid);
    if(changed||!quiet)message('Archivio aggiornato dal cloud: '+cloud.records.length+' civici. Le nuove modifiche restano da confermare con Sincronizza.');
    return{ok:true,count:cloud.records.length,changed};
@@ -308,6 +324,7 @@ async function synchronize({confirm=true}={}){
    if(changedLocal)await engine.applySnapshot(result.records);
    await engine.applyMapSnapshot(mapped);
    saveBase(result.records);
+   saveMapBase(mapped);
    store(OWNER,session.uid);
    // Backup Google Drive per-account, append-only e con lettura di verifica.
    // Un errore Drive non annulla la sincronizzazione Firebase già riuscita.
@@ -360,6 +377,7 @@ async function clearAllAcquisitions({expectedCount}={}){
    await engine.applyMapSnapshot(mapBefore);
    await engine.applySnapshot([]);
    saveBase([]);
+   saveMapBase(mapBefore);
    store(OWNER,session.uid);
    message('Eliminate '+before.length+' acquisizioni dall’Archivio. Mappa permanente conservata: '+mapBefore.length+' civici.');
    engine.toast('Archivio svuotato su cloud e dispositivo.');

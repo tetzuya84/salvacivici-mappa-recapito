@@ -116,6 +116,7 @@
         'not-connected':'Mappa permanente locale · accedi con Google in Dati.',
         editing:'Chiudi prima la modifica del civico.',
         'local-changes':'Hai civici da sincronizzare: vai in Archivio.',
+        'map-conflict':'Attenzione: civici diversi fra iPhone e cloud. Nessuna posizione sostituita. Controlla i punti in Archivio.',
         'first-sync':'Prima sincronizzazione da eseguire nell’Archivio.',
         'account-mismatch':'Account cloud differente: archivio locale conservato.',
         'local-changed-during-read':'Archivio modificato: sincronizza dall’Archivio.',
