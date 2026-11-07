@@ -4,7 +4,7 @@
 
 SalvaCivici è una web app progressiva (PWA) per la gestione personale di riferimenti civici e punti geografici verificati durante il recapito.
 
-**Versione pubblicata:** Beta 0.6.63.
+**Versione pubblicata:** Beta 0.6.64.
 
 ## Diritti e utilizzo
 
@@ -35,5 +35,8 @@ La documentazione operativa estesa e i backup delle versioni originali sono cons
 ### Sincronizzazione sicura (Beta 0.6.62)
 La Mappa permanente e' protetta da sovrascritture silenziose fra dispositivi. Ricevere dati da Firebase puo' aggiungere ID mancanti ma non sostituire un civico locale con un record cloud diverso dello stesso ID. L'app segnala il conflitto, non cambia coordinate e non applica parzialmente la ricezione; la sincronizzazione richiesta dall'utente usa il confronto con la versione comune salvata sul dispositivo per distinguere una sola modifica legittima da due modifiche concorrenti. Se la versione comune manca o esistono due modifiche differenti, si blocca e richiede verifica manuale prima del ripristino. Google Drive resta un archivio di backup append-only, mentre Google My Maps e Google Sheets sono copie esterne e non modificano Firebase o il telefono automaticamente. Questa protezione non sposta né corregge i civici già presenti: per risolvere i conflitti rimasti serve una futura schermata di confronto per ID.
 
-### Bussola e filtro Comune iPhone (Beta 0.6.63)
+### Bussola e filtro Comune iPhone (Beta 0.6.64)
 La bussola usa il rilevamento nord magnetico `webkitCompassHeading` quando disponibile su Safari iOS. Non usa più l'angolo `alpha` non assoluto per simulare un nord inesistente, esclude letture non calibrate o con incertezza superiore a 45 gradi e dà un messaggio se non arrivano orientamenti validi. L'indicazione «Bussola attiva» compare solo alla prima lettura valida. Adegua l'orientamento alla rotazione dello schermo e usa la rotazione fluida già presente in Leaflet. Il filtro Comune/Stato conserva stabile la tendina nativa durante la scelta, applica immediatamente la selezione al `change`, aggiorna i marker e lo zoom, richiude il pannello e visualizza un badge discreto con il numero di civici risultanti. Non modifica record, GPS salvati, Firebase, My Maps o backup; verifica fisica della calibrazione su iPhone ancora necessaria.
+
+### Bussola più rapida (Beta 0.6.64)
+Il primo heading valido viene applicato subito con setBearing(-heading), evitando il ritardo iniziale dell'animazione. I successivi aggiornamenti usano l'interpolatore Leaflet Rotate con ease 0,78 (prima 0,22) e deadzone 0,45° (prima 1,5°): risposta più vicina alla rotazione fisica dell'iPhone senza amplificare il rumore. L'interfaccia «Bussola attiva» viene aggiornata una sola volta, alla prima lettura valida, non a ogni evento. Restano invariati i controlli su nord magnetico, accuratezza, eventi alpha iOS e orientamento schermo. Nessun impatto su civici, coordinate o sincronizzazione; test su iPhone reale ancora necessari.

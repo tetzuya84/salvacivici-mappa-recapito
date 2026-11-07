@@ -1,4 +1,4 @@
-/* Beta 0.6.63 — heading affidabile iPhone e sincronizzazione con orientamento schermo. */
+/* Beta 0.6.64 — bussola iPhone rapida: primo fix immediato e inseguimento reattivo. */
 (function(root){
 'use strict';
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -118,13 +118,21 @@ function create({L,map,baseButton,compassButton,status,onTileLoad,onTileError}){
   // La bussola misura la parte ALTA del telefono; in modalità landscape
   // la parte alta dello schermo può essere ruotata rispetto al dispositivo.
   angle=((angle-screenAngle())%360+360)%360;
-  if(typeof map.setHeading==='function')map.setHeading(angle,{ease:.22,deadzone:1.5});
-  else map.setBearing(-angle);
-  headingReady=true;
-  if(compassWarmup!==null){clearTimeout(compassWarmup);compassWarmup=null;}
-  clearStatus();
-  compassButton.setAttribute('aria-pressed','true');
-  compassButton.textContent='◉ Bussola attiva';
+  // Il plugin Leaflet Rotate usa un'interpolazione progressiva per ogni
+  // frame: ease .22 lascia la mappa in ritardo rispetto al dispositivo.
+  // Sul primo orientamento valido posizionarsi SUBITO sul nord, poi inseguire
+  // senza ritardo evidente e senza il tremolio da misure sotto mezzo grado.
+  const firstFix=!headingReady;
+  if(firstFix&&typeof map.setBearing==='function')map.setBearing(-angle);
+  if(typeof map.setHeading==='function')map.setHeading(angle,{ease:.78,deadzone:.45});
+  else if(!firstFix)map.setBearing(-angle);
+  if(firstFix){
+   headingReady=true;
+   if(compassWarmup!==null){clearTimeout(compassWarmup);compassWarmup=null;}
+   clearStatus();
+   compassButton.setAttribute('aria-pressed','true');
+   compassButton.textContent='◉ Bussola attiva';
+  }
  }
  function activateCompass(permission,isStillVisible){
   const attempt=++compassAttempt;
