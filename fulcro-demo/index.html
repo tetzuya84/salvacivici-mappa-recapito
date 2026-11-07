@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#eaf0eb">
-<title>FULCRO 2.1 · Il laboratorio delle leve</title>
+<title>FULCRO 2.2 · Il laboratorio delle leve</title>
 <style>
 :root{--ink:#1c3435;--muted:#6d8381;--paper:#eff3ee;--white:#fffdf7;--line:#d8e2da;--orange:#ed8051;--orange-dark:#bd5735;--mint:#57a998}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -30,6 +30,15 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .bootOverlay{position:absolute;inset:58px 16px 18px;z-index:5;display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none}
 .bootOverlay .bootText{max-width:320px;border:1px solid #d9e3da;border-radius:20px;background:#fffcf8f5;padding:24px 18px;box-shadow:0 10px 30px #1b4c3d1a}
 .bootOverlay .bootText b{display:block;font-size:19px;margin:6px 0;color:#20443d}.bootOverlay .bootText small{font-size:12px;line-height:1.55;color:#55776a}
+
+/* Il comando di avvio resta visibile dentro l'area di gioco anche su iPhone. */
+.stageAction{position:absolute;right:12px;top:12px;z-index:8;display:flex;align-items:center;justify-content:flex-end;max-width:52%}
+.stagePlay{background:var(--orange);color:#fff;border:2px solid #fff5ee;border-radius:12px;font-weight:900;font-size:13px;padding:10px 13px;min-height:46px;box-shadow:0 3px 0 #b95c3e,0 5px 16px #7b382627;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.stagePlay:active{transform:translateY(1px)}
+.stageLive{padding:8px 10px;background:#ffffffee;border:1px solid #c7dfd3;border-radius:12px;font-size:11px;color:#2c6658;font-weight:900;letter-spacing:.5px;white-space:nowrap}
+#liveFeedback{display:block;font-size:11px;color:#607a72;margin-top:7px;font-weight:700;text-align:center;min-height:15px}
+@media(max-width:600px){.stage{width:min(100%,46svh);margin-left:auto;margin-right:auto}.wrap{padding-bottom:calc(18px + env(safe-area-inset-bottom))}.actions .btn{min-height:54px}}
+@media(max-height:700px) and (max-width:600px){.stage{width:min(100%,41svh)}.lead{margin-bottom:5px}.levelbar{margin:4px 0 6px}}
 </style>
 </head>
 <body>
@@ -37,11 +46,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
  <div class="top"><div class="brand"><div class="mark"><svg width="28" height="28" viewBox="0 0 36 36" fill="none"><path d="M5 24L31 13" stroke="#f4a36a" stroke-width="5" stroke-linecap="round"/><circle cx="18" cy="19" r="5" fill="#fffdf5"/><path d="M13 30h10l-5-10-5 10Z" fill="#91d6bd"/></svg></div><div><strong>FULCRO</strong><small>IL LABORATORIO DELLE LEVE</small></div></div><span class="pill" id="progress">0 / 12 risolti</span></div>
  <div class="micro" id="eyebrow">LIVELLO 01 · PRIMI PASSI</div><h1 id="levelName">Trova l'equilibrio.</h1><p class="lead" id="levelDesc">Inclina la leva per guidare la sfera verso il portale.</p>
  <div class="levelbar"><div class="levels" id="levelButtons" aria-label="Seleziona livello"></div><div class="micro" id="status">PRONTO AL LANCIO</div></div>
- <div class="stage" id="stage"><canvas id="game" aria-label="Gioco di fisica. Trascina le estremità delle leve, poi premi Lancia."></canvas><div class="corner"><span>●</span> FISICA IN TEMPO REALE</div><div class="bootOverlay" id="bootOverlay" role="alert"><div class="bootText"><span style="font-size:29px">🎮</span><b>Anteprima non interattiva</b><small>Il motore del gioco non viene avviato da questa anteprima. Per giocare apri FULCRO tramite il suo indirizzo web in Safari.</small></div></div><div class="result" id="result"><div class="winicon">✦</div><h2>Perfetto!</h2><p id="victoryText">Hai guidato la sfera a destinazione.</p><button id="next" class="btn primary" style="min-width:190px;flex:none">Livello successivo →</button><button id="again" class="btn secondary" style="min-width:190px">Rigioca questo livello</button></div></div>
+ <div class="stage" id="stage"><canvas id="game" aria-label="Gioco di fisica. Trascina le estremità delle leve, poi premi Lancia."></canvas><div class="stageAction"><button id="stageLaunch" class="stagePlay" type="button" aria-label="Avvia la simulazione">▶ LANCIA</button><span id="stageLive" class="stageLive" style="display:none" aria-live="polite">● IN MOVIMENTO</span></div><div class="corner"><span>●</span> FISICA IN TEMPO REALE</div><div class="bootOverlay" id="bootOverlay" role="alert"><div class="bootText"><span style="font-size:29px">🎮</span><b>Anteprima non interattiva</b><small>Il motore del gioco non viene avviato da questa anteprima. Per giocare apri FULCRO tramite il suo indirizzo web in Safari.</small></div></div><div class="result" id="result"><div class="winicon">✦</div><h2>Perfetto!</h2><p id="victoryText">Hai guidato la sfera a destinazione.</p><button id="next" class="btn primary" style="min-width:190px;flex:none">Livello successivo →</button><button id="again" class="btn secondary" style="min-width:190px">Rigioca questo livello</button></div></div>
  <div class="hintTag" id="guide"><span style="font-size:19px">☝️</span><span><b>Trascina le leve</b> per inclinarle, poi premi <b>Lancia</b>. Puoi muoverle anche durante la corsa.</span></div>
  <div class="actions"><button class="btn primary" id="launch">▶ &nbsp; Lancia la sfera</button><button class="btn secondary" id="restart" title="Ricomincia">↺ &nbsp; Reset</button><button class="btn smallBtn" id="pause" title="Pausa" aria-label="Pausa">⏸</button><button class="btn smallBtn" id="help" title="Suggerimento" aria-label="Suggerimento">💡</button></div>
- <div class="footer"><span class="info"><span class="dot"></span> Offline · Progressi salvati</span><span id="timer">0,0 s</span><span id="attempts">Tentativi: 0</span></div>
- <div class="help" id="howto"><b>Come si gioca:</b> sposta le estremità delle leve arancioni. La gravità farà il resto. Il portale verde è il traguardo; le zone rosse sono da evitare. Premi 💡 se vuoi un suggerimento.</div><div class="version">FULCRO 2.1 · 12 esperimenti · Versione compatibilità iPhone</div>
+ <span id="liveFeedback" aria-live="polite">Inclina una leva e premi ▶ LANCIA.</span><div class="footer"><span class="info"><span class="dot"></span> Offline · Progressi salvati</span><span id="timer">0,0 s</span><span id="attempts">Tentativi: 0</span></div>
+ <div class="help" id="howto"><b>Come si gioca:</b> sposta le estremità delle leve arancioni. La gravità farà il resto. Il portale verde è il traguardo; le zone rosse sono da evitare. Premi 💡 se vuoi un suggerimento.</div><div class="version">FULCRO 2.2 · 12 esperimenti · Controlli touch migliorati</div>
 </main>
 <script>
 try{(()=>{'use strict';
@@ -76,7 +85,8 @@ function updateUI(){
  el('attempts').textContent='Tentativi: '+attempts;
  el('status').textContent=state==='ready'?'PRONTO AL LANCIO':state==='running'?'IN MOVIMENTO':state==='paused'?'IN PAUSA':state==='won'?'COMPLETATO':'RIPROVA';
  el('launch').innerHTML=state==='running'?'❚❚ &nbsp; In movimento':(state==='failed'?'▶ &nbsp; Riprova':'▶ &nbsp; Lancia la sfera');
- el('launch').disabled=state==='running'||state==='paused'||state==='won';el('pause').disabled=state==='ready'||state==='failed'||state==='won';el('pause').textContent=state==='paused'?'▶':'⏸';el('timer').textContent=currentTime.toFixed(1).replace('.',',')+' s';
+ el('launch').disabled=state==='running'||state==='won';el('pause').disabled=state==='ready'||state==='failed'||state==='won';el('pause').textContent=state==='paused'?'▶':'⏸';el('timer').textContent=currentTime.toFixed(1).replace('.',',')+' s';
+ const showStagePlay=state==='ready'||state==='failed'||state==='paused';el('stageLaunch').style.display=showStagePlay?'inline-flex':'none';el('stageLaunch').textContent=state==='paused'?'▶ RIPRENDI':state==='failed'?'▶ RIPROVA':'▶ LANCIA';el('stageLive').style.display=state==='running'?'inline-flex':'none';el('liveFeedback').textContent=state==='running'?'Lancio avviato · tentativo '+attempts+' · puoi spostare le leve durante la corsa.':state==='paused'?'In pausa: premi Riprendi.':state==='failed'?'La sfera non è arrivata. Prova a modificare la leva e riprova.':state==='won'?'Livello completato!':'Inclina una leva e premi ▶ LANCIA.';
  el('result').classList.toggle('visible',state==='won');
  el('guide').style.display=state==='won'?'none':'';el('howto').innerHTML=levelIndex<6?'<b>Come si gioca:</b> trascina le leve arancioni per inclinarle e guida la sfera al portale verde. Evita i pericoli rossi.':levelIndex===6||levelIndex===9?'<b>Novità — molle:</b> i dischi azzurri rimbalzano e accelerano la pallina. Trascina le leve, poi lancia.':levelIndex===7||levelIndex===10?'<b>Novità — ingranaggi:</b> alcune leve sono collegate e ruotano in direzioni opposte. Regola i bracci con il dito.':'<b>Novità — interruttori:</b> la pallina deve toccare il pulsante arancione per aprire il cancello azzurro.';
  el('levelButtons').innerHTML=levels.map((_,i)=>'<button class="lev '+(i===levelIndex?'active':progress[i]?'done':'')+'" data-level="'+i+'" aria-label="Livello '+(i+1)+'">'+(i+1)+'</button>').join('');
@@ -86,7 +96,16 @@ function setup(i){levelIndex=clamp(i,0,levels.length-1);level=JSON.parse(JSON.st
  level.opened=false;level.springCooldown={};level.springs=level.springs||[];level.switches=level.switches||[];level.gates=level.gates||[];level.linkages=level.linkages||[];
  state='ready';attempts=0;currentTime=0;particles=[];confetti=[];flash=0;drag=null;accumulator=0;restTime=0;updateUI();draw();}
 function resetBall(){level.opened=false;level.springCooldown={};ball={x:level.spawn[0],y:level.spawn[1],vx:0,vy:0,r:12,rot:0};currentTime=0;particles=[];flash=0;state='ready';accumulator=0;restTime=0;updateUI()}
-function launch(){if(state==='running'||state==='won')return;if(state==='failed'){resetBall()}state='running';attempts++;currentTime=0;restTime=0;updateUI()}
+function launch(){
+ if(state==='running'||state==='won')return;
+ if(state==='paused'){state='running';updateUI();return}
+ if(state==='failed'){resetBall()}
+ state='running';attempts++;currentTime=0;restTime=0;
+ // Piccolo impulso orizzontale: impedisce che la sfera rimanga perfettamente
+ // immobile sul fulcro quando la leva viene lasciata orizzontale.
+ if(Math.abs(ball.vx)<1){ball.vx=18*Math.sign(Math.sin(level.beams[0].angle)||1)}
+ updateUI();
+}
 function win(){if(state!=='running')return;state='won';progress[levelIndex]=true;save();if(!bestTimes[levelIndex]||currentTime<bestTimes[levelIndex]){bestTimes[levelIndex]=currentTime;try{localStorage.setItem('fulcro-v2-times',JSON.stringify(bestTimes))}catch{}}updateUI();el('victoryText').textContent=levelIndex===levels.length-1?'Hai completato il laboratorio avanzato!':'Traguardo raggiunto in '+currentTime.toFixed(1).replace('.',',')+' s. Migliore: '+bestTimes[levelIndex].toFixed(1).replace('.',',')+' s.';confetti=Array.from({length:68},(_,i)=>({x:ball.x,y:ball.y,vx:(Math.random()-.5)*420,vy:-Math.random()*350-35,life:.8+Math.random()*1,angle:Math.random()*TAU,col:['#f1a365','#5ab69c','#466c77','#e6c860','#ffffff'][i%5]}));}
 function fail(){if(state!=='running')return;state='failed';updateUI();}
 function pointSeg(px,py,ax,ay,bx,by){let vx=bx-ax,vy=by-ay,q=clamp(((px-ax)*vx+(py-ay)*vy)/(vx*vx+vy*vy||1),0,1);return{x:ax+q*vx,y:ay+q*vy,q}}
@@ -170,7 +189,7 @@ function render(){ctx.clearRect(0,0,W,H);
  for(const c of confetti){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.angle);ctx.globalAlpha=clamp(c.life,0,1);ctx.fillStyle=c.col;ctx.fillRect(-3,-5,6,10);ctx.restore()}
 }
 function draw(){render();if(state==='running')el('timer').textContent=currentTime.toFixed(1).replace('.',',')+' s'}
-function update(ts){if(!lastTS)lastTS=ts;let delta=clamp((ts-lastTS)/1000,0,.05);lastTS=ts;accumulator+=delta;const dt=1/120;let n=0;while(accumulator>=dt&&n<8){step(dt);accumulator-=dt;n++}draw();requestAnimationFrame(update)}
+let lastFrameWallClock=0;function update(ts){lastFrameWallClock=performance.now();if(!lastTS)lastTS=ts;let delta=clamp((ts-lastTS)/1000,0,.05);lastTS=ts;accumulator+=delta;const dt=1/120;let n=0;while(accumulator>=dt&&n<8){step(dt);accumulator-=dt;n++}draw();requestAnimationFrame(update)}
 function worldPt(ev){const r=canvas.getBoundingClientRect();return{x:(ev.clientX-r.left)*W/r.width,y:(ev.clientY-r.top)*H/r.height}}
 function startDrag(ev){if(state==='won'||state==='paused')return;let p=worldPt(ev),sel=null,best=999;for(const b of level.beams){let ux=Math.cos(b.angle),uy=Math.sin(b.angle),x=ux*b.len/2,y=uy*b.len/2;let d=pointSeg(p.x,p.y,b.x-x,b.y-y,b.x+x,b.y+y);let dd=Math.hypot(p.x-d.x,p.y-d.y);if(dd<27&&dd<best){sel=b;best=dd}}if(!sel)return;
  drag={id:ev.pointerId,beam:sel,side:Math.cos(sel.angle)*(p.x-sel.x)+Math.sin(sel.angle)*(p.y-sel.y)>=0?1:-1};canvas.setPointerCapture(ev.pointerId);ev.preventDefault();}
@@ -180,7 +199,12 @@ function moveDrag(ev){if(!drag||drag.id!==ev.pointerId)return;let p=worldPt(ev),
  b.target=clamp(a,b.min,b.max);for(const [ia,ib,ratio] of level.linkages){if(b.id===ia){let o=level.beams[ib];o.target=clamp(b.target*ratio,o.min,o.max)}else if(b.id===ib){let o=level.beams[ia];o.target=clamp(b.target/ratio,o.min,o.max)}}if(state==='ready'||state==='failed')for(const lever of level.beams)lever.angle=lever.target;ev.preventDefault();}
 function endDrag(ev){if(drag&&ev.pointerId===drag.id){drag=null;try{canvas.releasePointerCapture(ev.pointerId)}catch{}}}
 canvas.addEventListener('pointerdown',startDrag);canvas.addEventListener('pointermove',moveDrag);canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
-el('launch').addEventListener('click',launch);
+// Due pulsanti, un solo comando; pointerup rende l'avvio affidabile anche nei visualizzatori iOS.
+for(const id of ['launch','stageLaunch']){
+ const btn=el(id);
+ btn.addEventListener('click',launch);
+ btn.addEventListener('pointerup',ev=>{if(ev.pointerType==='touch'||ev.pointerType==='pen'){ev.preventDefault();launch()}});
+}
 el('restart').addEventListener('click',()=>{resetBall();for(const b of level.beams)b.angle=b.target=0;updateUI()});
 el('help').addEventListener('click',()=>{for(let i=0;i<level.beams.length;i++){level.beams[i].target=level.hint[i];if(state!=='running'&&state!=='paused')level.beams[i].angle=level.hint[i]}el('guide').innerHTML='<span style="font-size:18px">💡</span><span><b>Indizio:</b> '+level.msg+' Le leve sono state inclinate come suggerimento, ma puoi ancora modificarle.</span>';draw()});
 el('pause').addEventListener('click',()=>{if(state==='running'){state='paused'}else if(state==='paused'){state='running'}updateUI()});
@@ -188,6 +212,9 @@ el('levelButtons').addEventListener('click',ev=>{const b=ev.target.closest('[dat
 el('next').addEventListener('click',()=>setup(levelIndex===levels.length-1?0:levelIndex+1));el('again').addEventListener('click',()=>setup(levelIndex));
 window.addEventListener('keydown',ev=>{if(ev.key===' '||ev.key==='Enter'){if(!ev.repeat&&ev.target.tagName!=='BUTTON'){ev.preventDefault();launch()}}else if(ev.key.toLowerCase()==='r'){resetBall()}});
 setup(0);document.getElementById('bootOverlay').style.display='none';requestAnimationFrame(update);
+// Se l'anteprima o Safari sospendono i frame, ripristina il clock al ritorno.
+document.addEventListener('visibilitychange',()=>{lastTS=0;accumulator=0});
+setInterval(()=>{if(state==='running'&&!document.hidden&&performance.now()-lastFrameWallClock>600){step(1/30);draw()}},100);
 })();}catch(err){var boot=document.getElementById('bootOverlay');if(boot){boot.style.display='flex';var msg=boot.querySelector('small');if(msg)msg.textContent='Il motore non si è avviato ('+(err&&err.message?err.message:'errore sconosciuto')+'). Apri il link web in Safari.';}console.error('FULCRO initialization error:',err);}
 </script>
 </body></html>
